@@ -64,11 +64,20 @@ std::string data_id_t::get_type(){
 	return type;
 }
 
-void data_id_t::add_data(void *ptr_, uint32_t size_){
+void data_id_t::add_data(void *ptr_, uint32_t size_, uint64_t flags){
+	/*
+	  All data in this array is networked, and until I see a need for
+	  non-network-able variables to be extracted, then ID_DATA_CACHE
+	  will be not registered
+	 */
+	if(flags & ID_DATA_CACHE){
+		return;
+	}
 	for(uint64_t i = 0;i < ID_PTR_LENGTH;i++){
 		if(data_ptr[i] == NULL){
 			data_ptr[i] = ptr_;
 			data_size[i] = size_;
+			data_flags[i] = flags;
 			return;
 		}
 	}
@@ -79,6 +88,7 @@ void data_id_t::add_id(uint64_t *ptr_, uint32_t size_){
 		if(id_ptr[i] == NULL){
 			id_ptr[i] = ptr_;
 			id_size[i] = size_;
+			// no flags needed, since no networking happens
 		}
 	}
 }
@@ -115,6 +125,19 @@ static void append_to_data(void* raw,
 	}
 }
 
+static std::vector<uint8_t> pull_data(std::vector<uint8_t> retval,
+				      uint64_t start_pos,
+				      uint8_t *array_to,
+				      uint64_t len){
+	/*
+	  array should ALWAYS be passed as &(array[ENTRY])
+	 */
+	std::vector<uint8_t> retval;
+	for(uint64_t i = 0;i < len;i++){
+		retval.push_back(array[i]);
+	}
+	return retval;
+}
 /*
   Pulled from id.h
 
@@ -124,25 +147,77 @@ static void append_to_data(void* raw,
 
   The rest is formatted in the following blocks
   2 byte for the entry in the data_ptr, should be enough
+  1 byte for the flags given in the initializer (encrypted)
   4 bytes for the size of the string to be parsed
   The raw string is here
 
  */
 
-std::vector<uint8_t> data_id_t::get_data_block(){
+std::vector<uint8_t> data_id_t::export(){
 	std::vector<uint8_t> retval;
 	append_to_data(&id, 8, &retval);
 	append_to_data(type, 24, &retval);
+	append_to_data(&pgp_cite_id, 8, &retval);
 	for(uint16_t i = 0;i <= ID_PTR_LENGTH-1;i++){
 		if(data_ptr[i] == nullptr){
 			continue;
 			// should I just exit here?
 		}
 		append_to_data(&i, 2, &retval);
-		append_to_data(&data_size[i], 4, &retval);
-		append_to_data(data_ptr[i], data_size[i], &retval);
+		/*
+		  the entire array is guaranteed to be blanked if any part
+		  of the entry is used, so read from the back to the front
+		  and set the data size to distance from the beginning
+		  to the first non-zero, so long arrays don't have to be 
+		  networked with redundant zeroes without sacrificing any
+		  data loss
+		 */
+		uint32_t data_entry_size = 0;
+		for(uint32_t i = data_size[i];i > 0;i--){
+			if(data_ptr[i] != 0){
+				data_entry_size = i+1;
+				break;
+			}
+		}
+		append_to_data(&data_entry_size, 4, &retval);
+		append_to_data(data_ptr[i], data_entry_size, &retval);
 	}
 	return retval;
+}
+
+void data_id_t::import(std::vector<uint8_t> data){
+	/*
+	  TODO: Finish and test export for security flaws and the like before I
+	  sink time into maintaining and building two converse programs
+	 */
+	throw std::runtime_error("import hasn't been made yet");
+	/*
+	uint64_t id_tmp = 0;
+	std::array<uint8_t, 24> type_tmp = {0};
+	uint64_t pgp_cite_id_tmp = 0;
+	pull_data(data, 0, &id_tmp, 8);
+	pull_data(data, 8, &type_tmp, 24);
+	pull_data(data, 32, &pgp_cite_id_tmp, 8);
+	if(id_tmp != id){
+		throw std::runtime_error("invalid ID matchup");
+	}
+	if(memcmp(&(type_tmp[0]), type.c_str()) != 0){
+		throw std::runtime_error("invalid type matchup");
+	}
+	if(id_array::exists(pgp_cite_id_tmp) == false){
+		pgp_unverified.push_back(data);
+	}
+	*/
+}
+
+static void data_id_t::pgp_decrypt_backlog(){
+	// The whole strucute isn't guaranteed to come over, and TCP
+	// gives us lossless connections, so apply them from oldest to
+	// newest
+	for(uint64_t i = 0;i < pgp_backlog.size();i++){
+		import(pgp_backlog[i]);
+	}
+	pgp_backlog.clear();
 }
 
 static data_id_t *id_fast_find(uint64_t id){

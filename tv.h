@@ -1,13 +1,24 @@
 #include "id.h"
+#include "pgp.h"
 #ifndef TV_H
 #define TV_H
 #include "utility"
-#define TV_FRAME_SIZE (7680*4320*16)
 
+// hopefully that is too low some day
+#define TV_CHANNEL_SIZE 65536
+// 4x4
+#define TV_WINDOW_SIZE 16
+// a pool of old tv_frame_ts are useful for reliable patching of
+// new ones, and I have doubts that memory usage is as big of a
+// problem as CPU usage (decrypting RSA)
+#define TV_FRAME_SIZE 65536
+// there is no reason to keep tv_patch_t's, as they are immediately
+// used and new tv_frame_t's are generated
 /*
   8K TVs in 4x4 should be good enough, actual limit is
   the stack size
  */
+#define TV_FRAME_SIZE (7680*4320*16)
 
 /*
   Lossless here means that the versions of the stream are the
@@ -18,12 +29,26 @@
 #define TV_PATCH_INFO_LOSSLESS (1)
 #define TV_PATCH_INFO_LOSSY (0)
 
+/*
+  A channel has to exist inside of a window at all times. When moving from
+  a lower resolution to a higher resolution display, the top-left channel
+  is always kept and the lower-right channels are cropped off or added upon.
+  The position of the window is defined in an X and Y plane
+ */
+struct tv_window_t{
+private:
+	uint8_t x_pos = 0; // start counting at 0
+	uint8_t y_pos = 0;
+	uint64_t channel_id = 0;
+public:
+};
+
 struct tv_patch_t{
 private:
 	// location of the byte to change
-	std::array<uint64_t, 65536> location = {};
+	std::array<uint64_t, STD_ARRAY_LENGTH> location = {};
 	// new value of the byte
-	std::array<uint64_t, 65536> value = {};
+	std::array<uint64_t, STD_ARRAY_LENGTH> value = {};
 	// id to be applied to
 	/*
 	  TODO: define a minimum amount of frames that the 
@@ -75,7 +100,11 @@ public:
 
 struct tv_channel_t{
 private:
-	std::array<uint8_t, 1024> public_key = {};
+	/*
+	  TODO: define a more legitimate type for PGP public keys than
+	  a std::array with an arbitrary value
+	 */
+	std::array<uint8_t, PGP_PUBKEY_SIZE> pubkey = {};
 	std::array<uint64_t, 1024> frame_list_id = {};
 public:
 	data_id_t id;
@@ -84,9 +113,38 @@ public:
 	uint64_t get_frame_id(uint64_t backstep);
 };
 
+void tv_init();
+
 namespace tv{
-	void init();
-	void loop();
-	void close();
+	namespace chan{
+		/*
+		  Channel information, metadata, ordering, and the like comes
+		  from this. Actual playback is in layout::window
+		 */
+		uint64_t count();
+		uint64_t next(uint64_t id);
+		uint64_t next(std::array<uint8_t, PGP_PUBKEY_SIZE> pubkey);
+		uint64_t prev(uint64_t id);
+		uint64_t prev(std::array<uint8_t, PGP_PUBKEY_SIZE> pubkey);
+		uint64_t rand();
+		// get streaming information
+	}
+	namespace layout{
+		void set_size(uint8_t x, uint8_t y);
+		std::pair<uint8_t, uint8_t> get();
+		namspace window{
+			// all windows ought to be the same res
+			std::pair<uint32_t, uint32_t> get_res();
+			uint64_t get_chan_id(uint8_t x, uint8_t y);
+			std::array<uint8_t, PGP_PUBKEY_SIZE> get_chan_pubkey(uint8_t x, uint8_t y);
+			void set_chan_id(uint64_t id, uint8_t x, uint8_t y);
+			void set_chan_pubkey(std::array<uint8_t, PGP_PUBKEY_SIZE> pubkey, uint8_t x, uint8_t y);
+		}
+		namespace monitor{
+			// unused, but would be pretty cool to have
+			// a multimonitor TV setup
+		}
+	}
 }
+
 #endif
