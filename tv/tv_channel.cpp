@@ -25,13 +25,10 @@ void tv_channel_t::set_frame_id(uint64_t id, uint64_t backstep){
 }
 
 bool tv_channel_t::is_streaming(){
-	data_id_t *frame_id_ptr = id_array::ptr(frame_list_id[0]);
-	if(frame_id_ptr == nullptr){
-		return false;
-	}
-	tv_frame_t *frame_ptr =
-		(tv_frame_t*)frame_id_ptr->get_ptr();
-	if(frame_ptr == nullptr){
+	tv_frame_t *frame_ptr = nullptr;
+	try{
+		frame_ptr = (tv_frame_t*)id_array::ptr_data(frame_list_id[0]);
+	}catch(std::runtime_error e){
 		return false;
 	}
 	uint8_t timestamp_diff =

@@ -67,7 +67,7 @@ uint64_t tv::chan::count(uint64_t flags){
 	for(uint64_t i = 0;i < channel_id_list.size();i++){
 		try{
 			tv_channel_t *channel =
-				(tv_channel_t*)channel_id->get_ptr();
+				(tv_channel_t*)id_array::ptr_data(channel_id_list[i]);
 			if((flags & TV_CHAN_STREAMING) && channel->is_streaming()){
 				retval++;
 				continue;

@@ -303,7 +303,7 @@ void *id_array::ptr_data(uint64_t id){
 }
 
 bool id_array::exists(uint64_t id){
-	return id_array::ptr(id);
+	return id_array::ptr_id(id) != nullptr;
 }
 
 bool id_array::exists_in_list(uint64_t id,
