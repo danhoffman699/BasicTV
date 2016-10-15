@@ -11,6 +11,7 @@ static data_id_t **id_list = nullptr;
   (single core, not the Two or Three or whatever)
  */
 
+std::array<std::pair<std::string, std::vector<uint64_t> >, STD_ARRAY_SIZE> type_vector;
 std::default_random_engine generator;
 
 data_id_t::data_id_t(void *ptr_, std::string type_){
@@ -43,9 +44,45 @@ data_id_t::data_id_t(void *ptr_, std::string type_){
 		id_size[i] = 0;
 	}
 	id_list[entry] = this;
+	bool type_cached = false;
+	for(uint64_t i = 0;i < STD_ARRAY_LENGTH;i++){
+		if(type_vector[i].first == type){
+			type_vector[i].second.push_back(id);
+			type_cached = true;
+			break;
+		}
+	}
+	// first of type created
+	if(!type_cached){
+		for(uint64_t i = 0;i < STD_ARRAY_LENGTH;i++){
+			if(type_vector[i].first == ""){
+				type_vector[i].first = type;
+				type_vector[i].second.push_back(id);
+				type_cached = true;
+				break;
+			}
+		}
+	}
+	// probably exceed 64K
+	if(!type_cached){
+		print("unable to add type to cache, 64K?", P_ERR);
+		// shouldn't happen, but add code to cope with this?
+	}
 }
 
 data_id_t::~data_id_t(){
+	uint64_t i = 0;
+	for(;i < STD_ARRAY_LENGTH;i++){
+		if(type_vector[i].first == type){
+			break;
+		}
+	}
+	for(uint c = 0;c < STD_ARRAY_LENGTH;c++){
+		if(type_vector[i].second[c] == id){
+			type_vector[i].second.erase(
+				type_vector[i].second.begin()+c);
+		}
+	}
 }
 
 void data_id_t::set_id(uint64_t id_){
@@ -244,13 +281,25 @@ static data_id_t *id_std_find(uint64_t id){
 	return nullptr;
 }
 
-data_id_t *id_array::ptr(uint64_t id){
+data_id_t *id_array::ptr_id(uint64_t id){
 	data_id_t *retval = nullptr;
 	retval = id_fast_find(id);
 	if(retval == nullptr){
 		retval = id_std_find(id);
 	}
+	if(retval == nullptr){
+		throw std::runtime_error("ptr_id: retval == nullptr");
+	}
 	return retval;
+}
+
+void *id_array::ptr_data(uint64_t id){
+	data_id_t *id_ptr = ptr_id(id);
+	// currently impossible
+	if(unlikely(id_ptr->get_ptr() == nullptr)){
+		throw std::runtime_error("ptr_data: id_ptr->ptr == nullptr");
+	}
+	return id_ptr->get_ptr();
 }
 
 bool id_array::exists(uint64_t id){
@@ -268,18 +317,15 @@ bool id_array::exists_in_list(uint64_t id,
 }
 
 /*
-  TODO: implement some sort of cache
+  TODO: crunch some numbers and check if comparing 16-bit hashes
+  would make any major difference
  */
 
 std::vector<uint64_t> id_array::all_of_type(std::string type){
-	std::vector<uint64_t> retval;
-	for(uint64_t i = 0;i < ID_ARRAY_SIZE;i++){
-		if(id_list[i] == nullptr){
-			continue;
-		}
-		if(id_list[i]->get_type() == type){
-			retval.push_back(id_list[i]->get_id());
+	for(uint64_t i = 0;i < STD_ARRAY_SIZE;i++){
+		if(type_vector[i].first == type){
+			return type_vector[i].second;
 		}
 	}
-	return retval;
+	return {};
 }

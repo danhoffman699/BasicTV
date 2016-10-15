@@ -148,6 +148,7 @@ namespace id_array{
 			    std::array<uint64_t, ID_PTR_LENGTH> catalog);
 	void optimize(std::array<uint64_t, ID_PTR_LENGTH> *array);
 	std::vector<uint64_t> all_of_type(std::string type);
-	data_id_t *ptr(uint64_t id);
+	data_id_t *ptr_id(uint64_t id);
+	void *ptr_data(uint64_t id);
 };
 #endif

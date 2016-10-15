@@ -32,12 +32,10 @@
 #include "tv_patch.h"
 #include "tv_window.h"
 
-std::array<uint64_t, TV_WINDOW_SIZE> window = {{0}};
-// channels, because of their network-ability, are created
-// on the spot with ID functions
-
-
-
+/*
+  channel and window arrays are created OTF with id_array::all_of_type,
+  an internal list of all types should be made to speed up the run time
+ */
 
 void tv_loop(){
 }
@@ -45,7 +43,6 @@ void tv_loop(){
 void tv_init(){
 	function_vector.push_back(tv_loop);
 }
-
 
 /*
   tv::chan: channel functions. Does not directly interface with the channels
@@ -68,22 +65,22 @@ uint64_t tv::chan::count(uint64_t flags){
 	std::vector<uint64_t> channel_id_list =
 		id_array::all_of_type("tv_channel_t");
 	for(uint64_t i = 0;i < channel_id_list.size();i++){
-		data_id_t *channel_id =
-			id_array::ptr(channel_id_list[i]);
-		CONTINUE_IF_NULL(channel_id);
-		tv_channel_t *channel =
-			(tv_channel_t*)channel_id->get_ptr();
-		CONTINUE_IF_NULL(channel);
-		if((flags & TV_CHAN_STREAMING) && channel->is_streaming()){
-			retval++;
-			continue;
-		}
-		if((flags & TV_CHAN_NO_AUDIO) && !channel->is_audio()){
-			retval++;
-			continue;
-		}
-		if((flags & TV_CHAN_NO_VIDEO) && !channel->is_video()){
-			retval++;
+		try{
+			tv_channel_t *channel =
+				(tv_channel_t*)channel_id->get_ptr();
+			if((flags & TV_CHAN_STREAMING) && channel->is_streaming()){
+				retval++;
+				continue;
+			}
+			if((flags & TV_CHAN_NO_AUDIO) && !channel->is_audio()){
+				retval++;
+				continue;
+			}
+			if((flags & TV_CHAN_NO_VIDEO) && !channel->is_video()){
+				retval++;
+				continue;
+			}
+		}catch(std::runtime_error e){
 			continue;
 		}
 	}

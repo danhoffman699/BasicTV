@@ -233,3 +233,9 @@ uint64_t array_func::add(void* array,
 	}
 	return array_size*data_size;
 }
+
+void throw_on_null(void* ptr){
+	if(ptr == nullptr){
+		throw std::runtime_error(__FUNCTION__);
+	}
+}

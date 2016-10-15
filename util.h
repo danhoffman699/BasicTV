@@ -85,4 +85,8 @@ namespace array_func{
 // print var char
 #define P_V_C(a, b) print((std::string)#a + " == '" + std::string(&a, 1) + "'", b)
 // cannot use print here
+
+// branch prediction
+#define likely(x)      __builtin_expect(!!(x), 1)
+#define unlikely(x)    __builtin_expect(!!(x), 0)
 #endif
