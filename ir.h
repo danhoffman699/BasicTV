@@ -1,3 +1,4 @@
+#include "id.h"
 #ifndef IR_H
 #define IR_H
 /*
@@ -18,10 +19,15 @@
 
 #define IR_COMMAND_BUFFER_SIZE 32
 
+#include "array"
+
 struct ir_remote_t{
 private:
-	std::array<std::array<uint8_t, 8>, IR_COMMAND_BUFFER_SIZE> buffer;
 public:
+	data_id_t id;
+	ir_remote_t();
+	~ir_remote_t();
+	
 };
 
 #endif

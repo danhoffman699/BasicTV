@@ -2,6 +2,8 @@
 #include "settings.h"
 #include "file.h"
 #include "util.h"
+#include "pgp.h"
+#include "ir.h"
 #include "tv.h"
 
 /*

@@ -9,6 +9,7 @@
 #define P_SPAM PRINT_SPAM
 #define P_DEBUG PRINT_DEBUG
 #define P_NOTICE PRINT_NOTICE
+#define P_NOTE PRINT_NOTICE
 #define P_WARN PRINT_WARNING
 #define P_ERR PRINT_ERROR
 #define P_CRIT PRINT_CRITICAL
@@ -57,6 +58,26 @@ namespace system_handler{
 	int run(std::string str);
 	void write(std::string cmd, std::string file);
 };
+
+/*
+  Since networking std::vectors takes some extra code and complexity, 
+  std::arrays are used with some helper functions to emulate std::vector
+  (push_back being the big one)
+ */
+
+namespace array_func{
+	uint64_t add(void *array,
+			   uint64_t array_size,
+			   void *data,
+			   uint64_t data_size);
+	uint64_t size(void *array,
+		      uint64_t array_size,
+		      uint64_t data_size);
+};
+
+#define CONTINUE_IF_NULL(x) if(x == nullptr){continue;}
+#define CONTINUE_IF_TRUE(x) if(!!x){continue;}
+
 // print var
 #define P_V(a, b) print((std::string)#a + " == '" + std::to_string(a) + "'", b)
 // print var string

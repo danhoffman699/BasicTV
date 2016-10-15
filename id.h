@@ -1,6 +1,7 @@
 #include "main.h" // STD_ARRAY_LENGTH
 #ifndef ID_H
 #define ID_H
+#include "cstdint"
 #include "fstream"
 #include "array"
 #include "vector"
@@ -70,6 +71,32 @@
  */
 #define ID_DATA_NOPGP (1 << 1)
 
+/*
+  The position in the array is encoded into the ID.
+
+  TODO: convert std::vector to std::array
+ */
+
+#define ID_RAND_MASK 0xFFFFFFFF00000000
+#define ID_SET_RAND(x, y) ((x) | ((y) << 32)) 
+#define ID_PULL_RAND(x) ((x) >> 32) // doesn't need logical and
+
+#define ID_POS_MASK 0x00000000FFFFFFFF
+#define ID_SET_POS(x, y) ((x) | ((y) & ID_POS_MASK))
+#define ID_PULL_POS(x) ((x) & (~ID_POS_MASK))
+
+/*
+  Array is dunamically allocated to prevent the stack from
+  having any major problems. I think dedicating 64MB of RAM to
+  just IDs should be plenty (assuming 64-bit pointers). I might 
+  want to install a spam-filter or just kick people from having their 
+  info relayed if they spaa ton of data (identifiable via PGP)
+
+  TODO: clearly define what "spam" means in the previous paragraph
+ */
+
+#define ID_ARRAY_SIZE ((64*1024*1024)/8)
+
 struct data_id_t{
 private:
 	uint64_t id = 0;
@@ -105,12 +132,13 @@ public:
 	void set_id(uint64_t id_);
 	uint64_t get_id();
 	std::string get_type();
+	void *get_ptr();
 	void add_data(void *ptr_, uint32_t size_, uint64_t flags = 0);
 	void add_id(uint64_t *ptr_, uint32_t size_);
 	uint64_t get_data_index_size();
-	std::vector<uint8_t> export();
-	void import(std::vector<uint8_t> data);
-	void import(std::string data);
+	std::vector<uint8_t> export_data();
+	void import_data(std::vector<uint8_t> data);
+	void import_data(std::string data);
 	void pgp_decrypt_backlog();
 };
 
@@ -119,6 +147,7 @@ namespace id_array{
 	bool exists_in_list(uint64_t id,
 			    std::array<uint64_t, ID_PTR_LENGTH> catalog);
 	void optimize(std::array<uint64_t, ID_PTR_LENGTH> *array);
+	std::vector<uint64_t> all_of_type(std::string type);
 	data_id_t *ptr(uint64_t id);
 };
 #endif

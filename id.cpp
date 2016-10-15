@@ -3,38 +3,37 @@
 #include "util.h"
 #include "lock.h"
 
-static std::vector<data_id_t*> id_list_vector;
-static lock_t id_list_vector_lock;
+static data_id_t **id_list = nullptr;
 
 /*
-  Split the ID into two parts for easy searching, since that is 
-  probably the singe most-used function outside of PRINT()
+  I'm not too concerned with threading if the entire idea
+  of the program is for it to be runnable on a Raspberry Pi
+  (single core, not the Two or Three or whatever)
  */
 
 std::default_random_engine generator;
 
 data_id_t::data_id_t(void *ptr_, std::string type_){
-	uint64_t part_one = 0;
-	while(part_one == 0){
+	uint32_t entry = 0;
+	if(id_list == nullptr){
+		id_list = new data_id_t*[ID_ARRAY_SIZE];
+		memset(id_list, 0, sizeof(data_id_t*)*ID_ARRAY_SIZE);
+		entry = 0;
+	}else{
+		for(uint64_t i = 0;i < ID_ARRAY_SIZE;i++){
+			if(id_list[i] != nullptr){
+				continue;
+			}
+			entry = i;
+			break;
+		}
+	}
+	while(ID_PULL_RAND(id) == 0){
 		std::uniform_int_distribution<uint32_t>
 			distribution(0, std::numeric_limits<uint32_t>::max());
-		part_one = (uint64_t)distribution(generator);
+		ID_SET_RAND(id, (uint64_t)distribution(generator));
 	}
-	uint64_t part_two = 0;
-	auto part_two_function = [&](){
-					 if(id_list_vector.size() == 0){
-						 return;
-					 }
-					 part_two =
-						 id_list_vector
-						 [id_list_vector.size()-1]->
-						 get_id() & 0xFFFFFFFF00000000;
-					 part_two >>= 32;
-					 part_two++;
-					 part_two <<= 32;
-				 };
-	LOCK_RUN(id_list_vector_lock, part_two_function());
-	id = part_one | part_two;
+	ID_SET_POS(id, entry);
 	type = type_;
 	ptr = ptr_;
 	for(uint64_t i = 0;i < ID_PTR_LENGTH;i++){
@@ -43,10 +42,7 @@ data_id_t::data_id_t(void *ptr_, std::string type_){
 		id_ptr[i] = nullptr;
 		id_size[i] = 0;
 	}
-	auto function = [&](){
-				id_list_vector.push_back(this);
-			};
-	LOCK_RUN(id_list_vector_lock, function());
+	id_list[entry] = this;
 }
 
 data_id_t::~data_id_t(){
@@ -62,6 +58,10 @@ uint64_t data_id_t::get_id(){
 
 std::string data_id_t::get_type(){
 	return type;
+}
+
+void *data_id_t::get_ptr(){
+	return ptr;
 }
 
 void data_id_t::add_data(void *ptr_, uint32_t size_, uint64_t flags){
@@ -125,19 +125,16 @@ static void append_to_data(void* raw,
 	}
 }
 
-static std::vector<uint8_t> pull_data(std::vector<uint8_t> retval,
-				      uint64_t start_pos,
+/*static std::vector<uint8_t> pull_data(std::vector<uint8_t> array,
 				      uint8_t *array_to,
 				      uint64_t len){
-	/*
-	  array should ALWAYS be passed as &(array[ENTRY])
-	 */
 	std::vector<uint8_t> retval;
 	for(uint64_t i = 0;i < len;i++){
 		retval.push_back(array[i]);
 	}
 	return retval;
-}
+}*/
+
 /*
   Pulled from id.h
 
@@ -153,12 +150,12 @@ static std::vector<uint8_t> pull_data(std::vector<uint8_t> retval,
 
  */
 
-std::vector<uint8_t> data_id_t::export(){
+std::vector<uint8_t> data_id_t::export_data(){
 	std::vector<uint8_t> retval;
 	append_to_data(&id, 8, &retval);
 	append_to_data(type, 24, &retval);
 	append_to_data(&pgp_cite_id, 8, &retval);
-	for(uint16_t i = 0;i <= ID_PTR_LENGTH-1;i++){
+	for(uint16_t i = 0;i != 0xFFFF;i++){
 		if(data_ptr[i] == nullptr){
 			continue;
 			// should I just exit here?
@@ -172,10 +169,11 @@ std::vector<uint8_t> data_id_t::export(){
 		  networked with redundant zeroes without sacrificing any
 		  data loss
 		 */
+		uint8_t *byte_array = (uint8_t*)data_ptr[i];
 		uint32_t data_entry_size = 0;
-		for(uint32_t i = data_size[i];i > 0;i--){
-			if(data_ptr[i] != 0){
-				data_entry_size = i+1;
+		for(;data_entry_size < data_size[i];data_entry_size++){
+			if(byte_array[data_entry_size] != 0){
+				data_entry_size++;
 				break;
 			}
 		}
@@ -185,12 +183,12 @@ std::vector<uint8_t> data_id_t::export(){
 	return retval;
 }
 
-void data_id_t::import(std::vector<uint8_t> data){
+void data_id_t::import_data(std::vector<uint8_t> data){
 	/*
 	  TODO: Finish and test export for security flaws and the like before I
-	  sink time into maintaining and building two converse programs
+	  sink time into maintaining and building two converse functions
 	 */
-	throw std::runtime_error("import hasn't been made yet");
+	throw std::runtime_error("import_data hasn't been made yet");
 	/*
 	uint64_t id_tmp = 0;
 	std::array<uint8_t, 24> type_tmp = {0};
@@ -210,32 +208,37 @@ void data_id_t::import(std::vector<uint8_t> data){
 	*/
 }
 
-static void data_id_t::pgp_decrypt_backlog(){
+void data_id_t::pgp_decrypt_backlog(){
 	// The whole strucute isn't guaranteed to come over, and TCP
 	// gives us lossless connections, so apply them from oldest to
 	// newest
 	for(uint64_t i = 0;i < pgp_backlog.size();i++){
-		import(pgp_backlog[i]);
+		import_data(pgp_backlog[i]);
 	}
 	pgp_backlog.clear();
 }
 
 static data_id_t *id_fast_find(uint64_t id){
-	const uint64_t tmp_entry = id >> 32;
+	const uint64_t tmp_entry = ID_PULL_POS(id);
+	if(tmp_entry >= ID_ARRAY_SIZE){
+		return nullptr;
+	}
 	const bool proper_id =
-		id_list_vector.at(tmp_entry)->get_id() == id;
+		id_list[tmp_entry]->get_id() == id;
 	if(proper_id){
-		return id_list_vector[tmp_entry];
+		return id_list[tmp_entry];
 	}
 	return nullptr;
 
 }
 
 static data_id_t *id_std_find(uint64_t id){
-	for(uint64_t i = 0;i < id_list_vector.size();i++){
-		data_id_t *tmp_id = id_list_vector[i];
-		if(id == tmp_id->get_id()){
-			return id_list_vector[i];
+	for(uint64_t i = 0;i < ID_ARRAY_SIZE;i++){
+		if(id_list[i] == nullptr){
+			continue;
+		}
+		if(id == id_list[i]->get_id()){
+			return id_list[i];
 		}
 	}
 	return nullptr;
@@ -243,9 +246,9 @@ static data_id_t *id_std_find(uint64_t id){
 
 data_id_t *id_array::ptr(uint64_t id){
 	data_id_t *retval = nullptr;
-	LOCK_RUN(id_list_vector_lock, retval = id_fast_find(id));
+	retval = id_fast_find(id);
 	if(retval == nullptr){
-		LOCK_RUN(id_list_vector_lock, retval = id_std_find(id));
+		retval = id_std_find(id);
 	}
 	return retval;
 }
@@ -262,4 +265,21 @@ bool id_array::exists_in_list(uint64_t id,
 		}
 	}
 	return false;
+}
+
+/*
+  TODO: implement some sort of cache
+ */
+
+std::vector<uint64_t> id_array::all_of_type(std::string type){
+	std::vector<uint64_t> retval;
+	for(uint64_t i = 0;i < ID_ARRAY_SIZE;i++){
+		if(id_list[i] == nullptr){
+			continue;
+		}
+		if(id_list[i]->get_type() == type){
+			retval.push_back(id_list[i]->get_id());
+		}
+	}
+	return retval;
 }

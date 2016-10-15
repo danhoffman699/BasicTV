@@ -1,2 +1,4 @@
 # BasicTV
-A decentralized Internet television system
+A simple, decentralized Internet television system
+
+

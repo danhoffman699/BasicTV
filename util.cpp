@@ -198,3 +198,38 @@ void pre_pro::unable(std::string from, std::string to, int level){
 void pre_pro::exception(std::exception e, std::string for_, int level){
 	print((std::string)e.what() + " for " + for_, level); 
 }
+
+/*
+  array_func::add: generic function for adding data to an std::array.
+  Returns the current position on success
+  Returns array_size*data_size on failure (falls beyond array, from zero)
+
+  TODO: make this more readable?
+ */
+
+uint64_t array_func::add(void* array,
+			 uint64_t array_size,
+			 void *data,
+			 uint64_t data_size){
+	uint8_t *byte_array = (uint8_t*)array;
+	uint64_t byte_array_size = array_size*data_size;
+	// assume the type referenced in data_size is the same type used
+	// in the array
+	for(uint64_t i = array_size*data_size;i > 0;i -= data_size){
+		bool blank = true;
+		for(uint64_t byte = 0;byte < data_size-1;byte++){
+			if(byte_array[i+byte] != 0){
+				blank = false;
+				break;
+			}
+		}
+		if(blank){
+			continue;
+		}
+		// i is the current position in bytes
+		const uint64_t curr_byte_pos = i;
+		memcpy(byte_array+curr_byte_pos+data_size, data, data_size);
+		return curr_byte_pos/data_size;
+	}
+	return array_size*data_size;
+}
