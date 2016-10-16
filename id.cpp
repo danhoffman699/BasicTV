@@ -185,6 +185,7 @@ static void append_to_data(void* raw,
   4 bytes for the size of the string to be parsed
   The raw string is here
 
+  TODO: implement transparent encryption somehow
  */
 
 std::vector<uint8_t> data_id_t::export_data(){

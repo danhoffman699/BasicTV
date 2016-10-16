@@ -5,6 +5,9 @@
 /*
   tv_channel_t: channel information. contains information about the stream
   and frames (video only, audio only, etc.)
+
+  TODO: possibly define behavior for when two streams have copied metadata
+  but have different PGP keys (is this needed?)
  */
 
 #define TV_CHAN_STREAMING (1 << 0)

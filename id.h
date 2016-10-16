@@ -46,6 +46,13 @@
   the "main" port should be done in this format, and 
   other services that might pop up should use another
   format
+
+  Information that originates from another server cannot be 
+  changed. The original, encrypted, information is kept locally
+  and is referenced when prompted by another peer for that info.
+  In the event that somebody tries to override that, the receiving
+  client will detect (somehow?) that the information was tampered
+  with and that the RSA decryption is invalid.
  */
 
 /*
@@ -102,19 +109,31 @@ private:
 	uint64_t id = 0;
 	std::string type;
 	void *ptr = nullptr;
-	uint64_t pgp_cite_id = 0;
 	/*
 	  If a pgp_cite_t item has not come yet, then
-	  put that data into the pgp_unverified vector and
+	  put that data into the pgp_backlog vector and
 	  run that when pgp_cite_id is found
 
 	  pgp_cite_t cannot be changed. If a change is detected, then 
 	  reject the incoming data. This is not typical software behavior
 	 */
+	uint64_t pgp_cite_id = 0;
+	/*
+	  Contains all information that can't be decrypted because pgp_cite_id
+	  is not valid. If pgp_cite_id doesn't match up with pgp_backlog data,
+	  then destroy this variable, as it is probably phishing
+	 */
 	std::vector<std::vector<uint8_t> > pgp_backlog;
-	
+
 	std::array<void*, ID_PTR_LENGTH> data_ptr = {{nullptr}};
 	std::array<uint32_t, ID_PTR_LENGTH> data_size = {{0}};
+	/*
+	  Flags for the data tell us if it is compressed, encrypted, or
+	  whatever.
+
+	  TODO: throw an error if data comes over that does NOT have anything
+	  encrypted, as showing proof of ownership there would be impossible
+	 */
 	std::array<uint8_t, ID_PTR_LENGTH> data_flags = {{0}};
 	std::array<uint64_t*, ID_PTR_LENGTH> id_ptr = {{nullptr}};
 	std::array<uint32_t, ID_PTR_LENGTH> id_size = {{0}};
@@ -133,6 +152,7 @@ public:
 	uint64_t get_id();
 	std::string get_type();
 	void *get_ptr();
+	std::array<uint8_t, PGP_PUBKEY_SIZE> get_owner_pubkey();
 	void add_data(void *ptr_, uint32_t size_, uint64_t flags = 0);
 	void add_id(uint64_t *ptr_, uint32_t size_);
 	uint64_t get_data_index_size();
