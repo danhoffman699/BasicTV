@@ -1,5 +1,6 @@
 #ifndef NET_PROTO_H
 #define NET_PROTO_H
+#include "id.h"
 #include "string"
 #include "SDL2/SDL_net.h"
 

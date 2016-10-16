@@ -1,6 +1,6 @@
-#include "id.h"
 #ifndef PGP_H
 #define PGP_H
+#include "id.h"
 #include "array"
 #include "string"
 
@@ -11,7 +11,6 @@
 
 #define PGP_CITE_STR_SIZE 256
 #define PGP_CITE_SIZE 16
-#define PGP_PUBKEY_SIZE 8192
 
 /*
   pgp_cite_t: contains citations for data_id_t ownership. Not all information

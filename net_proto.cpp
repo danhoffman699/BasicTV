@@ -39,7 +39,7 @@ static std::vector<uint8_t> net_proto_fetch_chunk(uint32_t size){
 	return retval;
 }
 
-net_peer_t::net_peer_t(TCPsocket socket_, std::string ip_, uint16_t port){
+net_peer_t::net_peer_t(TCPsocket socket_, std::string ip_, uint16_t port) : id(this, __FUNCTION__){
 	id.add_data(&(ip[0]), NET_IP_MAX_SIZE);
 	id.add_data(&(pubkey[0]), PGP_PUBKEY_SIZE);
 	/*
@@ -57,22 +57,16 @@ net_peer_t::~net_peer_t(){
 	SDLNet_TCP_Close(socket);
 }
 
-void net_peer_t::set_ip_socket(std:;string ip_addr_, TCPsocket socket_){
-	ip_addr = ip_addr_;
-	socket = socket_;
-}
-
 static void net_proto_process_incoming_connections(){
 	TCPsocket new_socket = SDLNet_TCP_Accept(server_socket);
-	if(new_socket == false){
+	if(new_socket == nullptr){
 		PRINT((std::string)"cannot accept TCP connection"+
 		      SDL_GetError(), P_ERR);
 	}else{
 		for(uint64_t i = 0;i < NET_PEER_LIMIT;i++){
 			if(!id_array::exists(peer[i])){
-				net_peer_t *peer_tmp = new net_peer_t();
-				peer[i] = peer_tmp.id->get_id();
-				peer_tmp->set_ip_socket();
+				net_peer_t *peer_tmp = new net_peer_t(new_socket, "0.0.0.0", 0);
+				peer[i] = peer_tmp->id.get_id();
 			}
 		}
 	}
