@@ -17,10 +17,11 @@ private:
 	   frame_number, increment by one every time.
 	 */
 	uint64_t frame_number = 0;
+	uint64_t frame_id_prev = 0;
+	uint64_t frame_id_next = 0;
 	uint64_t x_res = 0;
 	uint64_t y_res = 0;
 	uint64_t unix_timestamp = 0;
-	uint8_t frame_count = 0;
 public:
 	data_id_t id;
 	tv_frame_t();
@@ -31,6 +32,8 @@ public:
 	void reset_frame(uint64_t x, uint64_t y);
 	void set_pixel(uint64_t x, uint64_t y, uint64_t frame_number);
 	uint64_t get_frame_number();
+	uint64_t get_frame_id_prev();
+	uint64_t get_frame_id_next();
 	uint64_t get_pixel(uint64_t x, uint64_t y);
 	uint64_t get_x_res();
 	uint64_t get_y_res();

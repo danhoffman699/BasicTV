@@ -215,7 +215,7 @@ uint64_t array_func::add(void* array,
 	uint64_t byte_array_size = array_size*data_size;
 	// assume the type referenced in data_size is the same type used
 	// in the array
-	for(uint64_t i = array_size*data_size;i > 0;i -= data_size){
+	for(uint64_t i = array_size*data_size;i >= 0;i -= data_size){
 		bool blank = true;
 		for(uint64_t byte = 0;byte < data_size-1;byte++){
 			if(byte_array[i+byte] != 0){
@@ -238,4 +238,15 @@ void throw_on_null(void* ptr){
 	if(ptr == nullptr){
 		throw std::runtime_error(__FUNCTION__);
 	}
+}
+
+std::default_random_engine generator;
+
+uint64_t true_rand(uint64_t min, uint64_t max){
+	if(min >= max){
+		throw std::runtime_error("min >= max");
+	}
+	std::uniform_int_distribution<uint64_t>
+		distribution(min, max);
+	return distribution(generator);
 }

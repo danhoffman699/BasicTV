@@ -20,6 +20,8 @@
 #include "execinfo.h"
 #include "sstream"
 #include "vector"
+#include "random"
+
 extern void sleep_ms(int ms, bool force = false);
 extern int search_for_argv(std::string);
 extern std::string get_argv(int a);
@@ -27,6 +29,9 @@ extern void print(std::string data, int level, const char *func = nullptr);
 extern long double get_mul_to_btc(std::string currency);
 extern long double get_btc_rate(std::string currency);
 extern std::vector<std::string> newline_to_vector(std::string data);
+//128-bit GCC?
+extern uint64_t true_rand(uint64_t min, uint64_t max);
+
 #define HANG() while(true){sleep_ms(1000);}
 #define LOCK_RUN(a, b)							\
 	a.lock();							\
@@ -89,4 +94,7 @@ namespace array_func{
 // branch prediction
 #define likely(x)      __builtin_expect(!!(x), 1)
 #define unlikely(x)    __builtin_expect(!!(x), 0)
+
+#define FIND_FIRST_ZERO(A, B, C) for(uint64_t A = 0; A < C;A++){if(B[A] == 0){break;}
+
 #endif

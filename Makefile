@@ -1,6 +1,6 @@
-CFLAGS+=-Wall -Wextra
-LDFLAGS+=-std=c++11 -lstdc++ -lcurl -lSDL2_net -lSDL2
-CC=clang++
+CXXFLAGS+=-Wall -Wextra -std=c++11
+LDFLAGS+=-lstdc++ -lcurl -lSDL2_net -lSDL2
+CXX?=g++
 
 all:
 	$(CC) $(LDFLAGS) */*.cpp *.cpp $(CFLAGS) 

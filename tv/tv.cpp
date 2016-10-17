@@ -60,6 +60,7 @@ void tv_init(){
   tv::chan::count: returns a channel count of all channels. Channels that are
   not currently streaming are co
  */
+
 uint64_t tv::chan::count(uint64_t flags){
 	uint64_t retval = 0;
 	std::vector<uint64_t> channel_id_list =
@@ -85,4 +86,23 @@ uint64_t tv::chan::count(uint64_t flags){
 		}
 	}
 	return retval;
+}
+
+/*
+  TODO: implement actual sorting of channels on the fly. Possibly
+  embed that sorting into the PGP API?
+*/
+
+uint64_t tv::chan::next(uint64_t id, uint64_t flags){
+}
+
+uint64_t tv::chan::prev(uint64_t id, uint64_t flags){
+}
+
+uint64_t tv::chan::rand(uint64_t flags){
+	uint64_t channel_count = count(flags);
+	uint64_t id_from_start = true_rand(0, channel_count-1);
+	std::vector<uint64_t> channel_id =
+		id_array::all_of_type("tv_channel_t");
+	return channel_id.at(id_from_start);
 }

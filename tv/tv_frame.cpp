@@ -38,6 +38,18 @@ uint64_t tv_frame_t::get_pixel(uint64_t x, uint64_t y){
 	return 0;
 }
 
+uint64_t tv_frame_t::get_frame_number(){
+	return frame_number;
+}
+
+uint64_t tv_frame_t::get_frame_id_prev(){
+	return frame_id_prev;
+}
+
+uint64_t tv_frame_t::get_frame_id_next(){
+	return frame_id_next;
+}
+
 uint64_t tv_frame_t::get_timestamp(){
 	return unix_timestamp;
 }
