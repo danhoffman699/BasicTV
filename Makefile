@@ -1,9 +1,10 @@
-CFLAGS+=-Wall -Wextra
-LDFLAGS+=-std=c++11 -lstdc++ -lcurl -lSDL2_net -lSDL2
-CC=clang++
+CXXFLAGS+=-Wall -Wextra -std=c++11
+LDFLAGS+=-lstdc++ -lcurl -lSDL2_net -lSDL2
+#changed for personal reasons, clang++ is faster at compiling
+CXX=clang++
 
 all:
-	$(CC) $(LDFLAGS) */*.cpp *.cpp $(CFLAGS) 
+	$(CXX) $(CXXFLAGS) */*.cpp *.cpp $(LDFLAGS) 
 
 debug:
-	$(CC) $(LDFLAGS) */*.cpp *.cpp $(CFLAGS) -O0 -g
+	$(CXX) $(CXXFLAGS) -O0 -g */*.cpp *.cpp $(LDFLAGS) 

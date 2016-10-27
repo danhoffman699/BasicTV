@@ -1,5 +1,0 @@
-#ifndef NET_SOCKET_H
-#define NET_SOCKET_H
-/*
-  net_socket_t: Manages network sockets
- */

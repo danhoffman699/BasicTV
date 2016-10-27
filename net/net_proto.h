@@ -1,6 +1,10 @@
+/*
+  net_proto.h: The entire networking protocol
+ */
+#include "net_const.h"
 #ifndef NET_PROTO_H
 #define NET_PROTO_H
-#include "id.h"
+#include "../id/id.h"
 #include "string"
 #include "SDL2/SDL_net.h"
 
@@ -18,16 +22,13 @@
   generated from the PGP 
  */
 
-#define NET_PEER_LIMIT 65536
 
 // max length of a IPv4 mapped IPv6 address plus one for a NULL
-#define NET_IP_MAX_SIZE 46
 
 struct net_peer_t{
 private:
-	TCPsocket socket = nullptr;
 	std::array<uint8_t, NET_IP_MAX_SIZE> ip = {{0}};
-	uint16_t port;
+	uint16_t port = 0;
 	std::array<uint8_t, BITCOIN_WALLET_LENGTH> bitcoin_wallet = {{0}};
 public:
 	/*
@@ -40,8 +41,9 @@ public:
 	  stored as one. It is stored in two variables and converted OTF to
 	  ip_addr to easily network peer information across the internet
 	 */
-	net_peer_t(TCPsocket, IPaddress);
+	net_peer_t();
 	~net_peer_t();
+	void set_ip_addr(IPaddress ip_addr_);
 };
 
 /*namespace net_proto{

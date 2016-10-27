@@ -13,6 +13,13 @@ pgp_cite_t::pgp_cite_t() : id(this, __FUNCTION__){
 		    ID_DATA_CACHE | ID_DATA_NOPGP);
 }
 
+pgp_cite_t::~pgp_cite_t(){
+}
+
+std::array<uint8_t, PGP_PUBKEY_SIZE> pgp_cite_t::get_pgp_pubkey(){
+	return pgp_pubkey;
+}
+
 void pgp_cite_t::add(std::string url){
 	if(url.size() > PGP_CITE_STR_SIZE){
 		throw std::runtime_error("URL too long for citation");
@@ -24,5 +31,32 @@ void pgp_cite_t::add(std::string url){
 	}
 }
 
-pgp_cite_t::~pgp_cite_t(){
+bool pgp::cmp::greater_than(std::array<uint8_t, PGP_PUBKEY_SIZE> a,
+			    std::array<uint8_t, PGP_PUBKEY_SIZE> b){
+	for(uint64_t i = PGP_PUBKEY_SIZE;i != ~(uint64_t)0;i--){
+		if(a[i] > b[i]){
+			return true;
+		}
+	}
+	return false;
+}
+
+bool pgp::cmp::less_than(std::array<uint8_t, PGP_PUBKEY_SIZE> a,
+			    std::array<uint8_t, PGP_PUBKEY_SIZE> b){
+	for(uint64_t i = PGP_PUBKEY_SIZE;i >= ~(uint64_t)0;i--){
+		if(a[i] < b[i]){
+			return true;
+		}
+	}
+	return false;
+}
+
+bool pgp::cmp::equal_to(std::array<uint8_t, PGP_PUBKEY_SIZE> a,
+			    std::array<uint8_t, PGP_PUBKEY_SIZE> b){
+	for(uint64_t i = PGP_PUBKEY_SIZE;i >= ~(uint64_t)0;i--){
+		if(a[i] != b[i]){
+			return false;
+		}
+	}
+	return true;
 }

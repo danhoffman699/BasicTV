@@ -26,3 +26,6 @@ public:
 	bool get_complete();
 };
 #endif
+
+#include "net_socket.h"
+#include "net_proto.h"

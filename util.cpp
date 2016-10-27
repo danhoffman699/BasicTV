@@ -3,7 +3,7 @@
 #include "file.h"
 #include "lock.h"
 #include "settings.h"
-#include "net.h"
+#include "net/net.h"
 
 int print_level = P_SPAM;
 
@@ -68,32 +68,35 @@ static std::string print_level_text(int level){
 	throw std::runtime_error("invalid print level");
 }
 
-lock_t print_lock;
+//lock_t print_lock;
 
 void print(std::string data, int level, const char *func){
-	LOCK_RUN(print_lock, [&](){
-			if(search_for_argv("--debug") != -1){
-				print_level = P_DEBUG;
-			}else if(search_for_argv("--spam") != -1){
-				print_level = P_SPAM;
-			}else if(argc != 0){
-				print_level = P_NOTICE; // sane minimum
-			}else{
-				print_level = P_SPAM; // initializers before init
-			}
-			if(level >= print_level){
-				std::string func_;
-				if(func != nullptr){
-					func_ = func;
-				}
-				std::cout << print_level_text(level) << " "
-					  << " " << data << std::endl;
-			}
-			if(level == P_CRIT){
-				std::cerr << "CRITICAL ERROR" << std::endl;
-				throw std::runtime_error(data);
-			}
-		}());
+	if(search_for_argv("--debug") != -1){
+		print_level = P_DEBUG;
+	}else if(search_for_argv("--spam") != -1){
+		print_level = P_SPAM;
+	}else if(argc != 0){
+		print_level = P_NOTICE; // sane minimum
+	}else{
+		print_level = P_SPAM; // initializers before init
+	}
+	if(level >= print_level){
+		std::string func_;
+		if(func != nullptr){
+			func_ = func;
+		}
+		std::cout << print_level_text(level) << " "
+			  << " " << data << std::endl;
+	}
+	if(level == P_CRIT){
+		std::cerr << "CRITICAL ERROR" << std::endl;
+		throw std::runtime_error(data);
+		// should probably do more here, any catch
+		// anywhere nullifies the critical status
+	}
+	if(level == P_ERR){
+		throw std::runtime_error(data);
+	}
 }
 
 /*
@@ -215,7 +218,7 @@ uint64_t array_func::add(void* array,
 	uint64_t byte_array_size = array_size*data_size;
 	// assume the type referenced in data_size is the same type used
 	// in the array
-	for(uint64_t i = array_size*data_size;i > 0;i -= data_size){
+	for(int64_t i = array_size*data_size;i >= 0;i -= data_size){
 		bool blank = true;
 		for(uint64_t byte = 0;byte < data_size-1;byte++){
 			if(byte_array[i+byte] != 0){
@@ -238,4 +241,15 @@ void throw_on_null(void* ptr){
 	if(ptr == nullptr){
 		throw std::runtime_error(__FUNCTION__);
 	}
+}
+
+std::default_random_engine generator;
+
+uint64_t true_rand(uint64_t min, uint64_t max){
+	if(min >= max){
+		throw std::runtime_error("min >= max");
+	}
+	std::uniform_int_distribution<uint64_t>
+		distribution(min, max);
+	return distribution(generator);
 }

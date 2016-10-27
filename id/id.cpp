@@ -1,7 +1,16 @@
 #include "id.h"
-#include "main.h"
-#include "util.h"
-#include "lock.h"
+#include "id_index.h"
+#include "../main.h"
+#include "../util.h"
+#include "../lock.h"
+#include "../net/net.h"
+#include "../net/net_socket.h"
+#include "../net/net_proto.h"
+#include "../tv/tv.h"
+#include "../tv/tv_frame.h"
+#include "../tv/tv_patch.h"
+#include "../tv/tv_channel.h"
+#include "../tv/tv_window.h"
 
 /*
   I'm not too concerned with threading if the entire idea
@@ -18,7 +27,7 @@ std::array<std::pair<std::string, std::vector<uint64_t> >, STD_ARRAY_SIZE> type_
 data_id_t::data_id_t(void *ptr_, std::string type_){
 	uint64_t entry = 0;
 	while(id == 0){
-		id = true_rand(0, pow(2, 64)-1);
+		id = true_rand(0, 0xFFFFFFFFFFFFFFFF);
 	}
 	if(id_list == nullptr){
 		id_list = new data_id_t*[ID_ARRAY_SIZE];
@@ -260,11 +269,12 @@ void data_id_t::pgp_decrypt_backlog(){
 	pgp_backlog.clear();
 }
 
-static data_id_t *id_fast_find(uint64_t id){
-	/*
-	  TODO: have some sorting algorithm down so lookup costs are lower
-	 */
-	return nullptr;
+std::array<uint8_t, PGP_PUBKEY_SIZE> data_id_t::get_owner_pubkey(){
+	pgp_cite_t* cite = (pgp_cite_t*)id_array::ptr_data(pgp_cite_id);
+	if(cite == nullptr){
+		print("pgp_cite_id is not valid", P_ERR);
+	}
+	return cite->get_pgp_pubkey();
 }
 
 static data_id_t *id_std_find(uint64_t id){
@@ -280,11 +290,7 @@ static data_id_t *id_std_find(uint64_t id){
 }
 
 data_id_t *id_array::ptr_id(uint64_t id){
-	data_id_t *retval = nullptr;
-	retval = id_fast_find(id);
-	if(retval == nullptr){
-		retval = id_std_find(id);
-	}
+	data_id_t *retval = id_std_find(id);
 	if(retval == nullptr){
 		throw std::runtime_error("ptr_id: retval == nullptr");
 	}
@@ -326,4 +332,48 @@ std::vector<uint64_t> id_array::all_of_type(std::string type){
 		}
 	}
 	return {};
+}
+
+#define CHECK_TYPE(a) if(type == #a){(new a)->id.import_data(data_);return;}
+
+void id_array::add_data(std::vector<uint8_t> data_){
+	uint64_t id = 0;
+	std::string type = "";
+	std::vector<uint64_t> tmp_type_vector = all_of_type(type);
+	for(uint64_t i = 0;i < tmp_type_vector.size();i++){
+		if(tmp_type_vector[i] == id){
+			ptr_id(tmp_type_vector[i])->import_data(data_);
+			return;
+		}
+	}
+	CHECK_TYPE(tv_channel_t);
+	CHECK_TYPE(tv_frame_t);
+	CHECK_TYPE(pgp_cite_t);
+	CHECK_TYPE(net_peer_t);
+	print("type isn't valid", P_ERR);
+}
+
+#undef CHECK_TYPE
+
+std::vector<uint64_t> id_array::sort_by_pgp_pubkey(std::vector<uint64_t> tmp){
+	bool changed = true;
+	while(changed){
+		changed = false;
+		for(uint64_t i = 1;i < tmp.size()-1;i++){
+			data_id_t *tmp_array[2] = {nullptr};
+			tmp_array[0] = id_array::ptr_id(tmp[i-1]);
+			tmp_array[1] = id_array::ptr_id(tmp[i]);
+			const bool pgp_greater_than =
+				pgp::cmp::greater_than(tmp_array[i-1]->get_owner_pubkey(),
+						       tmp_array[i]->get_owner_pubkey());
+			if(pgp_greater_than){
+				uint64_t tmp_ = tmp[i-1];
+				tmp[i-1] = tmp[i];
+				tmp[i] = tmp_;
+				changed = true;
+				break; // ?
+			}
+		}
+	}
+	return tmp;
 }

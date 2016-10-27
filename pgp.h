@@ -37,6 +37,26 @@ public:
 	pgp_cite_t();
 	~pgp_cite_t();
 	void add(std::string url);
+	std::array<uint8_t, PGP_PUBKEY_SIZE> get_pgp_pubkey();
+};
+
+/*
+  In reality, this only does RSA, and PGP is only used to signify
+  it is for ownership and because of a naming convention
+ */
+
+namespace pgp{
+	namespace cmp{
+		bool greater_than(std::array<uint8_t, PGP_PUBKEY_SIZE> a,
+				  std::array<uint8_t, PGP_PUBKEY_SIZE> b);
+		bool less_than(std::array<uint8_t, PGP_PUBKEY_SIZE> a,
+			       std::array<uint8_t, PGP_PUBKEY_SIZE> b);
+		bool equal_to(std::array<uint8_t, PGP_PUBKEY_SIZE> a,
+			      std::array<uint8_t, PGP_PUBKEY_SIZE> b);
+	}
+	namespace transcode{
+		
+	};
 };
 
 #endif

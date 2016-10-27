@@ -1,4 +1,4 @@
-#include "main.h" // STD_ARRAY_LENGTH
+#include "../main.h" // STD_ARRAY_LENGTH
 #ifndef ID_H
 #define ID_H
 #include "cstdint"
@@ -12,6 +12,14 @@
   pointers don't work over a network. This allows for easy
   transmission of multiple different structures reliant
   upon statically allocated data types.
+ */
+
+/*
+  TODO: possibly add PGP public key to ID requests to ensure
+  that intentionally malformed IDs for items that have left
+  most of the nodes' memory isn't confused for another version
+  of the data? Odds are, if we know one of the IDs, we should 
+  know the owner of the other one as well.
  */
 
 /*
@@ -93,6 +101,14 @@
 
 #define ID_ARRAY_SIZE ((64*1024*1024)/8)
 
+#define ID_SIZE 16
+
+/*
+  TODO: create a larger ID so an RSA fingerprint can be embedded
+  into the ID? Regardless, create a typedef for the IDs
+ */
+//typedef id_t std::array<uint8_t, ID_SIZE>;
+
 struct data_id_t{
 private:
 	uint64_t id = 0;
@@ -115,6 +131,8 @@ private:
 	std::vector<std::vector<uint8_t> > pgp_backlog;
 
 	std::array<void*, ID_PTR_LENGTH> data_ptr = {{nullptr}};
+	std::array<uint64_t, ID_PTR_LENGTH> data_ptr_upper_range = {{0}};
+	std::array<uint64_t, ID_PTR_LENGTH> data_ptr_lower_range = {{0}};
 	std::array<uint32_t, ID_PTR_LENGTH> data_size = {{0}};
 	/*
 	  Flags for the data tell us if it is compressed, encrypted, or
@@ -134,6 +152,7 @@ private:
 	  are defined lengths at initialization and aren't
 	  networked (or shouldn't be)
 	 */
+	// size of the data that was networked
 public:
 	data_id_t(void *ptr_, std::string type_);
 	~data_id_t();
@@ -150,7 +169,7 @@ public:
 	  the size of the ID is referring to just the array size, since the size
 	  is assumed with the pointer type (8 bytes, but maybe more later?)
 	 */
-	void add_data(void *ptr_, uint32_t size_, uint64_t flags = 0);
+	void add_data(void *ptr_, uint32_t size_,  uint64_t flags = 0);
 	void add_id(uint64_t *ptr_, uint32_t size_);
 	// export and import data
 	std::vector<uint8_t> export_data();
@@ -169,5 +188,7 @@ namespace id_array{
 	std::vector<uint64_t> all_of_type(std::string type);
 	data_id_t *ptr_id(uint64_t id);
 	void *ptr_data(uint64_t id);
+	void add_data(std::vector<uint8_t> data_);
+	std::vector<uint64_t> sort_by_pgp_pubkey(std::vector<uint64_t> tmp);
 };
 #endif

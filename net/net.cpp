@@ -4,9 +4,10 @@
   becomes stale after 30 seconds. If a newer version is needed, then stale_time
   can be changed at will
  */
+
 #include "net.h"
-#include "main.h"
-#include "util.h"
+#include "../main.h"
+#include "../util.h"
 
 static std::vector<net_cache_t> net_cache; // lock this
 

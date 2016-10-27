@@ -6,6 +6,7 @@
 #define STD_ARRAY_LENGTH 65536
 #define STD_ARRAY_SIZE STD_ARRAY_LENGTH
 #define PGP_PUBKEY_SIZE 8192
+#define BITCOIN_WALLET_LENGTH 36
 extern std::vector<void(*)()> function_vector;
 extern int argc;
 extern char **argv;

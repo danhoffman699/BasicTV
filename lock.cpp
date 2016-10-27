@@ -2,6 +2,11 @@
 #include "main.h"
 #include "lock.h"
 
+/*
+  locking system doesn't work right, and since this is a singlethreaded
+  program (ideally), then it doesn't make sense to use locks in the first
+  place. Fix this when there is a need.
+ */
 lock_t::lock_t(){
 }
 
@@ -16,6 +21,13 @@ void lock_t::lock(){
 	ss << std::this_thread::get_id();
 	ss >> thread_id;
 	const std::string thread_id_str = std::to_string(thread_id);
+	if(first_run){
+		std::cout << "[SPAM] First run of lock" << std::endl;
+		first_run = false;
+		mutex_lock.lock();
+		id = std::this_thread::get_id();
+		return;
+	}
 	if(prev_state){ // was locked, is currently locking
 		if(same_thread){
 			if(search_for_argv("--spam") != -1){

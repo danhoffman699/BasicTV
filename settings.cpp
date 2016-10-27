@@ -2,13 +2,22 @@
 #include "settings.h"
 #include "file.h"
 #include "util.h"
-#include "lock.h"
 
 static std::vector<std::pair<std::string, std::string> > settings_vector;
-static lock_t settings_lock;
+
+void settings::set_setting(std::string a, std::string b){
+	settings_vector.push_back(std::make_pair(a, b));
+}
 
 void settings::set_settings(std::string settings_file){
-	std::string cfg_file = file::read_file(settings_file);
+	std::string cfg_file;
+	try{
+		cfg_file = file::read_file(settings_file);
+	}catch(...){
+		print("cannot set settings file", P_WARN);
+		// isn't distributed in the GitHub
+		return;
+	}
 	std::stringstream ss(cfg_file);
 	std::string temp_str;
 	char setting[512];
@@ -49,10 +58,8 @@ void settings::set_settings(std::string settings_file){
 			print("importing external file", P_NOTICE);
 			set_settings(var);
 		}
-		LOCK_RUN(settings_lock, [](char *setting, char *var){
-				settings_vector.push_back(
-					std::make_pair(setting, var));
-			}(setting, var));
+		settings_vector.push_back(
+			std::make_pair(setting, var));
 	}
 }
 
@@ -65,18 +72,29 @@ std::string settings::get_setting(std::string setting){
 	std::string retval;
 	bool found = false;
 	print("requesting setting " + setting, P_SPAM);
-	LOCK_RUN(settings_lock, [&](){
-			for(unsigned int i = 0;i < settings_vector.size();i++){
-				if(settings_vector[i].first == setting){
-					retval = settings_vector[i].second;
-					found = true;
-					// don't break, later values can
-					// override previous values
-				}
-			}
-		}());
+	for(unsigned int i = 0;i < settings_vector.size();i++){
+		if(settings_vector[i].first == setting){
+			retval = settings_vector[i].second;
+			found = true;
+			// don't break, later values can
+			// override previous values
+		}
+	}
 	if(!found){
 		throw std::runtime_error("setting " + setting + " not found");
 	}
 	return retval;
+}
+
+void settings::set_default_setting(std::string setting, std::string value){
+	for(uint64_t i = 0;i < settings_vector.size();i++){
+		if(settings_vector[i].first == setting){
+			return;
+		}
+	}
+	settings_vector.push_back(std::make_pair(setting, value));
+}
+
+void settings_init(){
+	settings::set_settings("settings.cfg");
 }
