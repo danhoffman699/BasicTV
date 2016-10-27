@@ -25,7 +25,7 @@
 #include "../util.h"
 #include "../settings.h"
 #include "../file.h"
-#include "../id.h"
+#include "../id/id.h"
 #include "tv.h"
 #include "tv_channel.h"
 #include "tv_frame.h"

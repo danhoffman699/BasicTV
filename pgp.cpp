@@ -1,6 +1,6 @@
 #include "main.h"
 #include "util.h"
-#include "id.h"
+#include "id/id.h"
 #include "pgp.h"
 
 pgp_cite_t::pgp_cite_t() : id(this, __FUNCTION__){
