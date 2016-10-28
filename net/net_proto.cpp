@@ -46,7 +46,7 @@ static void net_proto_loop_accept_conn(net_socket_t *incoming_socket){
   than a test for net_socket_t
  */
 
-static void net_proto_loop_dummy_read(){
+/*static void net_proto_loop_dummy_read(){
 	std::vector<uint64_t> all_sockets = id_array::all_of_type("net_socket_t");
 	for(uint64_t i = 0;i < all_sockets.size();i++){
 		net_socket_t *socket_ = (net_socket_t*)id_array::ptr_data(all_sockets[i]);
@@ -66,6 +66,33 @@ static void net_proto_loop_dummy_read(){
 			}
 		}
 	}
+	}*/
+
+/*
+  Read all of the information from TCP sockets and update the data. Sanity 
+  checks (RSA fingerprint checking and decoding) are used to prevent any
+  shady dealing and forgery
+ */
+
+static void net_proto_loop_read_and_update(){
+	std::vector<uint64_t> all_sockets = id_array::all_of_type("net_socket_t");
+	for(uint64_t i = 0;i < all_sockets.size();i++){
+		net_socket_t *socket_ = (net_socket_t*)id_array::ptr_data(all_sockets[i]);
+		if(socket_ == nullptr){
+			print("socket is nullptr", P_ERR);
+			continue;
+		}
+		if(socket_->get_client_conn().first == ""){
+			// inbound
+			continue;
+		}
+		if(socket_->activity()){
+			print("detected activity on a socket", P_SPAM);
+			/*
+			  TODO: actually implement this
+			 */
+		}
+	}
 }
 
 static void net_proto_loop(){
@@ -76,10 +103,10 @@ static void net_proto_loop(){
 	if(incoming_socket == nullptr){
 		print("incoming_socket == nullptr", P_ERR);
 	}
-	//if(incoming_socket->activity()){
-		net_proto_loop_accept_conn(incoming_socket);
-		//}
-	net_proto_loop_dummy_read();
+	// no penalty for accepting on a non-active socket
+	net_proto_loop_accept_conn(incoming_socket);
+	net_proto_loop_read_and_update();
+	//net_proto_loop_dummy_read();
 }
 
 void net_proto_init(){

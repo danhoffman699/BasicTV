@@ -58,7 +58,7 @@ static void init(){
 static void test_socket(){
 	/*
 	  I cannot locally connect to this computer without using another IP
-	  address (breaking 4-tuple), so just test this with laptop
+	  address (breaking 4-tuple UUID), so just test this with laptop
 	 */
 	net_socket_t *test_socket_ = new net_socket_t;
 	std::string ip;

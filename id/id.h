@@ -6,6 +6,7 @@
 #include "array"
 #include "vector"
 #include "random"
+#include "../types.h"
 
 /*
   Custom data types reference each other with IDs since
@@ -23,6 +24,14 @@
  */
 
 /*
+  Since the size of data is known, and functions exist that
+  can easily convert all types to NBO, all data is converted
+  to NBO, converting not only the bytes, but the order as
+  defined in the data size when the variable was added to 
+  the ID API. This shouldn't all be abstracted away so there
+  is no interference between the NBO conversion and the local
+  representation of the data.
+
   Networking standard:
   ID is the first 8 bytes
   Next 24 bytes are the name of the data type, padded

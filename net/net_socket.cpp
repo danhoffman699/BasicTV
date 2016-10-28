@@ -225,17 +225,30 @@ void net_socket_t::disconnect(){
   only used on accepting incoming connections
  */
 
-void net_socket_t::set_tcp_socket(TCPsocket socket_){
-	socket = socket_;
-	IPaddress tmp_ip;
-	tmp_ip = *SDLNet_TCP_GetPeerAddress(socket);
-	const char *ip_addr_tmp = SDLNet_ResolveIP(&tmp_ip);
+std::pair<std::string, uint16_t> net_socket_t::get_conn_from_socket(){
+	std::pair<std::string, uint16_t> retval;
+	if(socket == nullptr){
+		print("socket is nullptr", P_ERR);
+		return retval;
+	}
+	IPaddress *tmp_ip = SDLNet_TCP_GetPeerAddress(socket);
+	if(tmp_ip == nullptr){
+		print("ip is not valid", P_ERR);
+		return retval;
+	}
+	const char *ip_addr_tmp = SDLNet_ResolveIP(tmp_ip);
 	if(ip_addr_tmp == nullptr){
 		print("cannot read IP", P_ERR);
-		return;
+		return retval;
 	}
-	client_conn.first = ip_addr_tmp;
-	client_conn.second = tmp_ip.port;
+	retval.first = ip_addr_tmp;
+	retval.second = tmp_ip->port;
+	return retval;
+}
+
+void net_socket_t::set_tcp_socket(TCPsocket socket_){
+	socket = socket_;
+	client_conn = get_conn_from_socket();
 }
 
 TCPsocket net_socket_t::get_tcp_socket(){
