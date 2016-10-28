@@ -112,7 +112,7 @@
 struct data_id_t{
 private:
 	uint64_t id = 0;
-	std::string type;
+	std::array<uint8_t, 16> type;
 	void *ptr = nullptr;
 	/*
 	  If a pgp_cite_t item has not come yet, then

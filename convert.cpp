@@ -58,3 +58,18 @@ std::vector<uint8_t> convert::nbo::from(std::string data){
 	return retval;
 }
 
+std::array<uint8_t, 16> convert::array::type::to(std::string data){
+	std::array<uint8_t, 16> retval = {{0}};
+	for(uint64_t i = 0;i < data.size();i++){
+		retval[i] = data[i];
+	}
+	return retval;
+}
+
+std::string convert::array::type::from(std::array<uint8_t, 16> data){
+	std::string retval;
+	for(uint64_t i = 0;i < data.size();i++){
+		retval += (char)(data[i]);
+	}
+	return retval;
+}

@@ -23,7 +23,7 @@
 // moving it over to an std::vector
 static data_id_t **id_list = nullptr;
 
-std::array<std::pair<std::string, std::vector<uint64_t> >, STD_ARRAY_SIZE> type_vector;
+std::array<std::pair<std::array<uint8_t, 16>, std::vector<uint64_t> >, STD_ARRAY_SIZE> type_vector;
 
 data_id_t::data_id_t(void *ptr_, std::string type_){
 	uint64_t entry = 0;
@@ -43,7 +43,7 @@ data_id_t::data_id_t(void *ptr_, std::string type_){
 			break;
 		}
 	}
-	type = type_;
+	type = convert::array::type::to(type_);
 	ptr = ptr_;
 	id_list[entry] = this;
 	bool type_cached = false;
@@ -57,7 +57,7 @@ data_id_t::data_id_t(void *ptr_, std::string type_){
 	// first of type created
 	if(!type_cached){
 		for(uint64_t i = 0;i < STD_ARRAY_LENGTH;i++){
-			if(type_vector[i].first == ""){
+			if(type_vector[i].second.size() == 0){
 				type_vector[i].first = type;
 				type_vector[i].second.push_back(id);
 				type_cached = true;
@@ -108,7 +108,7 @@ uint64_t data_id_t::get_id(){
 }
 
 std::string data_id_t::get_type(){
-	return type;
+	return convert::array::type::from(type);
 }
 
 void *data_id_t::get_ptr(){
@@ -167,8 +167,8 @@ uint64_t data_id_t::get_data_index_size(){
   Pulled from id.h
 
   ID is the first 8 bytes
-  Next 24 bytes are the name of the data type, padded
-  with zeroes (null).
+  Next 16 bytes are the name of the data type, padded
+  with zeroes (artificially low to force short types).
 
   The rest is formatted in the following blocks
   2 byte for the entry in the data_ptr, should be enough
@@ -305,20 +305,25 @@ bool id_array::exists_in_list(uint64_t id,
  */
 
 std::vector<uint64_t> id_array::all_of_type(std::string type){
+	std::array<uint8_t, 16> type_tmp = convert::array::type::to(type);
 	for(uint64_t i = 0;i < STD_ARRAY_SIZE;i++){
-		if(type_vector[i].first == type){
+		if(type_vector[i].first == type_tmp){
 			return type_vector[i].second;
 		}
 	}
 	return {};
 }
 
-#define CHECK_TYPE(a) if(type == #a){(new a)->id.import_data(data_);return;}
+#define CHECK_TYPE(a) if(convert::array::type::from(type) == #a){(new a)->id.import_data(data_);return;}
 
 void id_array::add_data(std::vector<uint8_t> data_){
 	uint64_t id = 0;
-	std::string type = "";
-	std::vector<uint64_t> tmp_type_vector = all_of_type(type);
+	std::array<uint8_t, 16> type;
+	type.fill(0);
+	/*
+	  TODO: complete this
+	 */
+	std::vector<uint64_t> tmp_type_vector = all_of_type(convert::array::type::from(type));
 	for(uint64_t i = 0;i < tmp_type_vector.size();i++){
 		if(tmp_type_vector[i] == id){
 			ptr_id(tmp_type_vector[i])->import_data(data_);

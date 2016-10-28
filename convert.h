@@ -2,6 +2,7 @@
 #define CONVERT_H
 #include "vector"
 #include "string"
+#include "array"
 // TODO: implement some builtin functions for VC++ and other compilers
 // before opting for the slowest method
 
@@ -45,6 +46,12 @@ namespace convert{
 		std::vector<uint8_t> to(std::string);
 		std::vector<uint8_t> from(std::vector<uint8_t>);
 		std::vector<uint8_t> from(std::string);
+	}
+	namespace array{
+		namespace type{
+			std::array<uint8_t, 16> to(std::string);
+			std::string from(std::array<uint8_t, 16>);
+		}
 	}
 };
 
