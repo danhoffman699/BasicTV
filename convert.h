@@ -39,12 +39,12 @@
 #define NBO_TO_NATIVE_64(a) (a)
 #endif
 
-
-
 namespace convert{
 	namespace nbo{
 		std::vector<uint8_t> to(std::vector<uint8_t>);
 		std::vector<uint8_t> to(std::string);
+		std::vector<uint8_t> from(std::vector<uint8_t>);
+		std::vector<uint8_t> from(std::string);
 	}
 };
 

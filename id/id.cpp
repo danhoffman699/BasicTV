@@ -11,6 +11,7 @@
 #include "../tv/tv_patch.h"
 #include "../tv/tv_channel.h"
 #include "../tv/tv_window.h"
+#include "../convert.h"
 
 /*
   I'm not too concerned with threading if the entire idea
@@ -152,29 +153,6 @@ uint64_t data_id_t::get_data_index_size(){
 	return 0;
 }
 
-static void append_to_data(std::string str,
-			   uint64_t padding,
-			   std::vector<uint8_t> *data){
-	if(str.size() > padding){
-		PRINT("str.size() > padding", P_CRIT);
-	}
-	for(uint64_t i = 0;i < padding;i++){
-		if(i < str.size()){
-			data->push_back(str[i]);
-		}else{
-			data->push_back(0);
-		}
-	}
-}
-
-static void append_to_data(void* raw,
-			   uint64_t len,
-			   std::vector<uint8_t> *data){
-	for(uint64_t i = 0;i < len;i++){
-		data->push_back(((uint8_t*)raw)[i]);
-	}
-}
-
 /*static std::vector<uint8_t> pull_data(std::vector<uint8_t> array,
 				      uint8_t *array_to,
 				      uint64_t len){
@@ -203,15 +181,21 @@ static void append_to_data(void* raw,
 
 std::vector<uint8_t> data_id_t::export_data(){
 	std::vector<uint8_t> retval;
-	append_to_data(&id, 8, &retval);
-	append_to_data(type, 24, &retval);
-	append_to_data(&pgp_cite_id, 8, &retval);
+	const uint64_t nbo_id = NBO_64(id);
+	const std::vector<uint8_t> nbo_type =
+		convert::nbo::to(
+			std::vector<uint8_t>(type.begin(), type.end()));
+	const uint64_t nbo_pgp_cite_id = NBO_64(pgp_cite_id);
+	retval.insert(retval.end(), ((uint8_t*)&nbo_id), ((uint8_t*)&nbo_id)+8);
+	retval.insert(retval.end(), nbo_type.begin(), nbo_type.end());
+	retval.insert(retval.end(), ((uint8_t*)nbo_pgp_cite_id), ((uint8_t*)nbo_pgp_cite_id)+8);
 	for(uint16_t i = 0;i != 0xFFFF;i++){
 		if(data_ptr[i] == nullptr){
 			continue;
 			// should I just exit here?
 		}
-		append_to_data(&i, 2, &retval);
+		const uint16_t nbo_i = NBO_16(i);
+		retval.insert(retval.end(), ((uint8_t*)&nbo_i), ((uint8_t*)&nbo_i)+2);
 		/*
 		  the entire array is guaranteed to be blanked if any part
 		  of the entry is used, so read from the back to the front
@@ -228,9 +212,21 @@ std::vector<uint8_t> data_id_t::export_data(){
 				break;
 			}
 		}
-		append_to_data(&data_entry_size, 4, &retval);
-		append_to_data(data_ptr[i], data_entry_size, &retval);
-	}
+		const uint32_t nbo_data_entry_size = NBO_32(data_entry_size);
+		retval.insert(
+			retval.end(),
+			((uint8_t*)&nbo_data_entry_size),
+			((uint8_t*)&nbo_data_entry_size)+4);
+		std::vector<uint8_t> nbo_data_ptr =
+			convert::nbo::to(
+				std::vector<uint8_t>(
+					(uint8_t*)&data_ptr[i],
+					((uint8_t*)&data_ptr[i])+data_entry_size));
+		retval.insert(
+			retval.end(),
+			nbo_data_ptr.begin(),
+			nbo_data_ptr.end());
+			}
 	return retval;
 }
 
@@ -240,23 +236,6 @@ void data_id_t::import_data(std::vector<uint8_t> data){
 	  sink time into maintaining and building two converse functions
 	 */
 	throw std::runtime_error("import_data hasn't been made yet");
-	/*
-	uint64_t id_tmp = 0;
-	std::array<uint8_t, 24> type_tmp = {0};
-	uint64_t pgp_cite_id_tmp = 0;
-	pull_data(data, 0, &id_tmp, 8);
-	pull_data(data, 8, &type_tmp, 24);
-	pull_data(data, 32, &pgp_cite_id_tmp, 8);
-	if(id_tmp != id){
-		throw std::runtime_error("invalid ID matchup");
-	}
-	if(memcmp(&(type_tmp[0]), type.c_str()) != 0){
-		throw std::runtime_error("invalid type matchup");
-	}
-	if(id_array::exists(pgp_cite_id_tmp) == false){
-		pgp_unverified.push_back(data);
-	}
-	*/
 }
 
 void data_id_t::pgp_decrypt_backlog(){

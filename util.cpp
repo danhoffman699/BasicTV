@@ -218,7 +218,7 @@ uint64_t array_func::add(void* array,
 	uint64_t byte_array_size = array_size*data_size;
 	// assume the type referenced in data_size is the same type used
 	// in the array
-	for(uint64_t i = array_size*data_size;i >= 0;i -= data_size){
+	for(int64_t i = array_size*data_size;i >= 0;i -= data_size){
 		bool blank = true;
 		for(uint64_t byte = 0;byte < data_size-1;byte++){
 			if(byte_array[i+byte] != 0){
