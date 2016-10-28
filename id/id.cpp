@@ -11,7 +11,6 @@
 #include "../tv/tv_patch.h"
 #include "../tv/tv_channel.h"
 #include "../tv/tv_window.h"
-#include "../convert.h"
 
 /*
   I'm not too concerned with threading if the entire idea
@@ -156,23 +155,23 @@ uint64_t data_id_t::get_data_index_size(){
 static void append_to_data(std::string str,
 			   uint64_t padding,
 			   std::vector<uint8_t> *data){
-	std::vector<uint8_t> nbo_vector = convert::nbo::to(str);
-	if(padding > nbo_vector.size()){
-		nbo_vector.insert(nbo_vector.end(), padding-nbo_vector.size(), 0);
-	}else if(padding < nbo_vector.size()){
-		print("data to use is larger than the padding", P_ERR);
-		// should never actually happen
+	if(str.size() > padding){
+		PRINT("str.size() > padding", P_CRIT);
 	}
 	for(uint64_t i = 0;i < padding;i++){
-		(*data)[i] = nbo_vector[i];
+		if(i < str.size()){
+			data->push_back(str[i]);
+		}else{
+			data->push_back(0);
+		}
 	}
 }
 
 static void append_to_data(void* raw,
 			   uint64_t len,
 			   std::vector<uint8_t> *data){
-	for(uint64_t i = len;i != ~(uint64_t)0;i++){
-		data->push_back(NBO_8(((uint8_t*)raw)[i]));
+	for(uint64_t i = 0;i < len;i++){
+		data->push_back(((uint8_t*)raw)[i]);
 	}
 }
 

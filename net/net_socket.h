@@ -62,7 +62,6 @@ public:
 	void disable_socks();
 	void set_tcp_socket(TCPsocket);
 	TCPsocket get_tcp_socket();
-	std::pair<std::string, uint16_t> get_conn_from_socket();
 	std::pair<std::string, uint16_t> get_client_conn();
 	std::pair<std::string, uint16_t> get_socks_conn();
 	bool activity();
