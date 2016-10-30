@@ -16,15 +16,22 @@
 
 struct tv_channel_t{
 private:
-	std::array<uint8_t, PGP_PUBKEY_SIZE> pubkey = {{0}};
-	std::array<uint64_t, TV_FRAME_RETAIN_SIZE> frame_list_id = {{0}};
+	/*
+	  Any frame ID will be valid here, but I would imagine opting
+	  for the lowest frame would be the best option (increases
+	  networkability, and prevents people from having to download
+	  one frame to get the linked list for the desired frame on
+	  a metered connection). The planned behavior is the lowest 
+	  quality frame.
+	 */
+	uint64_t latest_frame_id = 0;
+	// TODO: actually implement a TV Guide style system
+	uint64_t latest_guide_id = 0;
 	uint64_t status = 0;
 public:
 	data_id_t id;
 	tv_channel_t();
 	~tv_channel_t();
-	uint64_t get_frame_id(uint64_t backstep);
-	void set_frame_id(uint64_t id, uint64_t backstep);
 	bool is_streaming();
 	bool is_audio();
 	bool is_video();

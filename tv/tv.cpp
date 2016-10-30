@@ -50,8 +50,8 @@ void tv_init(){
 
   flags:
   TV_CHAN_STREAMING: only use channels that are currently streaming. 
-  Streaming is a very broad definition, but
-  (set in the settings.cfg file, which hasn't been set up yet).
+  Streaming is a very broad definition, but should be an independent
+  variable inside of the tv_channel_t type
   TV_CHAN_NO_AUDIO: only video only streams
   TV_CHAN_NO_VIDEO: only audio only streams
 */

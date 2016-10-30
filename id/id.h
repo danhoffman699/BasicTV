@@ -23,6 +23,13 @@
  */
 
 /*
+  TODO: order reading in such a way as to allow 64-bit integers
+  to be networked with the smallest amount of data possible (no
+  zeroes at the beginning). Make this seamless so it can act as 
+  an all around performance boost versys a pedantic little one
+ */
+
+/*
   Networking standard:
   ID is the first 8 bytes
   Next 24 bytes are the name of the data type, padded
@@ -109,10 +116,16 @@
  */
 //typedef id_t std::array<uint8_t, ID_SIZE>;
 
+#define ID_LL_WIDTH 3
+#define ID_LL_HEIGHT 16
+
+#define TYPE_LENGTH 32 // standard length for C++ types7
+
 struct data_id_t{
 private:
+	// half UUID, half RSA fingerprint (for verification)
 	uint64_t id = 0;
-	std::array<uint8_t, 16> type;
+       	std::array<uint8_t, TYPE_LENGTH> type;
 	void *ptr = nullptr;
 	/*
 	  If a pgp_cite_t item has not come yet, then
@@ -152,7 +165,25 @@ private:
 	  are defined lengths at initialization and aren't
 	  networked (or shouldn't be)
 	 */
-	// size of the data that was networked
+	/*
+	  Standardized linked list system (IDs). This can exist in up to two 
+	  dimensions. The only current case where two dimensions is used
+	  is with tv_frame_t (one for time, the other for quality). Other
+	  cases for the 1D would be a TV Guide style system, along with
+	  any other streaming system (tv_channel_t doesn't handle the streaming,
+	  it just handles the metadata and one ID per sequenceable item (TV
+	  Guide, video & audio stream, other metadata, etc.). This can also
+	  be used for requesting large sums of data. The only information that
+	  would need to be sent across would be an ID to a local version, and
+	  the number of entires forwards/backwards that should be sent back.
+
+	  TODO: create a standardized version of querying for data using
+	  the linked list system (as specified above).
+	 */
+	std::array<uint64_t, ID_LL_WIDTH*ID_LL_HEIGHT> linked_list = {{0}};
+	void init_list_all_data();
+	void init_gen_list_id();
+	void init_type_cache();
 public:
 	data_id_t(void *ptr_, std::string type_);
 	~data_id_t();

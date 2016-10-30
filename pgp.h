@@ -21,6 +21,13 @@
   will fare
 */
 
+struct pgp_priv_key_{
+private:
+	std::array<uint8_t, 512> privkey = {{0}};
+	std::array<uint8_t, 512> pubkey = {{0}};
+public:
+};
+
 struct pgp_cite_t{
 private:
 /*	

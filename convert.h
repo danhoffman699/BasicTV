@@ -40,6 +40,10 @@
 #define NBO_TO_NATIVE_64(a) (a)
 #endif
 
+// mostly for time, but add the other ones
+#define MILLI_PREFIX (0.001)
+#define MICRO_PREFIX (0.000001)
+
 namespace convert{
 	namespace nbo{
 		std::vector<uint8_t> to(std::vector<uint8_t>);
@@ -49,8 +53,8 @@ namespace convert{
 	}
 	namespace array{
 		namespace type{
-			std::array<uint8_t, 16> to(std::string);
-			std::string from(std::array<uint8_t, 16>);
+			std::array<uint8_t, 32> to(std::string);
+			std::string from(std::array<uint8_t, 32>);
 		}
 	}
 };

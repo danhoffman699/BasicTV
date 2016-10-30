@@ -23,53 +23,63 @@
 // moving it over to an std::vector
 static data_id_t **id_list = nullptr;
 
-std::array<std::pair<std::array<uint8_t, 16>, std::vector<uint64_t> >, STD_ARRAY_SIZE> type_vector;
+std::array<std::pair<std::array<uint8_t, TYPE_LENGTH>, std::vector<uint64_t> >, STD_ARRAY_SIZE> type_vector;
 
-data_id_t::data_id_t(void *ptr_, std::string type_){
-	uint64_t entry = 0;
+void data_id_t::init_list_all_data(){
+	add_data(&id, sizeof(id));
+	add_id(&id, 1);
+	add_data(&(linked_list[0]), ID_LL_WIDTH*ID_LL_HEIGHT);
+}
+
+void data_id_t::init_gen_list_id(){
 	while(id == 0){
 		id = true_rand(0, 0xFFFFFFFFFFFFFFFF);
-	}
+	} // prevents "random" returning zero
 	if(id_list == nullptr){
 		id_list = new data_id_t*[ID_ARRAY_SIZE];
 		memset(id_list, 0, sizeof(data_id_t*)*ID_ARRAY_SIZE);
-		entry = 0;
-	}else{
-		for(uint64_t i = 0;i < ID_ARRAY_SIZE;i++){
-			if(id_list[i] != nullptr){
-				continue;
-			}
-			entry = i;
-			break;
+	}
+	for(uint64_t i = 0;i < ID_ARRAY_SIZE;i++){
+		if(id_list[i] == nullptr){
+			id_list[i] = this;
 		}
 	}
-	type = convert::array::type::to(type_);
-	ptr = ptr_;
-	id_list[entry] = this;
+}
+
+void data_id_t::init_type_cache(){
 	bool type_cached = false;
 	for(uint64_t i = 0;i < STD_ARRAY_LENGTH;i++){
 		if(type_vector[i].first == type){
+			type_vector[i].second.push_back(id);
+			return;
+		}
+	}
+	// first of type created
+	for(uint64_t i = 0;i < STD_ARRAY_LENGTH;i++){
+		if(type_vector[i].second.size() == 0){
+			type_vector[i].first = type;
 			type_vector[i].second.push_back(id);
 			type_cached = true;
 			break;
 		}
 	}
-	// first of type created
-	if(!type_cached){
-		for(uint64_t i = 0;i < STD_ARRAY_LENGTH;i++){
-			if(type_vector[i].second.size() == 0){
-				type_vector[i].first = type;
-				type_vector[i].second.push_back(id);
-				type_cached = true;
-				break;
-			}
-		}
-	}
-	// probably exceed 64K types, should never happen
-	if(!type_cached){
-		print("unable to add type to cache, 64K?", P_ERR);
-		// shouldn't happen, but add code to cope with this?
-	}
+	/*
+	  The type should never be changed, and there is no code implemented
+	  or planned to change that, so this can't be an attack vector
+	 */
+	print("unable to add type to cache, 64K?", P_ERR);
+}
+
+data_id_t::data_id_t(void *ptr_, std::string type_){
+	// store all data in contiguous containers, avoid
+	// std::string and std::vector. Use std::array for
+	// raw data, strings, and lists of items. Also forces
+	// a defined maximum to everything
+	type = convert::array::type::to(type_);
+	ptr = ptr_;
+	init_gen_list_id();
+	init_list_all_data();
+	init_type_cache();
 }
 
 data_id_t::~data_id_t(){
@@ -167,8 +177,10 @@ uint64_t data_id_t::get_data_index_size(){
   Pulled from id.h
 
   ID is the first 8 bytes
-  Next 16 bytes are the name of the data type, padded
+  Next TYPE_LENGTH (32) bytes are the name of the data type, padded
   with zeroes (artificially low to force short types).
+
+  NOTE: TYPE_LENGTH shouldn't change
 
   The rest is formatted in the following blocks
   2 byte for the entry in the data_ptr, should be enough
@@ -305,7 +317,7 @@ bool id_array::exists_in_list(uint64_t id,
  */
 
 std::vector<uint64_t> id_array::all_of_type(std::string type){
-	std::array<uint8_t, 16> type_tmp = convert::array::type::to(type);
+	std::array<uint8_t, TYPE_LENGTH> type_tmp = convert::array::type::to(type);
 	for(uint64_t i = 0;i < STD_ARRAY_SIZE;i++){
 		if(type_vector[i].first == type_tmp){
 			return type_vector[i].second;
@@ -318,7 +330,7 @@ std::vector<uint64_t> id_array::all_of_type(std::string type){
 
 void id_array::add_data(std::vector<uint8_t> data_){
 	uint64_t id = 0;
-	std::array<uint8_t, 16> type;
+	std::array<uint8_t, TYPE_LENGTH> type;
 	type.fill(0);
 	/*
 	  TODO: complete this
