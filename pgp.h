@@ -8,6 +8,9 @@
   I have pretty large concerns over the speed of decoding this information
   both on the fly and securely with a Raspberry Pi (non-dual-core).
  */
+// 4096-bit sounds nice
+#define PGP_PRIVKEY_SIZE 512
+#define PGP_PUBKEY_SIZE 512
 
 #define PGP_CITE_STR_SIZE 256
 #define PGP_CITE_SIZE 16
@@ -21,11 +24,14 @@
   will fare
 */
 
-struct pgp_priv_key_{
+struct pgp_priv_key_t{
 private:
 	std::array<uint8_t, 512> privkey = {{0}};
 	std::array<uint8_t, 512> pubkey = {{0}};
 public:
+	data_id_t id;
+	pgp_priv_key_t();
+	~pgp_priv_key_t();
 };
 
 struct pgp_cite_t{
@@ -54,6 +60,9 @@ public:
 
 namespace pgp{
 	namespace cmp{
+		bool greater_than(uint64_t a, uint64_t b);
+		bool less_than(uint64_t a, uint64_t b);
+		bool equal_to(uint64_t a, uint64_t b);
 		bool greater_than(std::array<uint8_t, PGP_PUBKEY_SIZE> a,
 				  std::array<uint8_t, PGP_PUBKEY_SIZE> b);
 		bool less_than(std::array<uint8_t, PGP_PUBKEY_SIZE> a,

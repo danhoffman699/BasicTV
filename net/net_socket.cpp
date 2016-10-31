@@ -63,7 +63,7 @@ void net_socket_t::send(std::vector<uint8_t> data){
 	const int64_t sent_bytes = SDLNet_TCP_Send(socket, byte_ptr, data.size());
 	if(sent_bytes == -1){
 		print("server port mismatch", P_ERR);
-	}else if(sent_bytes > 0 && sent_bytes != data.size()){
+	}else if(sent_bytes > 0 && sent_bytes != (int64_t)data.size()){
 		print("socket has closed", P_SPAM);
 		disconnect();
 		// socket has closed
@@ -90,7 +90,7 @@ std::vector<uint8_t> net_socket_t::recv(uint64_t byte_count, uint64_t flags){
 	const int64_t recv_bytes =
 		SDLNet_TCP_Recv(socket, byte_ptr, byte_count);
 	if(recv_bytes > 0){
-		for(uint64_t i = 0;i < recv_bytes;i++){
+		for(uint64_t i = 0;i < (uint64_t)recv_bytes;i++){
 			retval.push_back(byte_ptr[i]);
 		}
 	}

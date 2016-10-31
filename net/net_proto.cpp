@@ -16,6 +16,7 @@ static uint64_t incoming_id = 0;
 net_peer_t::net_peer_t() : id(this, __FUNCTION__){
 	id.add_data(&(ip[0]), NET_IP_MAX_SIZE);
 	id.add_data(&(port), sizeof(port));
+	id.add_data(&(bitcoin_wallet[0]), BITCOIN_WALLET_LENGTH);
 }
 
 net_peer_t::~net_peer_t(){

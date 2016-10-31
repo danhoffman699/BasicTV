@@ -32,6 +32,8 @@ public:
 	data_id_t id;
 	tv_channel_t();
 	~tv_channel_t();
+	uint64_t get_latest_frame_id();
+	uint64_t get_latest_guide_id();
 	bool is_streaming();
 	bool is_audio();
 	bool is_video();

@@ -38,10 +38,6 @@
   50K, actually, because of other data, overhead, and redundancy).
  */
 
-#define TV_FRAME_LINKED_LIST_HEIGHT 16
-// shouldn't be changed, so don't worry about using this macro
-#define TV_FRAME_LINKED_LIST_WIDTH 3
-
 struct tv_frame_t{
 private:
 	// raw information, parsed using following information
@@ -51,14 +47,11 @@ private:
 	uint64_t channel_id = 0;
 	// frame_number, increment by one every time.
 	uint64_t frame_number = 0;
-	// linked list of frames, exact copies of one another (no centering)
-	std::array<std::array<uint64_t, TV_FRAME_LINKED_LIST_HEIGHT>, 3> frame_linked_list = {{{0}}};
 	// pretty basic settings
 	uint64_t x_res = 0;
 	uint64_t y_res = 0;
-	// in bytes
-	uint8_t color_depth = 0;
-	uint8_t amp_depth = 0; // amplitude, bit depth
+	uint8_t bpc = 0; // bits per color
+	uint8_t amp_depth = 0; // amplitude, bit depth (in bytes)
 	// in Hz
 	uint64_t sampling_freq = 0;
 	// time to live in microseconds (easier for dynamic refresh rate)
@@ -69,8 +62,9 @@ private:
 	uint64_t unix_timestamp = 0;
 	// second layer of encryption, used for "cacheing" data
 	uint64_t second_cite_id = 0;
-	// search linked list for ID, return place in array
-	uint64_t get_frame_linked_list_entry();
+	uint64_t convert_to_raw_pixel(std::array<uint64_t, 3> tmp, uint8_t);
+	void write_raw_pixel(uint64_t x, uint64_t y, uint64_t);
+	uint64_t read_raw_pixel(uint64_t x, uint64_t y);
 public:
 	data_id_t id;
 	tv_frame_t();
@@ -85,11 +79,11 @@ public:
 		   uint64_t sampling_rate_ = TV_FRAME_DEFAULT_SAMPLING_RATE,
 		   uint8_t channel_count_ = TV_FRAME_DEFAULT_CHANNEL_COUNT,
 		   uint8_t amp_depth_ = TV_FRAME_DEFAULT_AMP_DEPTH);
-	void set_pixel(uint64_t x, uint64_t y, uint64_t frame_number);
+	void set_pixel(uint64_t x, uint64_t y, std::array<uint64_t, 3> raw_colors, uint8_t raw_bpc);
 	uint64_t get_frame_number();
 	uint64_t get_frame_id_prev();
 	uint64_t get_frame_id_next();
-	uint64_t get_pixel(uint64_t x, uint64_t y);
+	uint64_t get_pixel(uint64_t x, uint64_t y, uint8_t bpc_tmp);
 	uint64_t get_x_res();
 	uint64_t get_y_res();
 	uint64_t get_timestamp();

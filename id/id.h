@@ -192,7 +192,8 @@ public:
 	uint64_t get_id();
 	std::string get_type();
 	void *get_ptr();
-	std::array<uint8_t, PGP_PUBKEY_SIZE> get_owner_pubkey();
+	//std::array<uint8_t, PGP_PUBKEY_SIZE> get_owner_pubkey();
+	uint64_t get_pgp_cite_id();
 	uint64_t get_data_index_size();
 	// pointer list modififers
 	/*
@@ -222,4 +223,10 @@ namespace id_array{
 	void add_data(std::vector<uint8_t> data_);
 	std::vector<uint64_t> sort_by_pgp_pubkey(std::vector<uint64_t> tmp);
 };
+
+// use this instead of the longer version for type checking to
+// prevent buffer overflows
+#define GET_PTR_DATA(id, type) (type*)(id_array::ptr_data(id, #type))
+#define GET_PTR_ID(id, type) (id_array::ptr_ptr(id, #type))
+
 #endif

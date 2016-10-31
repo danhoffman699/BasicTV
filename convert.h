@@ -44,6 +44,12 @@
 #define MILLI_PREFIX (0.001)
 #define MICRO_PREFIX (0.000001)
 
+#ifndef __ORDER_LITTLE_ENDIAN__
+#error "convert CROP_LSB functions to big-endian machines"
+#endif
+
+#define CROP_LSB(data, bits_out) (data & ~((~0) << bits_out))
+
 namespace convert{
 	namespace nbo{
 		std::vector<uint8_t> to(std::vector<uint8_t>);

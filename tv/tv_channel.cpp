@@ -10,6 +10,14 @@ tv_channel_t::tv_channel_t() : id(this, __FUNCTION__){
 tv_channel_t::~tv_channel_t(){
 }
 
+uint64_t tv_channel_t::get_latest_frame_id(){
+	return latest_frame_id;
+}
+
+uint64_t tv_channel_t::get_latest_guide_id(){
+	return latest_guide_id;
+}
+
 bool tv_channel_t::is_streaming(){
 	return !!(status & TV_CHAN_STREAMING);
 }

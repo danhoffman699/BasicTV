@@ -154,6 +154,10 @@ void data_id_t::add_id(uint64_t *ptr_, uint32_t size_){
 	}
 }
 
+uint64_t data_id_t::get_pgp_cite_id(){
+	return pgp_cite_id;
+}
+
 uint64_t data_id_t::get_data_index_size(){
 	for(uint64_t i = 0;i < ID_PTR_LENGTH;i++){
 		if(data_ptr[i] == NULL){
@@ -260,14 +264,6 @@ void data_id_t::pgp_decrypt_backlog(){
 	pgp_backlog.clear();
 }
 
-std::array<uint8_t, PGP_PUBKEY_SIZE> data_id_t::get_owner_pubkey(){
-	pgp_cite_t* cite = (pgp_cite_t*)id_array::ptr_data(pgp_cite_id);
-	if(cite == nullptr){
-		print("pgp_cite_id is not valid", P_ERR);
-	}
-	return cite->get_pgp_pubkey();
-}
-
 static data_id_t *id_std_find(uint64_t id){
 	for(uint64_t i = 0;i < ID_ARRAY_SIZE;i++){
 		if(id_list[i] == nullptr){
@@ -360,8 +356,8 @@ std::vector<uint64_t> id_array::sort_by_pgp_pubkey(std::vector<uint64_t> tmp){
 			tmp_array[0] = id_array::ptr_id(tmp[i-1]);
 			tmp_array[1] = id_array::ptr_id(tmp[i]);
 			const bool pgp_greater_than =
-				pgp::cmp::greater_than(tmp_array[i-1]->get_owner_pubkey(),
-						       tmp_array[i]->get_owner_pubkey());
+				pgp::cmp::greater_than(tmp_array[i-1]->get_pgp_cite_id(),
+						       tmp_array[i]->get_pgp_cite_id());
 			if(pgp_greater_than){
 				uint64_t tmp_ = tmp[i-1];
 				tmp[i-1] = tmp[i];

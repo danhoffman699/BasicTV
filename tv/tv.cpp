@@ -37,6 +37,31 @@
   an internal list of all types should be made to speed up the run time
  */
 
+static void tv_render_all(){
+	std::vector<uint64_t> all_windows =
+		id_array::all_of_type("tv_window_t");
+	for(uint64_t i = 0;i < all_windows.size();i++){
+		tv_window_t *window =
+			(tv_window_t*)id_array::ptr_data(all_windows[i]);
+		if(window == nullptr){
+			print("window is nullptr", P_ERR);
+			continue;
+		}
+		tv_channel_t *channel =
+			(tv_channel_t*)id_array::ptr_data(window->get_channel_id());
+		if(channel == nullptr){
+			print("channel is nullptr", P_ERR);
+			continue;
+		}
+		tv_frame_t *frame =
+			(tv_frame_t*)id_array::ptr_data(channel->get_latest_frame_id());
+		if(frame == nullptr){
+			print("frame is nullptr", P_ERR);
+		}
+		
+	}
+}
+
 void tv_loop(){
 }
 
@@ -94,9 +119,28 @@ uint64_t tv::chan::count(uint64_t flags){
 */
 
 uint64_t tv::chan::next(uint64_t id, uint64_t flags){
+	std::vector<uint64_t> all_channels =
+		id_array::all_of_type("tv_channel_t");
+	for(uint64_t i = 0;i < all_channels.size();i++){
+		tv_channel_t *channel = (tv_channel_t*)id_array::ptr_data(all_channels[i]);
+		if(channel == nullptr){
+			continue;
+		}
+		const bool streaming =
+			channel->is_streaming() == (flags & TV_CHAN_STREAMING);
+		const bool audio =
+			(!channel->is_audio()) == (flags & TV_CHAN_NO_AUDIO);
+		const bool video =
+			(!channel->is_video()) == (flags & TV_CHAN_NO_VIDEO);
+		// checks for matches, not actual true statements
+		if(!(streaming && audio && video)){
+			all_channels.erase(all_channels.begin()+i);
+			i--;
+		}
+	}
 	const std::vector<uint64_t> pgp_sorted =
 		id_array::sort_by_pgp_pubkey(
-			id_array::all_of_type("tv_channel_t"));
+		        all_channels);
 	for(uint64_t i = 0;i < pgp_sorted.size();i++){
 		if(pgp_sorted[i] == id){
 			if(i != pgp_sorted.size()-2){
@@ -108,9 +152,28 @@ uint64_t tv::chan::next(uint64_t id, uint64_t flags){
 }
 
 uint64_t tv::chan::prev(uint64_t id, uint64_t flags){
+	std::vector<uint64_t> all_channels =
+		id_array::all_of_type("tv_channel_t");
+	for(uint64_t i = 0;i < all_channels.size();i++){
+		tv_channel_t *channel = (tv_channel_t*)id_array::ptr_data(all_channels[i]);
+		if(channel == nullptr){
+			continue;
+		}
+		const bool streaming =
+			channel->is_streaming() == (flags & TV_CHAN_STREAMING);
+		const bool audio =
+			(!channel->is_audio()) == (flags & TV_CHAN_NO_AUDIO);
+		const bool video =
+			(!channel->is_video()) == (flags & TV_CHAN_NO_VIDEO);
+		// checks for matches, not actual true statements
+		if(!(streaming && audio && video)){
+			all_channels.erase(all_channels.begin()+i);
+			i--;
+		}
+	}
 	const std::vector<uint64_t> pgp_sorted =
 		id_array::sort_by_pgp_pubkey(
-			id_array::all_of_type("tv_channel_t"));
+		        all_channels);
 	for(uint64_t i = 0;i < pgp_sorted.size();i++){
 		if(pgp_sorted[i] == id){
 			if(i != 1){

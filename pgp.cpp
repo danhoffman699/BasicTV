@@ -31,6 +31,22 @@ void pgp_cite_t::add(std::string url){
 	}
 }
 
+bool pgp::cmp::greater_than(uint64_t a, uint64_t b){
+	data_id_t *tmp[2] = {{nullptr}};
+	tmp[0] = id_array::ptr_id(a);
+	tmp[1] = id_array::ptr_id(b);
+	if(tmp[0] == nullptr || tmp[1] == nullptr){
+		print("can't compare invalid IDs", P_ERR);
+	}
+	pgp_cite_t *tmp_[2] = {{nullptr}};
+	tmp_[0] = (pgp_cite_t*)id_array::ptr_data(tmp[0]->get_pgp_cite_id());
+	tmp_[1] = (pgp_cite_t*)id_array::ptr_data(tmp[1]->get_pgp_cite_id());
+	if(tmp_[0] == nullptr || tmp_[1] == nullptr){
+		print("can't compare invalid pgp_cite_ids", P_ERR);
+	}
+	return greater_than(tmp_[0]->get_pgp_pubkey(), tmp_[1]->get_pgp_pubkey());
+}
+
 bool pgp::cmp::greater_than(std::array<uint8_t, PGP_PUBKEY_SIZE> a,
 			    std::array<uint8_t, PGP_PUBKEY_SIZE> b){
 	for(uint64_t i = PGP_PUBKEY_SIZE;i != ~(uint64_t)0;i--){
@@ -60,3 +76,13 @@ bool pgp::cmp::equal_to(std::array<uint8_t, PGP_PUBKEY_SIZE> a,
 	}
 	return true;
 }
+
+pgp_priv_key_t::pgp_priv_key_t() : id(this, __FUNCTION__){
+	// don't bother with adding anything to ID, can't risk
+	// private key leakage (especially with current state
+	// of the software).
+}
+
+pgp_priv_key_t::~pgp_priv_key_t(){
+}
+
