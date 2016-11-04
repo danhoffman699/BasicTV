@@ -95,11 +95,12 @@ std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> tv_frame_t::get_pixel(uint64_t
 	std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> color;
 	const uint64_t *pixel =
 		(uint64_t*)&(frame[get_raw_pixel_pos(x, y)]);
+	P_V_B(*pixel, P_SPAM);
 	const uint64_t bpc_mask =
 		(1 S_L (bpc+1))-1;
-	std::get<0>(color) = ((*pixel << bpc*0) & bpc_mask);
-	std::get<1>(color) = ((*pixel << bpc*1) & bpc_mask);
-	std::get<2>(color) = ((*pixel << bpc*2) & bpc_mask);
+	std::get<0>(color) = ((*pixel S_S bpc*0) & bpc_mask);
+	std::get<1>(color) = ((*pixel S_S bpc*1) & bpc_mask);
+	std::get<2>(color) = ((*pixel S_S bpc*2) & bpc_mask);
 	std::get<3>(color) = bpc;
 	return color;
 }

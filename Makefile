@@ -21,4 +21,4 @@ debug: tv net
 	$(CXX) $(CXXFLAGS) -O0 -g tv_unified.o net_unified.o id_unified.o *.cpp $(LDFLAGS) 
 
 clean:
-	rm tv_unified.o net_unified.o id_unified.o a.out
+	rm tv_unified.o net_unified.o id_unified.o a.out id/*~ tv/*~ *~

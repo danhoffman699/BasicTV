@@ -88,19 +88,13 @@ static SDL_Surface *tv_render_frame_to_surface(tv_frame_t *frame){
 			const std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> color =
 				convert::color::bpc(
 					frame->get_pixel(x, y), 8);
-			pixel_byte[0] = 255;
-			pixel_byte[1] = 255;
-			pixel_byte[2] = 255;
 			//  revert back once frame works reliably
-			/*pixel_byte[0] = 
+			pixel_byte[0] = 
 				(uint8_t)std::get<0>(color);
 			pixel_byte[1] =
 				(uint8_t)std::get<1>(color);
 			pixel_byte[2] = 
-			(uint8_t)std::get<2>(color);*/
-			//P_V(pixel_byte[0], P_SPAM);
-			//P_V(pixel_byte[1], P_SPAM);
-			//P_V(pixel_byte[2], P_SPAM);
+				(uint8_t)std::get<2>(color);
 		}
 	}
 	return surface;
