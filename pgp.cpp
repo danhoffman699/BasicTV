@@ -33,14 +33,14 @@ void pgp_cite_t::add(std::string url){
 
 bool pgp::cmp::greater_than(uint64_t a, uint64_t b){
 	data_id_t *tmp[2] = {{nullptr}};
-	tmp[0] = id_array::ptr_id(a);
-	tmp[1] = id_array::ptr_id(b);
+	tmp[0] = PTR_ID(a, "");
+	tmp[1] = PTR_ID(b, "");
 	if(tmp[0] == nullptr || tmp[1] == nullptr){
 		print("can't compare invalid IDs", P_ERR);
 	}
 	pgp_cite_t *tmp_[2] = {{nullptr}};
-	tmp_[0] = (pgp_cite_t*)id_array::ptr_data(tmp[0]->get_pgp_cite_id());
-	tmp_[1] = (pgp_cite_t*)id_array::ptr_data(tmp[1]->get_pgp_cite_id());
+	tmp_[0] = PTR_DATA(tmp[0]->get_pgp_cite_id(), pgp_cite_t);
+	tmp_[1] = PTR_DATA(tmp[1]->get_pgp_cite_id(), pgp_cite_t);
 	if(tmp_[0] == nullptr || tmp_[1] == nullptr){
 		print("can't compare invalid pgp_cite_ids", P_ERR);
 	}

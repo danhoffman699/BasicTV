@@ -1,3 +1,4 @@
+#include "SDL2/SDL.h"
 #ifndef INPUT_H
 #define INPUT_H
 
@@ -5,7 +6,11 @@
   INPUT_KEY_* is reserved from 32 to 127 for ASCII (extended
   ASCII isn't used). Anything above 127 is free game, so space
   isn't an issue.
+
+  Raw numbers don't exist in 0-9 outside of ASCII
  */
+
+// remote specific inputs
 
 #define INPUT_KEY_POWER 1
 #define INPUT_KEY_MENU 2
@@ -22,6 +27,9 @@
 #define INPUT_KEY_POUND 13
 #define INPUT_KEY_MODIFIER 14
 #define INPUT_KEY_MODIFIER_CANCEL 15
+
+// more generic inputs
+#define INPUT_KEY_ESCAPE 16 // terminates the program
 
 /*
   ASCII is allowed as input, which is pretty dope. However,
@@ -43,6 +51,7 @@
   I did as a proof of concept and to lay down some docs for the standard
  */
 
-void input_init();
+extern void input_init();
+extern void input_loop();
 
 #endif

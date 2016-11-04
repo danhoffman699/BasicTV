@@ -3,6 +3,7 @@
 #ifndef TV_H
 #define TV_H
 #include "utility"
+#include "chrono"
 
 // hopefully that is too low some day
 #define TV_CHANNEL_SIZE 65536
@@ -73,7 +74,8 @@ public:
 };
 
 
-void tv_init();
+extern void tv_init();
+extern void tv_loop();
 
 namespace tv{
 	namespace chan{

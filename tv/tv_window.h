@@ -17,19 +17,24 @@
 
 struct tv_window_t{
 private:
-	uint8_t x_pos = 0; // start counting at 0
-	uint8_t y_pos = 0;
+	uint64_t x_res = 0;
+	uint64_t y_res = 0;
+	uint64_t x_pos = 0;
+	uint64_t y_pos = 0;
 	uint64_t channel_id = 0;
 public:
 	data_id_t id;
 	tv_window_t();
 	~tv_window_t();
-	uint8_t get_x_pos();
-	void get_x_pos(uint8_t x_pos_);
-	uint8_t get_y_pos();
-	void get_y_pos(uint8_t y_pos_);
+	uint64_t get_x_pos();
+	void get_x_pos(uint64_t x_pos_);
+	uint64_t get_y_pos();
+	void get_y_pos(uint64_t y_pos_);
 	uint64_t get_channel_id();
 	void set_channel_id(uint64_t);
+	// generated from the position
+	uint64_t get_x_res();
+	uint64_t get_y_res();
 };
 
 #endif

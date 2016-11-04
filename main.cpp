@@ -5,6 +5,9 @@
 #include "pgp.h"
 #include "ir.h"
 #include "tv/tv.h"
+#include "tv/tv_frame.h"
+#include "tv/tv_window.h"
+#include "tv/tv_patch.h"
 #include "input.h"
 #include "net/net_proto.h"
 #include "net/net.h" // two seperate units (right now)
@@ -26,8 +29,6 @@
   not to mention the fact that I don't want people locking away tons of 
   money on inseucre software
  */
-
-std::vector<void(*)()> function_vector;
 
 int argc = 0;
 char **argv = nullptr;
@@ -85,14 +86,19 @@ static void test_socket(){
 	}
 }
 
+static void test(){
+}
+
 int main(int argc_, char **argv_){
 	argc = argc_;
 	argv = argv_;
 	init();
-	test_socket();
 	while(running){
-		for(uint64_t i = 0;i < function_vector.size();i++){
-			function_vector[i]();
+		tv_loop();
+		input_loop();
+		net_proto_loop();
+		if(search_for_argv("--slow-iterate") != -1){
+			sleep_ms(1000);
 		}
 		if(search_for_argv("--prove-iterate") != -1){
 			std::cout << "iterated" << std::endl;

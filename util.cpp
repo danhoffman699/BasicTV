@@ -4,6 +4,7 @@
 #include "lock.h"
 #include "settings.h"
 #include "net/net.h"
+#include "convert.h"
 
 int print_level = P_SPAM;
 
@@ -252,4 +253,16 @@ uint64_t true_rand(uint64_t min, uint64_t max){
 	std::uniform_int_distribution<uint64_t>
 		distribution(min, max);
 	return distribution(generator);
+}
+
+// there's a better way to do this, but I don't
+// care enough to bother right now. Little-endian
+// is the only allowable architecture right now
+
+uint64_t flip_bit_section(uint8_t begin, uint8_t end){
+	uint64_t retval = 0;
+	for(uint8_t i = begin;i <= end;i++){
+		retval |= ((uint64_t)1 << i);
+	}
+	return retval;
 }

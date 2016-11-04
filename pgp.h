@@ -1,6 +1,7 @@
 #ifndef PGP_H
 #define PGP_H
 #include "id/id.h"
+#include "id/id_api.h"
 #include "array"
 #include "string"
 

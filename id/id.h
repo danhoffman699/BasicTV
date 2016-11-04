@@ -125,7 +125,7 @@ struct data_id_t{
 private:
 	// half UUID, half RSA fingerprint (for verification)
 	uint64_t id = 0;
-       	std::array<uint8_t, TYPE_LENGTH> type;
+       	std::array<uint8_t, TYPE_LENGTH> type = {{0}};
 	void *ptr = nullptr;
 	/*
 	  If a pgp_cite_t item has not come yet, then
@@ -154,7 +154,7 @@ private:
 	  TODO: throw an error if data comes over that does NOT have anything
 	  encrypted, as showing proof of ownership there would be impossible
 	 */
-	std::array<uint8_t, ID_PTR_LENGTH> data_flags = {{0}};
+	std::array<uint64_t, ID_PTR_LENGTH> data_flags = {{0}};
 	std::array<uint64_t*, ID_PTR_LENGTH> id_ptr = {{nullptr}};
 	std::array<uint32_t, ID_PTR_LENGTH> id_size = {{0}};
 	// everything in id_ptr is put into data_ptr in another call. id_ptr
@@ -182,7 +182,7 @@ private:
 	 */
 	std::array<uint64_t, ID_LL_WIDTH*ID_LL_HEIGHT> linked_list = {{0}};
 	void init_list_all_data();
-	void init_gen_list_id();
+	void init_gen_id();
 	void init_type_cache();
 public:
 	data_id_t(void *ptr_, std::string type_);
@@ -211,22 +211,4 @@ public:
 	void pgp_decrypt_backlog();
 	void dereference_id(uint64_t id_);
 };
-
-namespace id_array{
-	bool exists(uint64_t id);
-	bool exists_in_list(uint64_t id,
-			    std::array<uint64_t, ID_PTR_LENGTH> catalog);
-	void optimize(std::array<uint64_t, ID_PTR_LENGTH> *array);
-	std::vector<uint64_t> all_of_type(std::string type);
-	data_id_t *ptr_id(uint64_t id);
-	void *ptr_data(uint64_t id);
-	void add_data(std::vector<uint8_t> data_);
-	std::vector<uint64_t> sort_by_pgp_pubkey(std::vector<uint64_t> tmp);
-};
-
-// use this instead of the longer version for type checking to
-// prevent buffer overflows
-#define GET_PTR_DATA(id, type) (type*)(id_array::ptr_data(id, #type))
-#define GET_PTR_ID(id, type) (id_array::ptr_ptr(id, #type))
-
 #endif

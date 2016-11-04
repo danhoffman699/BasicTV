@@ -29,3 +29,7 @@ bool tv_channel_t::is_audio(){
 bool tv_channel_t::is_video(){
 	return !(status & TV_CHAN_NO_VIDEO);
 }
+
+void tv_channel_t::set_latest_frame_id(uint64_t latest_frame_id_){
+	latest_frame_id = latest_frame_id_;
+}

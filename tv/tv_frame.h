@@ -9,7 +9,7 @@
   low so it can more easily spread across the network. This shouldn't be used by
   standard streams, and should instead use custom set variables in the settings
   files or the raw stream settings (lossless). However, this is the standsrd res
-  for menus and other things
+  for menus and other things that don't have to look pretty
 
   TODO: raise this when the compression is good enough all around
  */
@@ -58,13 +58,15 @@ private:
 	uint64_t time_to_live = 0;
 	// channel count (audio)
 	uint8_t channel_count = 1;
-	// unix timestamp of latest modification
-	uint64_t unix_timestamp = 0;
+	/*
+	  Milliseconds since the epoch as stated by std::chrono. I don't know
+	  how accurate it is per-system, but a better implementation can
+	  always be built and used (hopefully)
+	 */
+	uint64_t unix_timestamp_ms = 0;
 	// second layer of encryption, used for "cacheing" data
 	uint64_t second_cite_id = 0;
-	uint64_t convert_to_raw_pixel(std::array<uint64_t, 3> tmp, uint8_t);
-	void write_raw_pixel(uint64_t x, uint64_t y, uint64_t);
-	uint64_t read_raw_pixel(uint64_t x, uint64_t y);
+	uint64_t get_raw_pixel_pos(uint64_t x, uint64_t y);
 public:
 	data_id_t id;
 	tv_frame_t();
@@ -75,18 +77,23 @@ public:
 	void reset(uint64_t x = TV_FRAME_DEFAULT_X,
 		   uint64_t y = TV_FRAME_DEFAULT_Y,
 		   uint8_t color_depth_ = TV_FRAME_DEFAULT_COLOR_DEPTH,
-		   uint64_t time_to_live_ = TV_FRAME_DEFAULT_TIME_TO_LIVE,
+		   uint64_t time_to_live_ = (uint64_t)((1/MICRO_PREFIX)*TV_FRAME_DEFAULT_TIME_TO_LIVE),
 		   uint64_t sampling_rate_ = TV_FRAME_DEFAULT_SAMPLING_RATE,
 		   uint8_t channel_count_ = TV_FRAME_DEFAULT_CHANNEL_COUNT,
 		   uint8_t amp_depth_ = TV_FRAME_DEFAULT_AMP_DEPTH);
-	void set_pixel(uint64_t x, uint64_t y, std::array<uint64_t, 3> raw_colors, uint8_t raw_bpc);
+	void set_pixel(uint64_t x, uint64_t y, std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> color);
+	std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> get_pixel(uint64_t x, uint64_t y);
 	uint64_t get_frame_number();
 	uint64_t get_frame_id_prev();
 	uint64_t get_frame_id_next();
-	uint64_t get_pixel(uint64_t x, uint64_t y, uint8_t bpc_tmp);
 	uint64_t get_x_res();
 	uint64_t get_y_res();
-	uint64_t get_timestamp();
+	uint64_t get_timestamp_ms();
+	uint8_t get_bpc();
+	uint64_t get_red_mask();
+	uint64_t get_green_mask();
+	uint64_t get_blue_mask();
+	uint64_t get_alpha_mask(); // not used, just here for SDL2
 };
 
 #endif

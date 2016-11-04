@@ -9,7 +9,7 @@ tv_frame_t::tv_frame_t() : id(this, __FUNCTION__){
 	id.add_data(&channel_id, sizeof(channel_id));
 	id.add_id(&channel_id, sizeof(channel_id));
 	id.add_data(&frame_number, sizeof(frame_number));
-	id.add_data(&unix_timestamp, sizeof(unix_timestamp));
+	id.add_data(&unix_timestamp_ms, sizeof(unix_timestamp_ms));
 	/*
 	  TODO: add the rest of the variables
 	 */
@@ -50,91 +50,59 @@ void tv_frame_t::reset(uint64_t x,
 	channel_count = channel_count_;
 	amp_depth = amp_depth_;
 	frame.fill(0);
-	unix_timestamp = std::time(nullptr);
-}
-
-static uint64_t tv_find_first_pixel(std::array<uint8_t, TV_FRAME_SIZE> frame,
-			  uint64_t x_res,
-			  uint64_t y_res,
-			  uint64_t x,
-			  uint64_t y){
-	
-	// TODO: find a more friendly way to orient this and
-	// make some macro
-	const uint64_t entry =
-		(x_res*y)+x;
-	if(entry >= TV_FRAME_SIZE){
-		print("pixel out of TV_FRAME_SIZE bounds", P_ERR);
-	}
-	if(entry >= x_res*y_res){
-		print("pixel out of pre-defined bounds", P_ERR);
-	}
-	return entry;
-	
+	const std::chrono::milliseconds ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+	unix_timestamp_ms = (uint64_t)ms.count();
 }
 
 #define COLOR_RED 0
 #define COLOR_GREEN 1
 #define COLOR_BLUE 2
 
-uint64_t tv_frame_t::convert_to_raw_pixel(std::array<uint64_t, 3> tmp,
-					  uint8_t old_bpc){
-	uint64_t retval = 0;
-	const uint64_t bpc_max_val = pow(2, bpc);
-	const uint64_t old_bpc_max_val = pow(2, old_bpc);
-	for(uint64_t i = 0;i < 3;i++){
-		retval |= tmp[i]*(bpc_max_val/old_bpc_max_val) >> (i*bpc);
+uint64_t tv_frame_t::get_raw_pixel_pos(uint64_t x,
+				       uint64_t y){
+	if(bpc % 8 != 0){
+		print("bpc isn't valid", P_CRIT);
 	}
-	return retval;
-}
-
-void tv_frame_t::write_raw_pixel(uint64_t x, uint64_t y, uint64_t pixel){
-	const uint64_t first_pixel =
-		tv_find_first_pixel(frame, x_res, y_res, x, y);
-	for(uint64_t i = 0;i < 8;i++){
-		const uint64_t byte_entry = first_pixel+(i*x_res*y_res);
-		uint8_t *byte_tmp = (uint8_t*)&pixel;
-		frame[byte_entry] = byte_tmp[i];
-		byte_tmp = nullptr;
+	if(x > x_res || y > y_res){
+		print("resolution out of bounds", P_CRIT);
 	}
-}
-
-uint64_t tv_frame_t::read_raw_pixel(uint64_t x, uint64_t y){
-	const uint64_t first_pixel =
-		tv_find_first_pixel(frame, x_res, y_res, x, y);
-	uint64_t retval = 0;
-	for(uint64_t i = 0;i < 8;i++){
-		uint8_t *byte_array = (uint8_t*)&retval;
-		byte_array[i] = frame[first_pixel+(i*x_res*y_res)];
-		byte_array = nullptr;
-	}
-	return retval;
+	const uint64_t raw_pixel_pos = 
+		((y_res*x)+y)*((bpc*3)/8);
+	// TV_FRAME_SIZE should be checked against frame res
+	return raw_pixel_pos;
 }
 
 void tv_frame_t::set_pixel(uint64_t x,
 			   uint64_t y,
-			   std::array<uint64_t, 3> raw_colors,
-			   uint8_t raw_bpc){
-	const uint64_t pixel = convert_to_raw_pixel(raw_colors, raw_bpc);
-	write_raw_pixel(x, y, pixel);
+			   std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> color){
+	const uint64_t pixel_pos =
+		get_raw_pixel_pos(x, y);
+	uint64_t *pixel = (uint64_t*)&(frame[pixel_pos]);
+	/*
+	  Can't use convert functions because of the small-ish sizes
+	  possible with this, and this is pretty elegant as it is. 
+	  Maybe another time?
+	 */
+	color = convert::color::bpc(color, bpc);
+	(*pixel) &= ~flip_bit_section(0, bpc*3);
+	(*pixel) |= std::get<0>(color);
+	(*pixel) |= std::get<1>(color) S_L (bpc);
+	(*pixel) |= std::get<2>(color) S_L (bpc*2);
 }
 
-uint64_t tv_frame_t::get_pixel(uint64_t x,
-			       uint64_t y,
-			       uint8_t bpc_tmp){
-	uint64_t raw_pixel = read_raw_pixel(x, y);
-	uint64_t pixel = 0;
-	for(uint64_t i = 0;i < 3;i++){
-		uint64_t tmp = (raw_pixel << i*bpc) & ~(~0 >> bpc);
-		tmp *= bpc_tmp/bpc;
-		pixel |= (tmp >> i*bpc);
-	}
-	return pixel;
+std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> tv_frame_t::get_pixel(uint64_t x,
+									uint64_t y){
+	std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> color;
+	const uint64_t *pixel =
+		(uint64_t*)&(frame[get_raw_pixel_pos(x, y)]);
+	const uint64_t bpc_mask =
+		(1 S_L (bpc+1))-1;
+	std::get<0>(color) = ((*pixel << bpc*0) & bpc_mask);
+	std::get<1>(color) = ((*pixel << bpc*1) & bpc_mask);
+	std::get<2>(color) = ((*pixel << bpc*2) & bpc_mask);
+	std::get<3>(color) = bpc;
+	return color;
 }
-
-#undef COLOR_RED
-#undef COLOR_GREEN
-#undef COLOR_BLUE
 
 // frame only uses uint8_t for compression, uint64_t is used
 // for internal use
@@ -143,8 +111,8 @@ uint64_t tv_frame_t::get_frame_number(){
 	return frame_number;
 }
 
-uint64_t tv_frame_t::get_timestamp(){
-	return unix_timestamp;
+uint64_t tv_frame_t::get_timestamp_ms(){
+	return unix_timestamp_ms;
 }
 
 uint64_t tv_frame_t::get_x_res(){
@@ -153,4 +121,31 @@ uint64_t tv_frame_t::get_x_res(){
 
 uint64_t tv_frame_t::get_y_res(){
 	return y_res;
+}
+
+uint8_t tv_frame_t::get_bpc(){
+	return bpc;
+}
+
+uint64_t tv_frame_t::get_red_mask(){
+	switch(bpc){
+	case 8:
+		return (uint64_t)0xFF;
+	default:
+		print("unsupported bpc value", P_CRIT);
+	}
+	return 0;
+}
+
+
+uint64_t tv_frame_t::get_green_mask(){
+	return (get_red_mask() S_L ((uint64_t)bpc));
+}
+
+uint64_t tv_frame_t::get_blue_mask(){
+	return (get_green_mask() S_L ((uint64_t)bpc));
+}
+
+uint64_t tv_frame_t::get_alpha_mask(){
+	return (get_blue_mask() S_L ((uint64_t)bpc));
 }

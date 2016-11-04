@@ -50,9 +50,10 @@ extern uint64_t true_rand(uint64_t min, uint64_t max);
 		std::cout << "[SPAM] " << #a << " lock unlocked" << std::endl; \
 	}
 
-#define PRINT(a, b) print(a, b, __func__);
+#define PRINT(a, b) print(a, b, __PRETTY_FUNCTION__);
 
 // pre-programmed responses, going to enforce 80-col more
+
 namespace pre_pro{
 	void unable(std::string from, std::string to, int level);
 	void exception(std::exception e, std::string for_, int level);
@@ -80,16 +81,20 @@ namespace array_func{
 		      uint64_t data_size);
 };
 
+uint64_t flip_bit_section(uint8_t begin, uint8_t end);
+
 #define CONTINUE_IF_NULL(x) if(x == nullptr){continue;}
 #define CONTINUE_IF_TRUE(x) if(!!x){continue;}
 
 // print var
-#define P_V(a, b) print((std::string)__FUNCTION__ + ":" + (std::string)#a + " == '" + std::to_string(a) + "'", b)
+#define P_V(a, b) print((std::string)__PRETTY_FUNCTION__ + ":" + (std::string)#a + " == '" + std::to_string(a) + "'", b)
 // print var string
-#define P_V_S(a, b) print((std::string)__FUNCTION__ + ":" + (std::string)#a + " == '" + a + "'", b)
+#define P_V_S(a, b) print((std::string)__PRETTY_FUNCTION__ + ":" + (std::string)#a + " == '" + a + "'", b)
 // print var char
-#define P_V_C(a, b) print((std::string)__FUNCTION__ + ":" + (std::string)#a + " == '" + std::string(&a, 1) + "'", b)
+#define P_V_C(a, b) print((std::string)__PRETTY_FUNCTION__ + ":" + (std::string)#a + " == '" + std::string(&a, 1) + "'", b)
 // cannot use print here
+// print var as binary
+#define P_V_B(a, b) print(convert::number::to_binary(a), b);
 
 // branch prediction
 #define likely(x)      __builtin_expect(!!(x), 1)
