@@ -102,4 +102,6 @@ uint64_t flip_bit_section(uint8_t begin, uint8_t end);
 
 #define FIND_FIRST_ZERO(A, B, C) for(uint64_t A = 0; A < C;A++){if(B[A] == 0){break;}
 
+uint64_t get_time_microseconds();
+
 #endif

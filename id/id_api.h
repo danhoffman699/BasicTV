@@ -28,6 +28,7 @@ namespace id_api{
 		void del(uint64_t id); // no type
 		void add_data(std::vector<uint8_t> data_);
 		std::vector<uint64_t> sort_by_pgp_pubkey(std::vector<uint64_t> tmp);
+		std::vector<uint64_t> get_forward_linked_list(uint64_t id, uint64_t height);
 	}
 	namespace cache{
 		// get_type_vector_ptr should never be used outside of id_api.cpp	

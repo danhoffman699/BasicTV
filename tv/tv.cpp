@@ -1,4 +1,4 @@
-/*
+ /*
   tv.cpp
   This is responsible for the output of the stream to the screen. This does
   not cover inputs to the system, nor does it cover broadcasting streams to
@@ -44,8 +44,7 @@
   channel and window arrays are created OTF with id_api::cache::get
  */
 
-static SDL_Window *window = nullptr;
-static SDL_Surface *window_surface = nullptr;
+static SDL_Window *sdl_window = nullptr;
 
 // this surface should fit the dimensions of the frame, let SDL
 // handle the resizing (at least for now)
@@ -113,6 +112,38 @@ static SDL_Rect tv_render_gen_window_rect(tv_window_t *window){
 		return window_rect;
 }
 
+static bool tv_frame_valid(tv_frame_t *frame){
+	const uint64_t curr_time_micro_s =
+		get_time_microseconds();
+	const uint64_t frame_end_time_micro_s =
+		frame->get_end_time_micro_s();
+	P_V(curr_time_micro_s, P_SPAM);
+	P_V(frame_end_time_micro_s, P_SPAM);
+	if(curr_time_micro_s > frame_end_time_micro_s){
+		print("frame is old, re-running with new", P_SPAM);
+		return false;
+	}else{
+		print("frame is current, exiting loop", P_SPAM);
+		return true;
+	}
+
+}
+
+static uint64_t tv_render_id_of_last_valid_frame(uint64_t current){
+	// TODO: add support for patches
+	std::vector<uint64_t> frame_linked_list =
+		id_api::array::get_forward_linked_list(current, 0);
+	P_V(frame_linked_list.size(), P_SPAM);
+	for(uint64_t i = 0;i < frame_linked_list.size();i++){
+		tv_frame_t *frame =
+			PTR_DATA(frame_linked_list[i], tv_frame_t);
+		if(tv_frame_valid(frame)){
+			return frame_linked_list[i];
+		}
+	}
+	return current;
+}
+
 static void tv_render_all(){
 	std::vector<uint64_t> all_windows =
 		id_api::cache::get("tv_window_t");
@@ -129,22 +160,27 @@ static void tv_render_all(){
 			print("channel is nullptr", P_ERR);
 			continue;
 		}
-		tv_frame_t *frame =
-			PTR_DATA(channel->get_latest_frame_id(), tv_frame_t);
-		if(frame == nullptr){
-			print("frame is nullptr", P_ERR);
+		tv_frame_t *frame = nullptr;
+		try{
+			frame = PTR_DATA(tv_render_id_of_last_valid_frame(channel->get_latest_frame_id()), tv_frame_t);
+		}catch(...){
+			print("tv_channel_t seed ID is invalid", P_ERR);
+			continue;
 		}
-		if(window_surface == nullptr){
-			print("window_surface is nullptr", P_ERR);
+		SDL_Surface *sdl_window_surface =
+			SDL_GetWindowSurface(sdl_window);
+		if(sdl_window_surface == nullptr){
+			print("sdl_window_surface is nullptr", P_ERR);
 		}
 		SDL_Surface *frame_surface =
 			tv_render_frame_to_surface(frame);
-		SDL_Rect window_rect =
+		SDL_Rect sdl_window_rect = 
 			tv_render_gen_window_rect(window);
+		// should it have the sdl_ prefix?
 		if(SDL_BlitSurface(frame_surface,
 				   NULL,
-				   window_surface,
-				   NULL) < 0){
+				   sdl_window_surface,
+				   &sdl_window_rect) < 0){
 			print((std::string)"couldn't blit surface:"+SDL_GetError(), P_CRIT);
 		}else{
 			print("surface blit without errors", P_SPAM);
@@ -156,10 +192,10 @@ static void tv_render_all(){
 	  All surfaces that have been used for rendering have been blitted
 	  to the screen
 	 */
-	if(SDL_UpdateWindowSurface(window) < 0){
-		print((std::string)"cannot update window:"+SDL_GetError(), P_CRIT);
+	if(SDL_UpdateWindowSurface(sdl_window) < 0){
+		print((std::string)"cannot update sdl_window:"+SDL_GetError(), P_CRIT);
 	}else{
-		print("updated window without errors", P_SPAM);
+		print("updated sdl_window without errors", P_SPAM);
 	}
 }
 
@@ -172,44 +208,58 @@ static void tv_init_test_channel(){
 		new tv_window_t;
 	tv_channel_t *channel =
 		new tv_channel_t;
-	tv_frame_t *frame =
-		new tv_frame_t;
 	window->set_channel_id(channel->id.get_id());
-	channel->set_latest_frame_id(frame->id.get_id());
-	frame->reset(640,
-		     480,
-		     8,
-		     100,
-		     1,
-		     1,
-		     1);
-	// most of these aren't even used yet, but enough
-	// are being used for an OK video implementation
-	for(uint64_t x = 0;x < 640;x++){
-		for(uint64_t y = 0;y < 480;y++){
-			frame->set_pixel(x, y, std::make_tuple(0, 255, 0, 8));
+	std::array<tv_frame_t*, 16> tmp_frames = {{nullptr}};
+	for(uint64_t i = 0;i < 16;i++){
+		tmp_frames[i] = new tv_frame_t;
+		tmp_frames[i]->reset(640,
+				     480,
+				     8,
+				     1000*1000,
+				     44100,
+				     1,
+				     1);
+		for(uint64_t x = 0;x < 640;x++){
+			for(uint64_t y = 0;y < 480;y++){
+				tmp_frames[i]->set_pixel(x,
+							 y,
+							 std::make_tuple<uint64_t, uint64_t, uint64_t, uint8_t>(
+								 true_rand(0, 255),
+								 true_rand(0, 255),
+								 true_rand(0, 255),
+								 8));
+			}
 		}
 	}
+	tmp_frames[0]->id.set_next_linked_list(0, tmp_frames[1]->id.get_id());
+	for(uint64_t i = 1;i < 15;i++){
+		P_V(tmp_frames[i-1]->id.get_id(), P_SPAM);
+		P_V(tmp_frames[i+1]->id.get_id(), P_SPAM);
+		tmp_frames[i]->id.set_prev_linked_list(0,
+						       tmp_frames[i-1]->id.get_id());
+		tmp_frames[i]->id.set_next_linked_list(0,
+						       tmp_frames[i+1]->id.get_id());
+	}
+	channel->set_latest_frame_id(tmp_frames[0]->id.get_id());
 }
 
 void tv_init(){
 	SDL_Init(SDL_INIT_VIDEO);
-	window = SDL_CreateWindow("BasicTV",
+	sdl_window = SDL_CreateWindow("BasicTV",
 				  SDL_WINDOWPOS_CENTERED,
 				  SDL_WINDOWPOS_CENTERED,
 				  640,
 				  480,
 				  SDL_WINDOW_SHOWN);
-	if(window == nullptr){
+	if(sdl_window == nullptr){
 		print((std::string)"window is nullptr:"+SDL_GetError(), P_ERR);
 	}
-	window_surface = SDL_GetWindowSurface(window);
 	// blank the screen black
 	SDL_FillRect(
-		window_surface,
+		SDL_GetWindowSurface(sdl_window),
 		NULL,
-		SDL_MapRGB(window_surface->format, 0, 0, 0));
-	SDL_UpdateWindowSurface(window);
+		SDL_MapRGB(SDL_GetWindowSurface(sdl_window)->format, 0, 0, 0));
+	SDL_UpdateWindowSurface(sdl_window);
 	tv_init_test_channel();
 }
 

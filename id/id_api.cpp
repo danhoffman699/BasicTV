@@ -26,7 +26,7 @@ data_id_t *id_api::array::ptr_id(uint64_t id,
 		throw std::runtime_error("ptr_id: retval == nullptr (ID:" + std::to_string(id) + ")");
 	}
 	// blank type is a wildcard, currently onlu used for PGP sorting
-	// "" is used for direct calls, NOTYPE is used for macros
+	// "" is used for direct calls
 	if(retval->get_type() != type && type != ""){
 		P_V_S(retval->get_type(), P_ERR);
 		P_V_S(type, P_ERR);
@@ -179,4 +179,18 @@ std::vector<uint64_t> id_api::cache::get(std::array<uint8_t, TYPE_LENGTH> type){
 
 std::vector<uint64_t> id_api::cache::get(std::string type){
 	return get(convert::array::type::to(type));
+}
+
+// TODO: make a forwards and backwards function too
+
+std::vector<uint64_t> id_api::array::get_forward_linked_list(uint64_t id,
+							     uint64_t height){
+	std::vector<uint64_t> retval;
+	while(id != 0){
+		data_id_t *id_ptr = PTR_ID(id, );
+		retval.push_back(id);
+		P_V(id, P_SPAM);
+		id = id_ptr->get_next_linked_list(height);
+	}
+	return retval;
 }

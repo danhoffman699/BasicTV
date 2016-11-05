@@ -195,6 +195,10 @@ public:
 	//std::array<uint8_t, PGP_PUBKEY_SIZE> get_owner_pubkey();
 	uint64_t get_pgp_cite_id();
 	uint64_t get_data_index_size();
+	uint64_t get_next_linked_list(uint64_t height);
+	uint64_t get_prev_linked_list(uint64_t height);
+	void set_next_linked_list(uint64_t height, uint64_t data);
+	void set_prev_linked_list(uint64_t height, uint64_t data);
 	// pointer list modififers
 	/*
 	  size of data is referring to the type size and the array size, whereas

@@ -266,3 +266,10 @@ uint64_t flip_bit_section(uint8_t begin, uint8_t end){
 	}
 	return retval;
 }
+
+uint64_t get_time_microseconds(){
+	const std::chrono::microseconds micro_s =
+		std::chrono::duration_cast<std::chrono::microseconds>(
+			std::chrono::system_clock::now().time_since_epoch());
+	return micro_s.count();
+}

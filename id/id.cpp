@@ -197,3 +197,21 @@ void data_id_t::pgp_decrypt_backlog(){
 	}
 	pgp_backlog.clear();
 }
+
+uint64_t data_id_t::get_prev_linked_list(uint64_t height){
+	P_V(linked_list[(height*2)+0], P_SPAM);
+	return linked_list[(height*2)+0];
+}
+
+uint64_t data_id_t::get_next_linked_list(uint64_t height){
+	P_V(linked_list[(height*2)+1], P_SPAM);
+	return linked_list[(height*2)+1];
+}
+
+void data_id_t::set_prev_linked_list(uint64_t height, uint64_t data){
+	linked_list[(height*2)+0] = data;
+}
+
+void data_id_t::set_next_linked_list(uint64_t height, uint64_t data){
+	linked_list[(height*2)+1] = data;
+}

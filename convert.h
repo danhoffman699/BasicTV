@@ -69,6 +69,11 @@
 // mostly for time, but add the other ones
 #define MILLI_PREFIX (0.001)
 #define MICRO_PREFIX (0.000001)
+#define MILLI MILLI_PREFIX
+#define MICRO MICRO_PREFIX
+
+#define METRIC(a, b) (a/b)
+
 
 #ifndef __ORDER_LITTLE_ENDIAN__
 #error "convert CROP_LSB functions to big-endian machines"

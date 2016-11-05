@@ -24,11 +24,13 @@
 // used and new tv_frame_t's are generated
 
 /*
-  8K TVs in 4x4 should be good enough, actual limit is
-  the stack size
+  Since I am actually using this right now, let's put the cap at 1080p.
+  I plan to keep support for insane max resolutions, but I need to make
+  a function that pre-allocates large contiguous chunks of memory. Once that
+  is done, then this can go back up within reason
  */
 
-#define TV_FRAME_SIZE (7680*4320*16*4)
+#define TV_FRAME_SIZE (1920*1080*4)
 
 /*
   96KHz at 1/10 Hz

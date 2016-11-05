@@ -9,7 +9,7 @@ tv_frame_t::tv_frame_t() : id(this, __FUNCTION__){
 	id.add_data(&channel_id, sizeof(channel_id));
 	id.add_id(&channel_id, sizeof(channel_id));
 	id.add_data(&frame_number, sizeof(frame_number));
-	id.add_data(&unix_timestamp_ms, sizeof(unix_timestamp_ms));
+	id.add_data(&timestamp_micro_s, sizeof(timestamp_micro_s));
 	/*
 	  TODO: add the rest of the variables
 	 */
@@ -32,11 +32,12 @@ tv_frame_t::~tv_frame_t(){
 void tv_frame_t::reset(uint64_t x,
 		       uint64_t y,
 		       uint8_t bpc_,
-		       uint64_t time_to_live_, 
+		       uint64_t time_to_live_micro_s_, 
 		       uint64_t sampling_rate_,
 		       uint8_t channel_count_,
 		       uint8_t amp_depth_){
-	const uint64_t audio_size = time_to_live_*sampling_rate_;
+	// set sane audio values
+	const uint64_t audio_size = (time_to_live_micro_s_/1000000)*sampling_rate_;
 	if(audio_size >= TV_FRAME_AUDIO_SIZE){
 		print("audio is too large for frame", P_ERR);
 	}
@@ -46,12 +47,11 @@ void tv_frame_t::reset(uint64_t x,
 	x_res = x;
 	y_res = y;
 	bpc = bpc_;
-	time_to_live = time_to_live_;
+	time_to_live_micro_s = time_to_live_micro_s_;
 	channel_count = channel_count_;
 	amp_depth = amp_depth_;
 	frame.fill(0);
-	const std::chrono::milliseconds ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-	unix_timestamp_ms = (uint64_t)ms.count();
+	timestamp_micro_s = get_time_microseconds();
 }
 
 #define COLOR_RED 0
@@ -95,7 +95,6 @@ std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> tv_frame_t::get_pixel(uint64_t
 	std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> color;
 	const uint64_t *pixel =
 		(uint64_t*)&(frame[get_raw_pixel_pos(x, y)]);
-	P_V_B(*pixel, P_SPAM);
 	const uint64_t bpc_mask =
 		(1 S_L (bpc+1))-1;
 	std::get<0>(color) = ((*pixel S_S bpc*0) & bpc_mask);
@@ -110,10 +109,6 @@ std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> tv_frame_t::get_pixel(uint64_t
 
 uint64_t tv_frame_t::get_frame_number(){
 	return frame_number;
-}
-
-uint64_t tv_frame_t::get_timestamp_ms(){
-	return unix_timestamp_ms;
 }
 
 uint64_t tv_frame_t::get_x_res(){
@@ -149,4 +144,21 @@ uint64_t tv_frame_t::get_blue_mask(){
 
 uint64_t tv_frame_t::get_alpha_mask(){
 	return (get_blue_mask() S_L ((uint64_t)bpc));
+}
+
+uint64_t tv_frame_t::get_time_to_live_micro_s(){
+	return time_to_live_micro_s;
+}
+
+uint64_t tv_frame_t::get_timestamp_micro_s(){
+	return timestamp_micro_s;
+}
+
+uint64_t tv_frame_t::get_end_time_micro_s(){
+	return get_timestamp_micro_s()+
+		get_time_to_live_micro_s();
+}
+
+void tv_frame_t::set_timestamp_micro_s(uint64_t timestamp_micro_s_){
+	timestamp_micro_s = timestamp_micro_s_;
 }

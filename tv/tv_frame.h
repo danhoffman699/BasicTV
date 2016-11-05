@@ -17,8 +17,8 @@
 #define TV_FRAME_DEFAULT_Y 480
 #define TV_FRAME_DEFAULT_COLOR_DEPTH 2
 #define TV_FRAME_DEFAULT_REFRESH_RATE 30
-// in microseconds
-#define TV_FRAME_DEFAULT_TIME_TO_LIVE ((1/MICRO_PREFIX)/TV_FRAME_DEFAULT_REFRESH_RATE)
+// 30Hz
+#define TV_FRAME_DEFAULT_TIME_TO_LIVE (1000*1000/30)
 #define TV_FRAME_DEFAULT_SAMPLING_RATE 11025
 #define TV_FRAME_DEFAULT_CHANNEL_COUNT 1
 #define TV_FRAME_DEFAULT_AMP_DEPTH 2 // bytes, so 16-bit
@@ -55,7 +55,7 @@ private:
 	// in Hz
 	uint64_t sampling_freq = 0;
 	// time to live in microseconds (easier for dynamic refresh rate)
-	uint64_t time_to_live = 0;
+	uint64_t time_to_live_micro_s = 0;
 	// channel count (audio)
 	uint8_t channel_count = 1;
 	/*
@@ -63,7 +63,7 @@ private:
 	  how accurate it is per-system, but a better implementation can
 	  always be built and used (hopefully)
 	 */
-	uint64_t unix_timestamp_ms = 0;
+	uint64_t timestamp_micro_s = 0;
 	// second layer of encryption, used for "cacheing" data
 	uint64_t second_cite_id = 0;
 	uint64_t get_raw_pixel_pos(uint64_t x, uint64_t y);
@@ -77,7 +77,7 @@ public:
 	void reset(uint64_t x = TV_FRAME_DEFAULT_X,
 		   uint64_t y = TV_FRAME_DEFAULT_Y,
 		   uint8_t color_depth_ = TV_FRAME_DEFAULT_COLOR_DEPTH,
-		   uint64_t time_to_live_ = (uint64_t)((1/MICRO_PREFIX)*TV_FRAME_DEFAULT_TIME_TO_LIVE),
+		   uint64_t time_to_live_micro_s_ = (uint64_t)((1/MICRO_PREFIX)*TV_FRAME_DEFAULT_TIME_TO_LIVE),
 		   uint64_t sampling_rate_ = TV_FRAME_DEFAULT_SAMPLING_RATE,
 		   uint8_t channel_count_ = TV_FRAME_DEFAULT_CHANNEL_COUNT,
 		   uint8_t amp_depth_ = TV_FRAME_DEFAULT_AMP_DEPTH);
@@ -88,7 +88,12 @@ public:
 	uint64_t get_frame_id_next();
 	uint64_t get_x_res();
 	uint64_t get_y_res();
-	uint64_t get_timestamp_ms();
+	// as much as C++'s chrono looks cool, I can't deviate from
+	// storing data as native types
+	void set_timestamp_micro_s(uint64_t timestamp_micro_s_);
+	uint64_t get_timestamp_micro_s();
+	uint64_t get_time_to_live_micro_s();
+	uint64_t get_end_time_micro_s();
 	uint8_t get_bpc();
 	uint64_t get_red_mask();
 	uint64_t get_green_mask();
