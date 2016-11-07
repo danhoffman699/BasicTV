@@ -215,7 +215,7 @@ static void tv_init_test_channel(){
 		tmp_frames[i]->reset(640,
 				     480,
 				     8,
-				     1000*1000,
+				     (1000*1000)*i,
 				     44100,
 				     1,
 				     1);

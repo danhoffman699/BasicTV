@@ -44,6 +44,14 @@ static void input_run_input(std::vector<uint64_t> vector){
 	}
 }
 
+void signal_handler(int signal){
+	switch(signal){
+	case SIGINT:
+	case SIGTERM:
+		exit(signal);
+	}
+}
+
 void input_loop(){
 	input_gather_from_keyboard();
 	input_gather_from_ir();
@@ -51,6 +59,8 @@ void input_loop(){
 }
 
 void input_init(){
+	signal(SIGINT, signal_handler);
+	signal(SIGTERM, signal_handler);
 	SDL_Init(SDL_INIT_EVENTS);
 }
 

@@ -2,6 +2,8 @@
 #ifndef INPUT_H
 #define INPUT_H
 
+#include "signal.h"
+
 /*
   INPUT_KEY_* is reserved from 32 to 127 for ASCII (extended
   ASCII isn't used). Anything above 127 is free game, so space
