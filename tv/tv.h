@@ -28,6 +28,9 @@
   I plan to keep support for insane max resolutions, but I need to make
   a function that pre-allocates large contiguous chunks of memory. Once that
   is done, then this can go back up within reason
+
+  I can also make different subsets of tv_frame_t, one for low quality, one for 
+  current HD, and one for 4K streams and above. 
  */
 
 #define TV_FRAME_SIZE (1920*1080*4)

@@ -147,6 +147,7 @@ static uint64_t tv_render_id_of_last_valid_frame(uint64_t current){
 static void tv_render_all(){
 	std::vector<uint64_t> all_windows =
 		id_api::cache::get("tv_window_t");
+	uint64_t ms_start = get_time_microseconds();
 	for(uint64_t i = 0;i < all_windows.size();i++){
 		print("found a window", P_SPAM);
 		tv_window_t *window = PTR_DATA(all_windows[i], tv_window_t);
@@ -188,6 +189,7 @@ static void tv_render_all(){
 		SDL_FreeSurface(frame_surface);
 		frame_surface = nullptr;
 	}
+	print("elapsed time:" + std::to_string((get_time_microseconds()-ms_start)/(long double)1000000.0), P_DEBUG);
 	/*
 	  All surfaces that have been used for rendering have been blitted
 	  to the screen
@@ -209,18 +211,18 @@ static void tv_init_test_channel(){
 	tv_channel_t *channel =
 		new tv_channel_t;
 	window->set_channel_id(channel->id.get_id());
-	std::array<tv_frame_t*, 16> tmp_frames = {{nullptr}};
-	for(uint64_t i = 0;i < 16;i++){
+	std::array<tv_frame_t*, 120> tmp_frames = {{nullptr}};
+	for(uint64_t i = 0;i < 120;i++){
 		tmp_frames[i] = new tv_frame_t;
-		tmp_frames[i]->reset(640,
-				     480,
+		tmp_frames[i]->reset(240, // intentionally low because set_pixel is slow
+				     144,
 				     8,
-				     (1000*1000)*i,
+				     ((1000*1000)/60)*i,
 				     44100,
 				     1,
 				     1);
-		for(uint64_t x = 0;x < 640;x++){
-			for(uint64_t y = 0;y < 480;y++){
+		for(uint64_t x = 0;x < 240;x++){
+			for(uint64_t y = 0;y < 144;y++){
 				tmp_frames[i]->set_pixel(x,
 							 y,
 							 std::make_tuple<uint64_t, uint64_t, uint64_t, uint8_t>(
@@ -232,7 +234,7 @@ static void tv_init_test_channel(){
 		}
 	}
 	tmp_frames[0]->id.set_next_linked_list(0, tmp_frames[1]->id.get_id());
-	for(uint64_t i = 1;i < 15;i++){
+	for(uint64_t i = 1;i < 119;i++){
 		P_V(tmp_frames[i-1]->id.get_id(), P_SPAM);
 		P_V(tmp_frames[i+1]->id.get_id(), P_SPAM);
 		tmp_frames[i]->id.set_prev_linked_list(0,

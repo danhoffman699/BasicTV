@@ -1,0 +1,43 @@
+TV system
+Change color format from std::tuple to macros with a 64-bit integer (slowly move it over)
+	Was working on this the hard way, stuff broke, and I reverted the changes, that's why the
+	frame demo was broken for so long
+Enable support for seamless exchanges between tv_frame_t and tv_patch_t IDs
+Allow for both edited and unedited clips to be allowed
+	Embed a value into a virtual class for tv_frame_t and tv_patch_t for unedited IDs
+Implement some sort of closed captioning system?
+Implement some different audio feeds for different languages?
+
+ID system
+Change entire system to allow for RSA fingerprint planting.
+Finish exporting system
+Allow for some basic level of lossless compression (LZMA)
+Allow for simple garbage collection and disk caching
+	Disk caching is one of the major selling points of this (possibly infinite DVR space)
+	There is no garbage collection for global variables, but local data types that cannot be networked
+	(or shouldn't be networked) should be periodically cached to disk, and the ones who keep wanting them
+	read back to them will be put on a whitelist of ones to not cache again (or not as much). This wouldn't
+	work too well for random global IDs, but those should be nested in some larger struct and called
+	with all_of_type anyways to make it (probably) more extensible
+
+Input system
+Implement actual IR code receiving
+Allow an easy to use interface for configuring a certain remote to work
+Get a basic API for TCP/IP control over the box for an app
+	IR is only as terrible as the software it controls
+	Sell the phone app on things IR simply cannot do
+
+General
+Actually involve the Raspberry Pi with development
+	 Performance on the Raspberry Pi is very reduced
+	 ARM vs x86 sounds pretty interesting (no assembly is the goal though)
+
+Reach out for support once there is at least some templates for all facets of the codebase
+	Inputs, ID requests, exporting, menus, TV channels, DVRing, exporting to other formats, and
+	a slew of other work needs to be done, but I think I can knock (most) of that out in a month
+	(at least get a template)
+
+Make a legitimate website or web-based interface into the network
+	Not really streaming directly to the web browser (I don't know how well web browsers can
+	handle that sort of networking), but instead just have a TV Guide setup and channel
+	meta-data
