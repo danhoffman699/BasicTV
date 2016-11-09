@@ -211,8 +211,8 @@ static void tv_init_test_channel(){
 	tv_channel_t *channel =
 		new tv_channel_t;
 	window->set_channel_id(channel->id.get_id());
-	std::array<tv_frame_t*, 120> tmp_frames = {{nullptr}};
-	for(uint64_t i = 0;i < 120;i++){
+	std::array<tv_frame_t*, 12> tmp_frames = {{nullptr}};
+	for(uint64_t i = 0;i < 12;i++){
 		tmp_frames[i] = new tv_frame_t;
 		tmp_frames[i]->reset(240, // intentionally low because set_pixel is slow
 				     144,
@@ -234,7 +234,7 @@ static void tv_init_test_channel(){
 		}
 	}
 	tmp_frames[0]->id.set_next_linked_list(0, tmp_frames[1]->id.get_id());
-	for(uint64_t i = 1;i < 119;i++){
+	for(uint64_t i = 1;i < 11;i++){
 		P_V(tmp_frames[i-1]->id.get_id(), P_SPAM);
 		P_V(tmp_frames[i+1]->id.get_id(), P_SPAM);
 		tmp_frames[i]->id.set_prev_linked_list(0,
