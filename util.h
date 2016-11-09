@@ -96,6 +96,19 @@ uint64_t flip_bit_section(uint8_t begin, uint8_t end);
 // print var as binary
 #define P_V_B(a, b) print(convert::number::to_binary(a), b);
 
+#ifdef SPAM_OUTPUT
+#define DEBUG_OUTPUT 1
+#define P_SPAM_(a) print((std::string)a, P_SPAM);
+#else
+#define P_SPAM_(a) ;
+#endif
+
+#ifdef DEBUG_OUTPUT
+#define P_DEBUG_(a) print((std::string)a, P_DEBUG);
+#else
+#define P_DEBUG_(a) ;
+#endif
+
 // branch prediction
 #define likely(x)      __builtin_expect(!!(x), 1)
 #define unlikely(x)    __builtin_expect(!!(x), 0)

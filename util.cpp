@@ -6,7 +6,7 @@
 #include "net/net.h"
 #include "convert.h"
 
-int print_level = P_SPAM;
+int print_level = -1;
 
 std::vector<std::string> newline_to_vector(std::string data){
 	std::vector<std::string> retval;
@@ -72,31 +72,33 @@ static std::string print_level_text(int level){
 //lock_t print_lock;
 
 void print(std::string data, int level, const char *func){
-	if(search_for_argv("--debug") != -1){
-		print_level = P_DEBUG;
-	}else if(search_for_argv("--spam") != -1){
-		print_level = P_SPAM;
-	}else if(argc != 0){
-		print_level = P_NOTICE; // sane minimum
-	}else{
-		print_level = P_SPAM; // initializers before init
+	if(unlikely(print_level == -1)){
+		if(search_for_argv("--debug") != -1){
+			print_level = P_DEBUG;
+		}else if(search_for_argv("--spam") != -1){
+			print_level = P_SPAM;
+		}else if(argc != 0){
+			print_level = P_NOTICE; // sane minimum
+		}else{
+			print_level = P_SPAM; // initializers before init
+		}
 	}
-	if(level >= print_level){
+	if(unlikely(level >= print_level)){
 		std::string func_;
 		if(func != nullptr){
 			func_ = func;
 		}
 		std::cout << print_level_text(level) << " "
 			  << " " << data << std::endl;
-	}
-	if(level == P_CRIT){
-		std::cerr << "CRITICAL ERROR" << std::endl;
-		throw std::runtime_error(data);
-		// should probably do more here, any catch
-		// anywhere nullifies the critical status
-	}
-	if(level == P_ERR){
-		throw std::runtime_error(data);
+		if(level == P_CRIT){
+			std::cerr << "CRITICAL ERROR" << std::endl;
+			throw std::runtime_error(data);
+			// should probably do more here, any catch
+			// anywhere nullifies the critical status
+		}
+		if(level == P_ERR){
+			throw std::runtime_error(data);
+		}
 	}
 }
 

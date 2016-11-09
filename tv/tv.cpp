@@ -55,13 +55,8 @@ static SDL_Surface *tv_render_frame_to_surface(tv_frame_t *frame){
 	const uint8_t depth = frame->get_bpc()*4; // includes alpha
 	const uint64_t red_mask = frame->get_red_mask();
 	const uint64_t green_mask = frame->get_green_mask();
-	const uint64_t blue_mask = frame->get_blue_mask();	
+	const uint64_t blue_mask = frame->get_blue_mask();
 	const uint64_t alpha_mask = frame->get_alpha_mask();
-	P_V_S(convert::number::to_binary(red_mask), P_SPAM);
-	P_V_S(convert::number::to_binary(green_mask), P_SPAM);
-	P_V_S(convert::number::to_binary(blue_mask), P_SPAM);
-	P_V_S(convert::number::to_binary(alpha_mask), P_SPAM);
-	P_V(depth, P_SPAM);
 	SDL_Surface *surface =
 		SDL_CreateRGBSurface(0,
 				     width,
@@ -105,10 +100,6 @@ static SDL_Rect tv_render_gen_window_rect(tv_window_t *window){
 		window_rect.x = window->get_x_pos();
 		window_rect.h = window->get_y_res();
 		window_rect.y = window->get_y_pos();
-		P_V(window_rect.w, P_SPAM);
-		P_V(window_rect.x, P_SPAM);
-		P_V(window_rect.h, P_SPAM);
-		P_V(window_rect.y, P_SPAM);
 		return window_rect;
 }
 
@@ -117,8 +108,6 @@ static bool tv_frame_valid(tv_frame_t *frame){
 		get_time_microseconds();
 	const uint64_t frame_end_time_micro_s =
 		frame->get_end_time_micro_s();
-	P_V(curr_time_micro_s, P_SPAM);
-	P_V(frame_end_time_micro_s, P_SPAM);
 	if(curr_time_micro_s > frame_end_time_micro_s){
 		print("frame is old, re-running with new", P_SPAM);
 		return false;
@@ -133,7 +122,6 @@ static uint64_t tv_render_id_of_last_valid_frame(uint64_t current){
 	// TODO: add support for patches
 	std::vector<uint64_t> frame_linked_list =
 		id_api::array::get_forward_linked_list(current, 0);
-	P_V(frame_linked_list.size(), P_SPAM);
 	for(uint64_t i = 0;i < frame_linked_list.size();i++){
 		tv_frame_t *frame =
 			PTR_DATA(frame_linked_list[i], tv_frame_t);
@@ -235,8 +223,6 @@ static void tv_init_test_channel(){
 	}
 	tmp_frames[0]->id.set_next_linked_list(0, tmp_frames[1]->id.get_id());
 	for(uint64_t i = 1;i < 11;i++){
-		P_V(tmp_frames[i-1]->id.get_id(), P_SPAM);
-		P_V(tmp_frames[i+1]->id.get_id(), P_SPAM);
 		tmp_frames[i]->id.set_prev_linked_list(0,
 						       tmp_frames[i-1]->id.get_id());
 		tmp_frames[i]->id.set_next_linked_list(0,
