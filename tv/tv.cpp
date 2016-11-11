@@ -100,21 +100,6 @@ static SDL_Surface* tv_render_frame_to_surface_ptr(tv_frame_t *frame){
 	const uint64_t green_mask = frame->get_green_mask();
 	const uint64_t blue_mask = frame->get_blue_mask();
 	const uint64_t alpha_mask = frame->get_alpha_mask();
-	//SDL_PixelFormat format;
-	//format.palette = nullptr;
-	/*format.format = SDL_PIXELFORMAT_RGB24 | SDL_PIXELTYPE_ARRAYU8 | SDL_ARRAYORDER_RGB;
-	// RGB24 is an unifying alias for big and little endian
-	format.Rmask = red_mask;
-	format.Gmask = green_mask;
-	format.Bmask = blue_mask;
-	format.Amask = alpha_mask;
-	format.BytesPerPixel = 3;
-	format.BitsPerPixel = 24;*/
-	//format.format = SDL_MasksToPixelFormatEnum(SDL_PIXELFORMAT_RGB24 | SDL_PIXELTYPE_ARRAYU8 | SDL_ARRAYORDER_RGB,
-	//					    red_mask,
-	//					    green_mask,
-	//					    blue_mask,
-	//					    alpha_mask);
 	SDL_Surface *retval =
 		SDL_CreateRGBSurface(0,
 				     width,
@@ -124,14 +109,14 @@ static SDL_Surface* tv_render_frame_to_surface_ptr(tv_frame_t *frame){
 				     green_mask,
 				     blue_mask,
 				     0);
-	if(retval == nullptr){
+	if(unlikely(retval == nullptr)){
 		print((std::string)"unable to generate surface:" + SDL_GetError(), P_ERR);
 	}
 	retval = SDL_ConvertSurfaceFormat(retval, SDL_PIXELFORMAT_RGB24, 0);
-	if(retval == nullptr){
+	if(unlikely(retval == nullptr)){
 		print((std::string)"cannot convert surface to desired format:" + SDL_GetError(), P_ERR);
 	}
-	if(SDL_LockSurface(retval) < 0){
+	if(unlikely(SDL_LockSurface(retval) < 0)){
 		print((std::string)"unable to lock surface:"+SDL_GetError(), P_ERR);
 	}
 	retval->pixels = frame->get_pixel_data_ptr();
@@ -140,7 +125,7 @@ static SDL_Surface* tv_render_frame_to_surface_ptr(tv_frame_t *frame){
 }
 
 static void tv_frame_gen_xor_frame(uint8_t *frame, uint64_t x_, uint64_t y_, uint8_t bpc){
-	if(bpc != 8){
+	if(unlikely(bpc != 8)){
 		print("BPC is not supported", P_ERR);
 	}
 	for(uint64_t y = 0;y < y_;y++){
@@ -197,19 +182,15 @@ static void tv_render_all(){
 	for(uint64_t i = 0;i < all_windows.size();i++){
 		print("found a window", P_SPAM);
 		tv_window_t *window = PTR_DATA(all_windows[i], tv_window_t);
-		if(window == nullptr){
-			print("window is nullptr", P_ERR);
-			continue;
-		}
+		CONTINUE_IF_NULL(window);
 		tv_channel_t *channel =
 			PTR_DATA(window->get_channel_id(), tv_channel_t);
-		if(channel == nullptr){
-			print("channel is nullptr", P_ERR);
-			continue;
-		}
+		CONTINUE_IF_NULL(channel);
 		tv_frame_t *frame = nullptr;
 		try{
-			frame = PTR_DATA(tv_render_id_of_last_valid_frame(channel->get_latest_frame_id()), tv_frame_t);
+			frame = PTR_DATA(tv_render_id_of_last_valid_frame(
+						 channel->get_latest_frame_id()),
+					 tv_frame_t);
 		}catch(...){
 			print("tv_channel_t seed ID is invalid", P_ERR);
 			continue;
@@ -221,17 +202,29 @@ static void tv_render_all(){
 		}
 		SDL_Rect sdl_window_rect = 
 			tv_render_gen_window_rect(window);
-		SDL_Surface *frame_surface =
-			tv_render_frame_to_surface_ptr(frame);
-		if(SDL_BlitSurface(frame_surface,
-				   NULL,
-				   sdl_window_surface,
-				   &sdl_window_rect) < 0){
+		SDL_Surface *frame_surface = nullptr;
+
+		bool custom_pixel_data = false;
+		if(frame->get_bpc() == 8){
+			frame_surface =
+				tv_render_frame_to_surface_ptr(frame);
+			custom_pixel_data = true;
+		}else{
+			frame_surface =
+				tv_render_frame_to_surface_copy(frame);
+			custom_pixel_data = false;
+		}
+		if(unlikely(SDL_BlitSurface(frame_surface,
+					    NULL,
+					    sdl_window_surface,
+					    &sdl_window_rect) < 0)){
 			print((std::string)"couldn't blit surface:"+SDL_GetError(), P_CRIT);
 		}else{
 			print("surface blit without errors", P_SPAM);
 		}
-		frame_surface->pixels = nullptr;
+		if(custom_pixel_data){
+			frame_surface->pixels = nullptr;
+		}
 		// direct pointer to frame if *_ptr was called
 		SDL_FreeSurface(frame_surface);
 		frame_surface = nullptr;

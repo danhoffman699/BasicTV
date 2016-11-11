@@ -22,6 +22,10 @@
 #include "vector"
 #include "random"
 
+// branch prediction
+#define likely(x)      __builtin_expect(!!(x), 1)
+#define unlikely(x)    __builtin_expect(!!(x), 0)
+
 extern void sleep_ms(int ms, bool force = false);
 extern int search_for_argv(std::string);
 extern std::string get_argv(int a);
@@ -83,8 +87,8 @@ namespace array_func{
 
 uint64_t flip_bit_section(uint8_t begin, uint8_t end);
 
-#define CONTINUE_IF_NULL(x) if(x == nullptr){continue;}
-#define CONTINUE_IF_TRUE(x) if(!!x){continue;}
+#define CONTINUE_IF_NULL(x) if(unlikely(x == nullptr)){continue;}
+#define CONTINUE_IF_TRUE(x) if((unlikely(!!x)){continue;}
 
 // print var
 #define P_V(a, b) print((std::string)__PRETTY_FUNCTION__ + ":" + (std::string)#a + " == '" + std::to_string(a) + "'", b)
@@ -108,10 +112,6 @@ uint64_t flip_bit_section(uint8_t begin, uint8_t end);
 #else
 #define P_DEBUG_(a) ;
 #endif
-
-// branch prediction
-#define likely(x)      __builtin_expect(!!(x), 1)
-#define unlikely(x)    __builtin_expect(!!(x), 0)
 
 #define FIND_FIRST_ZERO(A, B, C) for(uint64_t A = 0; A < C;A++){if(B[A] == 0){break;}
 
