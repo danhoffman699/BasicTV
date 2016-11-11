@@ -139,6 +139,19 @@ static SDL_Surface* tv_render_frame_to_surface_ptr(tv_frame_t *frame){
 	return retval;
 }
 
+static void tv_frame_gen_xor_frame(uint8_t *frame, uint64_t x_, uint64_t y_, uint8_t bpc){
+	if(bpc != 8){
+		print("BPC is not supported", P_ERR);
+	}
+	for(uint64_t y = 0;y < y_;y++){
+		for(uint64_t x = 0;x < x_;x++){
+			frame[(((x_*y)+x)*3)+0] = (x^y)&255;
+			frame[(((x_*y)+x)*3)+1] = (x^y)&255;
+			frame[(((x_*y)+x)*3)+2] = (x^y)&255;
+		}
+	}
+}
+
 static SDL_Rect tv_render_gen_window_rect(tv_window_t *window){
 	SDL_Rect window_rect;
 	window_rect.w = window->get_x_res();
@@ -257,7 +270,7 @@ static void tv_init_test_channel(){
 				     1,
 				     1,
 				     1);
-		for(uint64_t x = 0;x < 240;x++){
+		/*for(uint64_t x = 0;x < 240;x++){
 			for(uint64_t y = 0;y < 144;y++){
 				tmp_frames[i]->set_pixel(x,
 							 y,
@@ -269,7 +282,11 @@ static void tv_init_test_channel(){
 				// just put here for testing different SDL frame
 				// models, but it is suprisingly cool
 			}
-		}
+			}*/
+		tv_frame_gen_xor_frame((uint8_t*)tmp_frames[i]->get_pixel_data_ptr(),
+				       tmp_frames[i]->get_x_res(),
+				       tmp_frames[i]->get_y_res(),
+				       tmp_frames[i]->get_bpc());
 	}
 	tmp_frames[0]->id.set_next_linked_list(0, tmp_frames[1]->id.get_id());
 	for(uint64_t i = 1;i < TEST_FRAME_SIZE-1;i++){
