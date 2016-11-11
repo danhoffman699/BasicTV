@@ -83,6 +83,8 @@ public:
 		   uint8_t amp_depth_ = TV_FRAME_DEFAULT_AMP_DEPTH);
 	void set_pixel(uint64_t x, uint64_t y, std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> color);
 	std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> get_pixel(uint64_t x, uint64_t y);
+	void set_pixel_data(std::array<uint8_t, TV_FRAME_SIZE> frame_);
+	std::array<uint8_t, TV_FRAME_SIZE> *get_pixel_data_ptr();
 	uint64_t get_frame_number();
 	uint64_t get_frame_id_prev();
 	uint64_t get_frame_id_next();

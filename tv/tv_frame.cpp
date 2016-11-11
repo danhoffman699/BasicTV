@@ -66,8 +66,15 @@ uint64_t tv_frame_t::get_raw_pixel_pos(uint64_t x,
 	if(x > x_res || y > y_res){
 		print("resolution out of bounds", P_CRIT);
 	}
+	const uint64_t major =
+		x_res*y;
+	const uint64_t minor =
+		x;
+	if(bpc != 8){
+		print("cannot support alternate frames at the time", P_ERR);
+	}
 	const uint64_t raw_pixel_pos = 
-		((y_res*x)+y)*((bpc*3)/8);
+		(major+minor)*3;
 	// TV_FRAME_SIZE should be checked against frame res
 	return raw_pixel_pos;
 }
@@ -85,9 +92,9 @@ void tv_frame_t::set_pixel(uint64_t x,
 	 */
 	color = convert::color::bpc(color, bpc);
 	(*pixel) &= ~flip_bit_section(0, bpc*3);
-	(*pixel) |= std::get<0>(color);
-	(*pixel) |= std::get<1>(color) S_L (bpc);
-	(*pixel) |= std::get<2>(color) S_L (bpc*2);
+	(*pixel) |= std::get<0>(color) & 255;
+	(*pixel) |= (std::get<1>(color) & 255) S_L (bpc);
+	(*pixel) |= (std::get<2>(color) & 255) S_L (bpc*2);
 }
 
 std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> tv_frame_t::get_pixel(uint64_t x,
@@ -96,12 +103,19 @@ std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> tv_frame_t::get_pixel(uint64_t
 	const uint64_t *pixel =
 		(uint64_t*)&(frame[get_raw_pixel_pos(x, y)]);
 	const uint64_t bpc_mask =
-		(1 S_L (bpc+1))-1;
+		flip_bit_section(0, bpc);
 	std::get<0>(color) = ((*pixel S_S bpc*0) & bpc_mask);
 	std::get<1>(color) = ((*pixel S_S bpc*1) & bpc_mask);
 	std::get<2>(color) = ((*pixel S_S bpc*2) & bpc_mask);
 	std::get<3>(color) = bpc;
 	return color;
+}
+
+void tv_frame_t::set_pixel_data(std::array<uint8_t, TV_FRAME_SIZE> frame_){
+}
+
+std::array<uint8_t, TV_FRAME_SIZE>* tv_frame_t::get_pixel_data_ptr(){
+	return &frame;
 }
 
 // frame only uses uint8_t for compression, uint64_t is used

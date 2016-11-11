@@ -49,7 +49,7 @@ static SDL_Window *sdl_window = nullptr;
 // this surface should fit the dimensions of the frame, let SDL
 // handle the resizing (at least for now)
 
-static SDL_Surface *tv_render_frame_to_surface(tv_frame_t *frame){
+static SDL_Surface* tv_render_frame_to_surface_copy(tv_frame_t *frame){
 	const uint64_t width = frame->get_x_res();
 	const uint64_t height = frame->get_y_res();
 	const uint8_t depth = frame->get_bpc()*4; // includes alpha
@@ -57,6 +57,8 @@ static SDL_Surface *tv_render_frame_to_surface(tv_frame_t *frame){
 	const uint64_t green_mask = frame->get_green_mask();
 	const uint64_t blue_mask = frame->get_blue_mask();
 	const uint64_t alpha_mask = frame->get_alpha_mask();
+	// TODO: actually stretch it to fit the frame
+	// older approach, very slow
 	SDL_Surface *surface =
 		SDL_CreateRGBSurface(0,
 				     width,
@@ -66,15 +68,11 @@ static SDL_Surface *tv_render_frame_to_surface(tv_frame_t *frame){
 				     0,
 				     0,
 				     0);
-	if(surface == nullptr){
-		print((std::string)"surface is nullptr:" + SDL_GetError(), P_ERR);
-	}
-	if(surface->format->BytesPerPixel != 4){
+	if(surface->format->BytesPerPixel != 3){
 		P_V(surface->format->BytesPerPixel, P_WARN);
 		print("surface created with improper BPP", P_CRIT);
-		// can't render it
+		// can't render it, at least not yet
 	}
-	// TODO: actually stretch it to fit the frame
 	for(uint64_t x = 0;x < surface->w;x++){
 		for(uint64_t y = 0;y < surface->h;y++){
 			uint8_t *pixel_byte = (uint8_t*)surface->pixels + y * surface->pitch +
@@ -94,13 +92,60 @@ static SDL_Surface *tv_render_frame_to_surface(tv_frame_t *frame){
 	return surface;
 }
 
+static SDL_Surface* tv_render_frame_to_surface_ptr(tv_frame_t *frame){
+	const uint64_t width = frame->get_x_res();
+	const uint64_t height = frame->get_y_res();
+	const uint8_t bpc = frame->get_bpc(); // includes alpha
+	const uint64_t red_mask = frame->get_red_mask();
+	const uint64_t green_mask = frame->get_green_mask();
+	const uint64_t blue_mask = frame->get_blue_mask();
+	const uint64_t alpha_mask = frame->get_alpha_mask();
+	//SDL_PixelFormat format;
+	//format.palette = nullptr;
+	/*format.format = SDL_PIXELFORMAT_RGB24 | SDL_PIXELTYPE_ARRAYU8 | SDL_ARRAYORDER_RGB;
+	// RGB24 is an unifying alias for big and little endian
+	format.Rmask = red_mask;
+	format.Gmask = green_mask;
+	format.Bmask = blue_mask;
+	format.Amask = alpha_mask;
+	format.BytesPerPixel = 3;
+	format.BitsPerPixel = 24;*/
+	//format.format = SDL_MasksToPixelFormatEnum(SDL_PIXELFORMAT_RGB24 | SDL_PIXELTYPE_ARRAYU8 | SDL_ARRAYORDER_RGB,
+	//					    red_mask,
+	//					    green_mask,
+	//					    blue_mask,
+	//					    alpha_mask);
+	SDL_Surface *retval =
+		SDL_CreateRGBSurface(0,
+				     width,
+				     height,
+				     bpc*3,
+				     red_mask,
+				     green_mask,
+				     blue_mask,
+				     0);
+	if(retval == nullptr){
+		print((std::string)"unable to generate surface:" + SDL_GetError(), P_ERR);
+	}
+	retval = SDL_ConvertSurfaceFormat(retval, SDL_PIXELFORMAT_RGB24, 0);
+	if(retval == nullptr){
+		print((std::string)"cannot convert surface to desired format:" + SDL_GetError(), P_ERR);
+	}
+	if(SDL_LockSurface(retval) < 0){
+		print((std::string)"unable to lock surface:"+SDL_GetError(), P_ERR);
+	}
+	retval->pixels = frame->get_pixel_data_ptr();
+	SDL_UnlockSurface(retval);
+	return retval;
+}
+
 static SDL_Rect tv_render_gen_window_rect(tv_window_t *window){
-		SDL_Rect window_rect;
-		window_rect.w = window->get_x_res();
-		window_rect.x = window->get_x_pos();
-		window_rect.h = window->get_y_res();
-		window_rect.y = window->get_y_pos();
-		return window_rect;
+	SDL_Rect window_rect;
+	window_rect.w = window->get_x_res();
+	window_rect.x = window->get_x_pos();
+	window_rect.h = window->get_y_res();
+	window_rect.y = window->get_y_pos();
+	return window_rect;
 }
 
 static bool tv_frame_valid(tv_frame_t *frame){
@@ -161,11 +206,10 @@ static void tv_render_all(){
 		if(sdl_window_surface == nullptr){
 			print("sdl_window_surface is nullptr", P_ERR);
 		}
-		SDL_Surface *frame_surface =
-			tv_render_frame_to_surface(frame);
 		SDL_Rect sdl_window_rect = 
 			tv_render_gen_window_rect(window);
-		// should it have the sdl_ prefix?
+		SDL_Surface *frame_surface =
+			tv_render_frame_to_surface_ptr(frame);
 		if(SDL_BlitSurface(frame_surface,
 				   NULL,
 				   sdl_window_surface,
@@ -174,6 +218,8 @@ static void tv_render_all(){
 		}else{
 			print("surface blit without errors", P_SPAM);
 		}
+		frame_surface->pixels = nullptr;
+		// direct pointer to frame if *_ptr was called
 		SDL_FreeSurface(frame_surface);
 		frame_surface = nullptr;
 	}
@@ -193,20 +239,22 @@ void tv_loop(){
 	tv_render_all();
 }
 
+#define TEST_FRAME_SIZE 120
+
 static void tv_init_test_channel(){
 	tv_window_t *window =
 		new tv_window_t;
 	tv_channel_t *channel =
 		new tv_channel_t;
 	window->set_channel_id(channel->id.get_id());
-	std::array<tv_frame_t*, 12> tmp_frames = {{nullptr}};
-	for(uint64_t i = 0;i < 12;i++){
+	std::array<tv_frame_t*, TEST_FRAME_SIZE> tmp_frames = {{nullptr}};
+	for(uint64_t i = 0;i < TEST_FRAME_SIZE;i++){
 		tmp_frames[i] = new tv_frame_t;
 		tmp_frames[i]->reset(240, // intentionally low because set_pixel is slow
 				     144,
 				     8,
-				     ((1000*1000)/60)*i,
-				     44100,
+				     ((1000*1000))*i,
+				     1,
 				     1,
 				     1);
 		for(uint64_t x = 0;x < 240;x++){
@@ -214,15 +262,17 @@ static void tv_init_test_channel(){
 				tmp_frames[i]->set_pixel(x,
 							 y,
 							 std::make_tuple<uint64_t, uint64_t, uint64_t, uint8_t>(
-								 true_rand(0, 255),
-								 true_rand(0, 255),
-								 true_rand(0, 255),
+								 (x^y) & 255,
+								 (x^y) & 255,
+								 (x^y) & 255,
 								 8));
+				// just put here for testing different SDL frame
+				// models, but it is suprisingly cool
 			}
 		}
 	}
 	tmp_frames[0]->id.set_next_linked_list(0, tmp_frames[1]->id.get_id());
-	for(uint64_t i = 1;i < 11;i++){
+	for(uint64_t i = 1;i < TEST_FRAME_SIZE-1;i++){
 		tmp_frames[i]->id.set_prev_linked_list(0,
 						       tmp_frames[i-1]->id.get_id());
 		tmp_frames[i]->id.set_next_linked_list(0,

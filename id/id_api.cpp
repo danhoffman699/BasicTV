@@ -4,7 +4,15 @@
 static data_id_t **id_list = nullptr;
 static std::vector<std::pair<std::vector<uint64_t>, std::array<uint8_t, TYPE_LENGTH> > > type_cache;
 
+static void check_and_allocate_list(){
+	if(unlikely(id_list == nullptr)){
+		id_list = new data_id_t*[ID_ARRAY_SIZE];
+		memset(id_list, 0, ID_ARRAY_SIZE*sizeof(data_id_t*));
+	}
+}
+
 static data_id_t *id_find(uint64_t id){
+	check_and_allocate_list();
 	for(uint64_t i = 0;i < ID_ARRAY_SIZE;i++){
 		if(id_list[i] == nullptr){
 			continue;
@@ -56,10 +64,7 @@ void *id_api::array::ptr_data(uint64_t id,
 }
 
 void id_api::array::add(uint64_t id, data_id_t *ptr){
-	if(id_list == nullptr){
-		id_list = new data_id_t*[ID_ARRAY_SIZE];
-		memset(id_list, 0, ID_ARRAY_SIZE*sizeof(data_id_t*));
-	}
+	check_and_allocate_list();
 	for(uint64_t i = 0;i < ID_ARRAY_SIZE;i++){
 		if(id_list[i] == nullptr){
 			id_list[i] = ptr;
@@ -70,13 +75,13 @@ void id_api::array::add(uint64_t id, data_id_t *ptr){
 }
 
 void id_api::array::del(uint64_t id){
+	check_and_allocate_list();
 	for(uint64_t i = 0;i < ID_ARRAY_SIZE;i++){
 		if(id_list[i] == nullptr){
 			continue;
 		}
 		if(id_list[i]->get_id() == id){
 			id_list[i] = nullptr;
-			return;
 		}
 	}
 	print("cannot find ID in list", P_ERR);
