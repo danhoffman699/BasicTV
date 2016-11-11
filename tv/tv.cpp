@@ -33,6 +33,10 @@
 #include "tv_patch.h"
 #include "tv_window.h"
 
+#define TEST_FRAME_SIZE 120
+#define WINDOW_X_RES 1280
+#define WINDOW_Y_RES 720
+
 /*
   TODO: clean up all of this code. I made it in a hurry to use as proof
   that it all works fine. Most of what is here doesn't break anything
@@ -68,11 +72,7 @@ static SDL_Surface* tv_render_frame_to_surface_copy(tv_frame_t *frame){
 				     0,
 				     0,
 				     0);
-	if(surface->format->BytesPerPixel != 3){
-		P_V(surface->format->BytesPerPixel, P_WARN);
-		print("surface created with improper BPP", P_CRIT);
-		// can't render it, at least not yet
-	}
+	// probably doesn't work, but the reference copy does
 	for(uint64_t x = 0;x < surface->w;x++){
 		for(uint64_t y = 0;y < surface->h;y++){
 			uint8_t *pixel_byte = (uint8_t*)surface->pixels + y * surface->pitch +
@@ -123,6 +123,11 @@ static SDL_Surface* tv_render_frame_to_surface_ptr(tv_frame_t *frame){
 	SDL_UnlockSurface(retval);
 	return retval;
 }
+
+/*
+  This is a lot easier to generate than a test card, and looks a lot
+  better as well. 
+ */
 
 static void tv_frame_gen_xor_frame(uint8_t *frame, uint64_t x_, uint64_t y_, uint8_t bpc){
 	if(unlikely(bpc != 8)){
@@ -175,6 +180,35 @@ static uint64_t tv_render_id_of_last_valid_frame(uint64_t current){
 	return current;
 }
 
+static void tv_render_frame_to_screen_surface(tv_frame_t *frame,
+					      SDL_Surface *sdl_window_surface,
+					      SDL_Rect sdl_window_rect){
+	SDL_Surface *frame_surface = nullptr;
+	bool custom_pixel_data = false;
+	if(frame->get_bpc() == 8){
+		frame_surface =
+			tv_render_frame_to_surface_ptr(frame);
+		custom_pixel_data = true;
+	}else{
+		frame_surface =
+			tv_render_frame_to_surface_copy(frame);
+		custom_pixel_data = false;
+	}
+	if(unlikely(SDL_BlitSurface(frame_surface,
+				    NULL,
+				    sdl_window_surface,
+				    &sdl_window_rect) < 0)){
+		print((std::string)"couldn't blit surface:"+SDL_GetError(), P_CRIT);
+	}else{
+		print("surface blit without errors", P_SPAM);
+	}
+	if(custom_pixel_data){
+		frame_surface->pixels = nullptr;
+	}
+	SDL_FreeSurface(frame_surface);
+	frame_surface = nullptr;
+}
+
 static void tv_render_all(){
 	std::vector<uint64_t> all_windows =
 		id_api::cache::get("tv_window_t");
@@ -197,44 +231,21 @@ static void tv_render_all(){
 		}
 		SDL_Surface *sdl_window_surface =
 			SDL_GetWindowSurface(sdl_window);
-		if(sdl_window_surface == nullptr){
+		if(unlikely(sdl_window_surface == nullptr)){
 			print("sdl_window_surface is nullptr", P_ERR);
 		}
 		SDL_Rect sdl_window_rect = 
 			tv_render_gen_window_rect(window);
-		SDL_Surface *frame_surface = nullptr;
-
-		bool custom_pixel_data = false;
-		if(frame->get_bpc() == 8){
-			frame_surface =
-				tv_render_frame_to_surface_ptr(frame);
-			custom_pixel_data = true;
-		}else{
-			frame_surface =
-				tv_render_frame_to_surface_copy(frame);
-			custom_pixel_data = false;
-		}
-		if(unlikely(SDL_BlitSurface(frame_surface,
-					    NULL,
-					    sdl_window_surface,
-					    &sdl_window_rect) < 0)){
-			print((std::string)"couldn't blit surface:"+SDL_GetError(), P_CRIT);
-		}else{
-			print("surface blit without errors", P_SPAM);
-		}
-		if(custom_pixel_data){
-			frame_surface->pixels = nullptr;
-		}
-		// direct pointer to frame if *_ptr was called
-		SDL_FreeSurface(frame_surface);
-		frame_surface = nullptr;
+		tv_render_frame_to_screen_surface(frame,
+						  sdl_window_surface,
+						  sdl_window_rect);
 	}
 	print("elapsed time:" + std::to_string((get_time_microseconds()-ms_start)/(long double)1000000.0), P_DEBUG);
 	/*
 	  All surfaces that have been used for rendering have been blitted
 	  to the screen
 	 */
-	if(SDL_UpdateWindowSurface(sdl_window) < 0){
+	if(unlikely(SDL_UpdateWindowSurface(sdl_window) < 0)){
 		print((std::string)"cannot update sdl_window:"+SDL_GetError(), P_CRIT);
 	}else{
 		print("updated sdl_window without errors", P_SPAM);
@@ -245,8 +256,6 @@ void tv_loop(){
 	tv_render_all();
 }
 
-#define TEST_FRAME_SIZE 120
-
 static void tv_init_test_channel(){
 	tv_window_t *window =
 		new tv_window_t;
@@ -256,8 +265,8 @@ static void tv_init_test_channel(){
 	std::array<tv_frame_t*, TEST_FRAME_SIZE> tmp_frames = {{nullptr}};
 	for(uint64_t i = 0;i < TEST_FRAME_SIZE;i++){
 		tmp_frames[i] = new tv_frame_t;
-		tmp_frames[i]->reset(240, // intentionally low because set_pixel is slow
-				     144,
+		tmp_frames[i]->reset(WINDOW_X_RES, // intentionally low because set_pixel is slow
+				     WINDOW_Y_RES,
 				     8,
 				     ((1000*1000))*i,
 				     1,
@@ -296,8 +305,8 @@ void tv_init(){
 	sdl_window = SDL_CreateWindow("BasicTV",
 				  SDL_WINDOWPOS_CENTERED,
 				  SDL_WINDOWPOS_CENTERED,
-				  640,
-				  480,
+				  WINDOW_X_RES,
+				  WINDOW_Y_RES,
 				  SDL_WINDOW_SHOWN);
 	if(sdl_window == nullptr){
 		print((std::string)"window is nullptr:"+SDL_GetError(), P_ERR);

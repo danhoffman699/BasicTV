@@ -60,17 +60,14 @@ void tv_frame_t::reset(uint64_t x,
 
 uint64_t tv_frame_t::get_raw_pixel_pos(uint64_t x,
 				       uint64_t y){
-	if(bpc % 8 != 0){
-		print("bpc isn't valid", P_CRIT);
-	}
-	if(x > x_res || y > y_res){
+	if(unlikely(x > x_res || y > y_res)){
 		print("resolution out of bounds", P_CRIT);
 	}
 	const uint64_t major =
 		x_res*y;
 	const uint64_t minor =
 		x;
-	if(bpc != 8){
+	if(unlikely(bpc != 8)){
 		print("cannot support alternate frames at the time", P_ERR);
 	}
 	const uint64_t raw_pixel_pos = 
