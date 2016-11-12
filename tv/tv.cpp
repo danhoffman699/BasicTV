@@ -269,6 +269,11 @@ static void tv_init_test_channel(){
 	std::array<tv_frame_t*, TEST_FRAME_SIZE> tmp_frames = {{nullptr}};
 	tv_menu_t *menu = new tv_menu_t;
 	menu->set_menu_entry(0, "BasicTV");
+	menu->set_menu_entry(1, "is");
+	menu->set_menu_entry(2, "going");
+	menu->set_menu_entry(3, "to");
+	menu->set_menu_entry(4, "be");
+	menu->set_menu_entry(5, "great");
 	channel->set_latest_frame_id(menu->get_frame_id());
 }
 

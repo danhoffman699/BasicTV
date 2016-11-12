@@ -5,8 +5,10 @@
 // the last two are for characters that reach below the line, making the
 // practical size 4x6
 #define GLYPH_X 4
+#define GLYPH_X_BORDER 1
 #define GLYPH_Y_MAIN 6
 #define GLYPH_Y_FULL 8
+#define GLYPH_Y_BORDER 1
 static std::array<std::array<std::array<bool, GLYPH_X>, GLYPH_Y_FULL>, 256> char_data = {{{{{{0}}}}}};
 
 static bool valid_char_data = false;
@@ -339,11 +341,11 @@ void tv_menu_t::update_frame(){
 		     1, // don't have any audio
 		     1);
 	for(uint64_t line = 0;line < 64;line++){
-		const uint64_t y_pos = line*GLYPH_Y_MAIN;
+		const uint64_t y_pos = line*(GLYPH_Y_MAIN+GLYPH_Y_BORDER);
 		for(uint64_t curr_char = 0;
 		    curr_char < menu_entries[line].size();
 		    curr_char++){
-			const uint64_t x_pos = curr_char*(GLYPH_X+1);
+			const uint64_t x_pos = curr_char*(GLYPH_X+GLYPH_X_BORDER);
 			tv_menu_render_glyph_to_frame(menu_entries[line][curr_char],
 						      frame,
 						      x_pos,
