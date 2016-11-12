@@ -15,7 +15,7 @@
  */
 #define TV_FRAME_DEFAULT_X 640
 #define TV_FRAME_DEFAULT_Y 480
-#define TV_FRAME_DEFAULT_COLOR_DEPTH 2
+#define TV_FRAME_DEFAULT_BPC 8
 #define TV_FRAME_DEFAULT_REFRESH_RATE 30
 // 30Hz
 #define TV_FRAME_DEFAULT_TIME_TO_LIVE (1000*1000/30)
@@ -76,7 +76,7 @@ public:
 	 */
 	void reset(uint64_t x = TV_FRAME_DEFAULT_X,
 		   uint64_t y = TV_FRAME_DEFAULT_Y,
-		   uint8_t color_depth_ = TV_FRAME_DEFAULT_COLOR_DEPTH,
+		   uint8_t bpc_ = TV_FRAME_DEFAULT_BPC,
 		   uint64_t time_to_live_micro_s_ = (uint64_t)((1/MICRO_PREFIX)*TV_FRAME_DEFAULT_TIME_TO_LIVE),
 		   uint64_t sampling_rate_ = TV_FRAME_DEFAULT_SAMPLING_RATE,
 		   uint8_t channel_count_ = TV_FRAME_DEFAULT_CHANNEL_COUNT,

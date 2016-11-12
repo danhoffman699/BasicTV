@@ -4,7 +4,7 @@
 #include "array"
 struct tv_menu_t{
 private:
-	std::array<std::string, 64> menu_entries;
+	std::array<std::string, 64> menu_entries = {{""}};
 	uint16_t highlighed = 0;
 	uint64_t frame_id = 0;
 	void update_frame();

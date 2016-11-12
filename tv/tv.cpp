@@ -32,6 +32,7 @@
 #include "tv_frame.h"
 #include "tv_patch.h"
 #include "tv_window.h"
+#include "tv_menu.h"
 
 #define TEST_FRAME_SIZE 120
 #define WINDOW_X_RES 1280
@@ -266,28 +267,9 @@ static void tv_init_test_channel(){
 		new tv_channel_t;
 	window->set_channel_id(channel->id.get_id());
 	std::array<tv_frame_t*, TEST_FRAME_SIZE> tmp_frames = {{nullptr}};
-	for(uint64_t i = 0;i < TEST_FRAME_SIZE;i++){
-		tmp_frames[i] = new tv_frame_t;
-		tmp_frames[i]->reset(WINDOW_X_RES, // intentionally low because set_pixel is slow
-				     WINDOW_Y_RES,
-				     8,
-				     ((1000*1000))*i,
-				     1,
-				     1,
-				     1);
-		tv_frame_gen_xor_frame((uint8_t*)tmp_frames[i]->get_pixel_data_ptr(),
-				       tmp_frames[i]->get_x_res(),
-				       tmp_frames[i]->get_y_res(),
-				       tmp_frames[i]->get_bpc());
-	}
-	tmp_frames[0]->id.set_next_linked_list(0, tmp_frames[1]->id.get_id());
-	for(uint64_t i = 1;i < TEST_FRAME_SIZE-1;i++){
-		tmp_frames[i]->id.set_prev_linked_list(0,
-						       tmp_frames[i-1]->id.get_id());
-		tmp_frames[i]->id.set_next_linked_list(0,
-						       tmp_frames[i+1]->id.get_id());
-	}
-	channel->set_latest_frame_id(tmp_frames[0]->id.get_id());
+	tv_menu_t *menu = new tv_menu_t;
+	menu->set_menu_entry(0, "BasicTV");
+	channel->set_latest_frame_id(menu->get_frame_id());
 }
 
 void tv_init(){

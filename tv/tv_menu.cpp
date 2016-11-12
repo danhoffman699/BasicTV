@@ -4,7 +4,12 @@
 // defined as an 4x8, only two colors for now
 // the last two are for characters that reach below the line, making the
 // practical size 4x6
-static std::array<std::array<std::array<bool, 4>, 8>, 256> char_data = {{{{{{0}}}}}};
+#define GLYPH_X 4
+#define GLYPH_Y_MAIN 6
+#define GLYPH_Y_FULL 8
+static std::array<std::array<std::array<bool, GLYPH_X>, GLYPH_Y_FULL>, 256> char_data = {{{{{{0}}}}}};
+
+static bool valid_char_data = false;
 
 static void init_char_data(){
 	char_data['A'] = {{
@@ -275,15 +280,49 @@ static void init_char_data(){
 	char_data['x'] = char_data['X'];
 	char_data['y'] = char_data['Y'];
 	char_data['z'] = char_data['Z'];
+	valid_char_data = true;
 }
 
 tv_menu_t::tv_menu_t() : id(this, __FUNCTION__){
 	id.add_data(&frame_id, sizeof(frame_id));
 	id.add_id(&frame_id, 1);
 	frame_id = (new tv_frame_t)->id.get_id();
+	if(unlikely(valid_char_data == false)){
+		init_char_data();
+	}
 }
 
 tv_menu_t::~tv_menu_t(){
+}
+
+static void tv_menu_render_glyph_to_frame(int8_t glyph,
+					  tv_frame_t *frame,
+					  uint64_t x_,
+					  uint64_t y_){
+	for(uint64_t x = 0;x < GLYPH_X;x++){
+		for(uint64_t y = 0;y < GLYPH_Y_FULL;y++){
+			const uint64_t frame_x =
+				x+x_;
+			const uint64_t frame_y =
+				y+y_;
+			const uint64_t glyph_x =
+				x;
+			const uint64_t glyph_y =
+				y;
+			const int8_t map_entry =
+				char_data[glyph][glyph_y][glyph_x];
+			std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> color =
+				std::make_tuple(0, 0, 0, 8);
+			if(map_entry != 0){
+				color = std::make_tuple(
+					255,
+					255,
+					255,
+					8);
+			} // TODO: add alpha channel, at least in menu settings
+			frame->set_pixel(frame_x, frame_y, color);
+		}
+	}
 }
 
 void tv_menu_t::update_frame(){
@@ -292,7 +331,25 @@ void tv_menu_t::update_frame(){
 	if(never(frame == nullptr)){
 		print("menu frame is a nullptr", P_CRIT);
 	}
-	
+	frame->reset(512,
+		     512,
+		     TV_FRAME_DEFAULT_BPC, // not needed, only for fast rendering
+		     0, // not a typical frame, doesn't need a frame rate
+		     1,
+		     1, // don't have any audio
+		     1);
+	for(uint64_t line = 0;line < 64;line++){
+		const uint64_t y_pos = line*GLYPH_Y_MAIN;
+		for(uint64_t curr_char = 0;
+		    curr_char < menu_entries[line].size();
+		    curr_char++){
+			const uint64_t x_pos = curr_char*(GLYPH_X+1);
+			tv_menu_render_glyph_to_frame(menu_entries[line][curr_char],
+						      frame,
+						      x_pos,
+						      y_pos);
+		}
+	}
 }
 
 void tv_menu_t::set_menu_entry(uint16_t entry,
@@ -316,7 +373,6 @@ void tv_menu_t::set_highlighed(uint16_t highlighted_){
 		print("highlighed_ is larger than the max", P_CRIT);
 	}
 	highlighed = highlighted_;
-	update_frame();
 }
 
 uint64_t tv_menu_t::get_frame_id(){
