@@ -184,6 +184,7 @@ static uint64_t tv_render_id_of_last_valid_frame(uint64_t current){
 	return current;
 }
 
+
 static void tv_render_frame_to_screen_surface(tv_frame_t *frame,
 					      SDL_Surface *sdl_window_surface,
 					      SDL_Rect sdl_window_rect){
@@ -199,20 +200,10 @@ static void tv_render_frame_to_screen_surface(tv_frame_t *frame,
 			tv_render_frame_to_surface_copy(frame);
 		custom_pixel_data = false;
 	}
-	SDL_Rect *rect = nullptr;
-	if(sdl_window_rect.w == sdl_window_surface->w &&
-	   sdl_window_rect.h == sdl_window_surface->h){
-		// Only set to null becuase of automatic stretching
-		print("detected a center screen, setting rect to nullptr", P_DEBUG);
-		rect = nullptr;
-	}else{
-		print("detected a non-center screen, setting rect to sdl_window_rect", P_DEBUG);
-		rect = &sdl_window_rect;
-	}
 	if(unlikely(SDL_BlitScaled(frame_surface,
 				    NULL,
 				    sdl_window_surface,
-				    rect) < 0)){
+				    &sdl_window_rect) < 0)){
 		print((std::string)"couldn't blit surface:"+SDL_GetError(), P_CRIT);
 	}else{
 		print("surface blit without errors", P_SPAM);
