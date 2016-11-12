@@ -1,6 +1,22 @@
 #include "tv_menu.h"
 #include "tv_frame.h"
 
+/*
+  tv_menu: a standardized menu setup. I want this program to be as simple,
+  but as versatile as possible. I plan on hard coding all of the ASCII, and
+  trying to make other small characters work (appending 'e' to the end of an
+  umlatued word, esset to 'ss', etc.). I don't plan on supporting Russian, 
+  Chinese, Korean, or any other wonky alphabets with hardcoding, but instead
+  load TrueType fonts. However, there isn't anything I won't try to hard-code
+  if somebody requests it.
+
+  The glyph size is going to increase with more advanced symbols, but it should
+  stay roughly the same for the rest of the ASCII alphabet. I don't plan on 
+  having different sizes of the same font, but just increase the size of the 
+  one font through blitting (the entire menu will be expanded out to the screen,
+  and it starts as a 512x512 (64x64 characters at the planned max size of 8x8).
+ */
+
 // defined as an 4x8, only two colors for now
 // the last two are for characters that reach below the line, making the
 // practical size 4x6
@@ -202,10 +218,10 @@ static void init_char_data(){
 		}};
 	char_data['X'] = {{
 			{{1, 0, 0, 1}},
+			{{1, 0, 0, 1}},
 			{{0, 1, 1, 0}},
-			{{0, 0, 1, 0}},
-			{{0, 1, 0, 0}},
 			{{0, 1, 1, 0}},
+			{{1, 0, ;0, 1}},
 			{{1, 0, 0, 1}}
 		}};
 	char_data['Y'] = {{
@@ -256,6 +272,7 @@ static void init_char_data(){
 			{{0, 0, 1, 1}},
 			{{0, 0, 1, 1}}
 		}};
+	// probably shouldn't do this
 	char_data['a'] = char_data['A'];
 	char_data['b'] = char_data['B'];
 	char_data['c'] = char_data['C'];
