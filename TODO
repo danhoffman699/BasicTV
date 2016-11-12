@@ -6,7 +6,9 @@ Enable support for seamless exchanges between tv_frame_t and tv_patch_t IDs
 Allow for both edited and unedited clips to be allowed
 	Embed a value into a virtual class for tv_frame_t and tv_patch_t for unedited IDs
 Implement some sort of closed captioning system?
+Implement audio feeds in general?
 Implement some different audio feeds for different languages?
+	  Seperate the frame into two different types, video and audio
 Define tv_frame_t as tv_frames_t and use the pre-defined allocated space for an arbitrary number
 of frames, so that large chunks of RAM aren't being wasted
 	This can probably be done easily with adding an offset to the getters and setters, and

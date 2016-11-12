@@ -26,6 +26,13 @@
 #define likely(x)      __builtin_expect(!!(x), 1)
 #define unlikely(x)    __builtin_expect(!!(x), 0)
 
+/*
+  A lot of times, never and always are paired with error messages
+  that can easily be fixed. However, always and never are in direct
+  defiance of the defined behavior, and any instance where an always
+  or never flag is wrong means something internal is wrong
+ */
+
 #ifdef DEBUG
 #define never(x) unlikely(x)
 #define always(x) likely(x)

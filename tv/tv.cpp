@@ -189,16 +189,14 @@ static void tv_render_frame_to_screen_surface(tv_frame_t *frame,
 					      SDL_Surface *sdl_window_surface,
 					      SDL_Rect sdl_window_rect){
 	SDL_Surface *frame_surface = nullptr;
-	bool custom_pixel_data = false;
-	// Bitmasks aren't special in BPC, but maybe check for byte order?
-	if(frame->get_bpc() == 8){
+	bool custom_pixel_data = frame->get_bpc() == 8;
+	// Bitmasks aren't special in BPC, but maybe check for byte order (BGR)?
+	if(custom_pixel_data){
 		frame_surface =
 			tv_render_frame_to_surface_ptr(frame);
-		custom_pixel_data = true;
 	}else{
 		frame_surface =
 			tv_render_frame_to_surface_copy(frame);
-		custom_pixel_data = false;
 	}
 	if(unlikely(SDL_BlitScaled(frame_surface,
 				    NULL,
