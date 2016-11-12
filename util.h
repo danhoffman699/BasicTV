@@ -26,6 +26,14 @@
 #define likely(x)      __builtin_expect(!!(x), 1)
 #define unlikely(x)    __builtin_expect(!!(x), 0)
 
+#ifdef DEBUG
+#define never(x) unlikely(x)
+#define always(x) likely(x)
+#else
+#define never(x) false
+#define always(x) true
+#endif
+
 extern void sleep_ms(int ms, bool force = false);
 extern int search_for_argv(std::string);
 extern std::string get_argv(int a);

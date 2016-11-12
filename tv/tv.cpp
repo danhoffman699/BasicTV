@@ -142,12 +142,16 @@ static void tv_frame_gen_xor_frame(uint8_t *frame, uint64_t x_, uint64_t y_, uin
 	}
 }
 
-static SDL_Rect tv_render_gen_window_rect(tv_window_t *window){
+static SDL_Rect tv_render_gen_window_rect(tv_window_t *window,
+					  SDL_Surface *surface){
 	SDL_Rect window_rect;
-	window_rect.w = window->get_x_res();
-	window_rect.x = window->get_x_pos();
-	window_rect.h = window->get_y_res();
-	window_rect.y = window->get_y_pos();
+	if(window->get_pos() != TV_WINDOW_CT){
+		print("unsupported window position", P_CRIT);
+	}
+	window_rect.w = surface->w;
+	window_rect.x = 0;
+	window_rect.h = surface->h;
+	window_rect.y = 0;
 	return window_rect;
 }
 
@@ -185,6 +189,7 @@ static void tv_render_frame_to_screen_surface(tv_frame_t *frame,
 					      SDL_Rect sdl_window_rect){
 	SDL_Surface *frame_surface = nullptr;
 	bool custom_pixel_data = false;
+	// Bitmasks aren't special in BPC, but maybe check for byte order?
 	if(frame->get_bpc() == 8){
 		frame_surface =
 			tv_render_frame_to_surface_ptr(frame);
@@ -194,10 +199,20 @@ static void tv_render_frame_to_screen_surface(tv_frame_t *frame,
 			tv_render_frame_to_surface_copy(frame);
 		custom_pixel_data = false;
 	}
-	if(unlikely(SDL_BlitSurface(frame_surface,
+	SDL_Rect *rect = nullptr;
+	if(sdl_window_rect.w == sdl_window_surface->w &&
+	   sdl_window_rect.h == sdl_window_surface->h){
+		// Only set to null becuase of automatic stretching
+		print("detected a center screen, setting rect to nullptr", P_DEBUG);
+		rect = nullptr;
+	}else{
+		print("detected a non-center screen, setting rect to sdl_window_rect", P_DEBUG);
+		rect = &sdl_window_rect;
+	}
+	if(unlikely(SDL_BlitScaled(frame_surface,
 				    NULL,
 				    sdl_window_surface,
-				    &sdl_window_rect) < 0)){
+				    rect) < 0)){
 		print((std::string)"couldn't blit surface:"+SDL_GetError(), P_CRIT);
 	}else{
 		print("surface blit without errors", P_SPAM);
@@ -212,7 +227,6 @@ static void tv_render_frame_to_screen_surface(tv_frame_t *frame,
 static void tv_render_all(){
 	std::vector<uint64_t> all_windows =
 		id_api::cache::get("tv_window_t");
-	uint64_t ms_start = get_time_microseconds();
 	for(uint64_t i = 0;i < all_windows.size();i++){
 		print("found a window", P_SPAM);
 		tv_window_t *window = PTR_DATA(all_windows[i], tv_window_t);
@@ -235,15 +249,15 @@ static void tv_render_all(){
 			print("sdl_window_surface is nullptr", P_ERR);
 		}
 		SDL_Rect sdl_window_rect = 
-			tv_render_gen_window_rect(window);
+			tv_render_gen_window_rect(window,
+						  sdl_window_surface);
 		tv_render_frame_to_screen_surface(frame,
 						  sdl_window_surface,
 						  sdl_window_rect);
 	}
-	print("elapsed time:" + std::to_string((get_time_microseconds()-ms_start)/(long double)1000000.0), P_DEBUG);
 	/*
 	  All surfaces that have been used for rendering have been blitted
-	  to the screen
+	  to the screen previously
 	 */
 	if(unlikely(SDL_UpdateWindowSurface(sdl_window) < 0)){
 		print((std::string)"cannot update sdl_window:"+SDL_GetError(), P_CRIT);
@@ -272,19 +286,6 @@ static void tv_init_test_channel(){
 				     1,
 				     1,
 				     1);
-		/*for(uint64_t x = 0;x < 240;x++){
-			for(uint64_t y = 0;y < 144;y++){
-				tmp_frames[i]->set_pixel(x,
-							 y,
-							 std::make_tuple<uint64_t, uint64_t, uint64_t, uint8_t>(
-								 (x^y) & 255,
-								 (x^y) & 255,
-								 (x^y) & 255,
-								 8));
-				// just put here for testing different SDL frame
-				// models, but it is suprisingly cool
-			}
-			}*/
 		tv_frame_gen_xor_frame((uint8_t*)tmp_frames[i]->get_pixel_data_ptr(),
 				       tmp_frames[i]->get_x_res(),
 				       tmp_frames[i]->get_y_res(),
@@ -307,7 +308,7 @@ void tv_init(){
 				  SDL_WINDOWPOS_CENTERED,
 				  WINDOW_X_RES,
 				  WINDOW_Y_RES,
-				  SDL_WINDOW_SHOWN);
+				  SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
 	if(sdl_window == nullptr){
 		print((std::string)"window is nullptr:"+SDL_GetError(), P_ERR);
 	}

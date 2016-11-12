@@ -31,14 +31,10 @@ void data_id_t::init_list_all_data(){
 	add_data(&(linked_list[0]), ID_LL_WIDTH*ID_LL_HEIGHT);
 }
 
-static uint64_t id_inc = 1;
-
 void data_id_t::init_gen_id(){
-	//while(id == 0){
-	//	id = true_rand(0, 0xFFFFFFFFFFFFFFFF);
-	//} // prevents "random" returning zero
-	id = id_inc;
-	id_inc++;
+	while(id == 0){
+		id = true_rand(0, 0xFFFFFFFFFFFFFFFF);
+	} // prevents "random" returning zero
 	// Testing locally only
 }
 

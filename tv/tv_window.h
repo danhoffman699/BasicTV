@@ -3,6 +3,12 @@
 #ifndef TV_WINDOW_H
 #define TV_WINDOW_H
 #include "SDL2/SDL.h"
+// get a better way to do this
+#define TV_WINDOW_CT 0
+#define TV_WINDOW_UL 1
+#define TV_WINDOW_UR 2
+#define TV_WINDOW_LL 2
+#define TV_WINDOW_LR 3
 /*
   A channel has to exist inside of a window at all times. When moving from
   a lower resolution to a higher resolution display, the top-left channel
@@ -17,19 +23,14 @@
 
 struct tv_window_t{
 private:
-	uint64_t x_res = 0;
-	uint64_t y_res = 0;
-	uint64_t x_pos = 0;
-	uint64_t y_pos = 0;
+	uint8_t pos = TV_WINDOW_CT;
 	uint64_t channel_id = 0;
 public:
 	data_id_t id;
 	tv_window_t();
 	~tv_window_t();
-	uint64_t get_x_pos();
-	void get_x_pos(uint64_t x_pos_);
-	uint64_t get_y_pos();
-	void get_y_pos(uint64_t y_pos_);
+	void set_pos(uint8_t pos_);
+	uint8_t get_pos();
 	uint64_t get_channel_id();
 	void set_channel_id(uint64_t);
 	// generated from the position
