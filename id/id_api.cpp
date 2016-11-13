@@ -27,18 +27,18 @@ static data_id_t *id_find(uint64_t id){
 data_id_t *id_api::array::ptr_id(uint64_t id,
 				 std::string type){
 	if(id == 0){
-		throw std::runtime_error("ptr_id: zero ID");
+		return nullptr;
 	}
 	data_id_t *retval = id_find(id);
 	if(retval == nullptr){
-		throw std::runtime_error("ptr_id: retval == nullptr (ID:" + std::to_string(id) + ")");
+		return nullptr;
 	}
 	// blank type is a wildcard, currently onlu used for PGP sorting
 	// "" is used for direct calls
 	if(retval->get_type() != type && type != ""){
 		P_V_S(retval->get_type(), P_ERR);
 		P_V_S(type, P_ERR);
-		throw std::runtime_error("ptr_id: ID found, but type mis-match");
+		return nullptr;
 	}
 	return retval;
 }
@@ -51,9 +51,8 @@ data_id_t *id_api::array::ptr_id(uint64_t id,
 void *id_api::array::ptr_data(uint64_t id,
 			      std::string type){
 	data_id_t *id_ptr = ptr_id(id, type);
-	// error thrown on all null cases
-	if(id_ptr->get_ptr() == nullptr){
-		throw std::runtime_error("ptr_data: get_ptr() == nullptr");
+	if(id_ptr == nullptr){
+		return nullptr;
 	}
 	return id_ptr->get_ptr();
 }

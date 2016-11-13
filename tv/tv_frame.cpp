@@ -4,6 +4,21 @@
 #include "tv_channel.h"
 #include "tv_frame.h"
 
+static bool valid_bpc(uint8_t bpc){
+	return bpc == 8;
+}
+
+static bool valid_masks(uint64_t red,
+			uint64_t green,
+			uint64_t blue,
+			uint64_t alpha){
+	// P_V_B(red, P_SPAM);
+	// P_V_B(green, P_SPAM);
+	// P_V_B(blue, P_SPAM);
+	// P_V_B(alpha, P_SPAM);
+	return true;
+}
+
 tv_frame_t::tv_frame_t() : id(this, __FUNCTION__){
 	id.add_data(&(frame[0]), sizeof(frame[0])*TV_FRAME_SIZE);
 	id.add_data(&channel_id, sizeof(channel_id));
@@ -37,9 +52,28 @@ void tv_frame_t::reset(uint64_t x,
 	if(x*y*(bpc*3) > TV_FRAME_SIZE){
 		print("frame is too large for picture array", P_ERR);
 	}
+	if(!valid_bpc(bpc_)){
+		P_V(bpc_, P_WARN);
+		print("invalid BPC", P_ERR);
+	}
+	if(!valid_masks(red_mask_,
+			green_mask_,
+			blue_mask_,
+			alpha_mask_)){
+		P_V_B(red_mask_, P_WARN);
+		P_V_B(green_mask_, P_WARN);
+		P_V_B(blue_mask_, P_WARN);
+		P_V_B(alpha_mask_, P_WARN);
+		print("invalid masks", P_ERR);
+	}
+	if(x_res == 0 ^ y_res == 0){
+		print("one zero dimension found in tv_frame_t", P_WARN);
+		// won't break anything
+	}else if(x_res == 0 && y_res == 0){
+		print("empty frame generated", P_SPAM);
+	}
 	x_res = x;
 	y_res = y;
-	P_V(bpc, P_SPAM);
 	bpc = bpc_;
 	red_mask = red_mask_;
 	green_mask = green_mask_;
@@ -48,8 +82,8 @@ void tv_frame_t::reset(uint64_t x,
 	time_to_live_micro_s = time_to_live_micro_s_;
 	channel_count = channel_count_;
 	amp_depth = amp_depth_;
-	frame.fill(0);
 	timestamp_micro_s = get_time_microseconds();
+	frame.fill(0);
 }
 
 #define COLOR_RED 0
@@ -65,7 +99,7 @@ uint64_t tv_frame_t::get_raw_pixel_pos(uint64_t x,
 		x_res*y;
 	const uint64_t minor =
 		x;
-	if(unlikely(bpc != 8)){
+	if(unlikely(!valid_bpc(bpc))){
 		print("cannot support alternate frames at the time", P_ERR);
 	}
 	const uint64_t raw_pixel_pos = 
@@ -80,8 +114,8 @@ static void tv_frame_color_sanity_check(std::tuple<uint64_t, uint64_t, uint64_t,
 	   std::get<2>(color) > MASK(bpc)){
 		print("color is not withing BPC bounds", P_ERR);
 	}
-	if(bpc != 8){
-		print("BPC is not a valid value", P_ERR);
+	if(unlikely(!valid_bpc(bpc))){
+		print("BPC is invalid", P_ERR);
 	}
 }
 

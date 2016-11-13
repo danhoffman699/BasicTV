@@ -353,37 +353,54 @@ void tv_menu_t::update_frame(){
 	uint64_t x_count = 0;
 	uint64_t y_count = 0;
 	for(uint64_t i = 0;i < 64;i++){
-		if(menu_entries[i].size() == 0){
+		tv_menu_entry_t *entry_ =
+			PTR_DATA(entry[i], tv_menu_entry_t);
+		if(entry_ == nullptr){
 			y_count = i;
 			break;
 		}
-		if(menu_entries[i].size() > x_count){
-			x_count = menu_entries[i].size();
+		if(entry_->get_text().size() == 0){
+			y_count = i;
+			break;
+		} // should this still be here?
+		if(entry_->get_text().size() > x_count){
+			x_count = entry_->get_text().size();
 		}
 	}
 	const uint64_t x_res_mul =
 		GLYPH_X;
 	const uint64_t y_res_mul =
 		GLYPH_Y;
-	frame->reset((x_count*x_res_mul),
-		     (y_count*y_res_mul),
+	const uint64_t x_res = x_count*x_res_mul;
+	const uint64_t y_res = y_count*y_res_mul;
+	P_V(x_res, P_SPAM);
+	P_V(y_res, P_SPAM);
+	frame->reset(x_res,
+		     y_res,
 		     TV_FRAME_DEFAULT_BPC,
 		     TV_FRAME_DEFAULT_RED_MASK,
 		     TV_FRAME_DEFAULT_GREEN_MASK,
 		     TV_FRAME_DEFAULT_BLUE_MASK,
 		     0, // no alpha mask needed
-		     0, // not a typical frame, doesn't need a frame rate
+		     1000*1000,
 		     1,
 		     1, // don't have any audio
 		     1);
 	for(uint64_t y = 0;y < y_count;y++){
 		const uint64_t y_pos =
 			(y*GLYPH_Y);
-		for(uint64_t x = 0;x < menu_entries[y].size();x++){
+		tv_menu_entry_t *entry_ =
+			PTR_DATA(entry[y], tv_menu_entry_t);
+		if(entry_ == nullptr){
+			continue;
+		}
+		const std::string text =
+			entry_->get_text();
+		for(uint64_t x = 0;x < text.size();x++){
 			const uint64_t x_pos =
 				(x*GLYPH_X);
 			const int8_t current =
-				menu_entries[y][x];
+				text[x];
 			tv_menu_render_glyph_to_frame(current,
 						      frame,
 						      x_pos,
@@ -392,20 +409,37 @@ void tv_menu_t::update_frame(){
 	}
 }
 
-void tv_menu_t::set_menu_entry(uint16_t entry,
+void tv_menu_t::set_menu_entry(uint16_t entry_pos,
 			       std::string string){
-	if(never(entry >= 64)){
-		print("entry is larger than the max", P_CRIT);
+	if(never(entry_pos >= 64)){
+		print("entry_pos is larger than the max", P_CRIT);
 	}
-	menu_entries[entry] = string;
+	tv_menu_entry_t *entry_ = nullptr;
+	if(entry[entry_pos] == 0){
+		entry_ = new tv_menu_entry_t;
+		entry[entry_pos] = entry_->id.get_id();
+	}else{
+		entry_ =
+			PTR_DATA(entry[entry_pos], tv_menu_entry_t);
+	}
+	if(unlikely(entry_ == nullptr)){
+		print("entry is nullptr", P_ERR);
+	}
+	entry_->set_text(string);
 	update_frame();
 }
 
-std::string tv_menu_t::get_menu_entry(uint16_t entry){
-	if(never(entry >= 64)){
+std::string tv_menu_t::get_menu_entry(uint16_t entry_pos){
+	if(never(entry_pos >= 64)){
 		print("entry is larger than the max", P_CRIT);
 	}
-	return menu_entries[entry];
+	tv_menu_entry_t *entry_ =
+		PTR_DATA(entry[entry_pos], tv_menu_entry_t);
+	if(entry_ == nullptr){
+		print("not a valid entry", P_WARN);
+		return "";
+	}
+	return entry_->get_text();
 }
 
 void tv_menu_t::set_highlighed(uint16_t highlighted_){
@@ -417,4 +451,27 @@ void tv_menu_t::set_highlighed(uint16_t highlighted_){
 
 uint64_t tv_menu_t::get_frame_id(){
 	return frame_id;
+}
+
+tv_menu_entry_t::tv_menu_entry_t() : id(this, __FUNCTION__){
+}
+
+tv_menu_entry_t::~tv_menu_entry_t(){}
+
+void tv_menu_entry_t::set_text(std::string text_){
+	text = text_;
+}
+
+std::string tv_menu_entry_t::get_text(){
+	return text;
+}
+
+void tv_menu_entry_t::set_function(void (*function_)()){
+	function = function_;
+}
+
+void tv_menu_entry_t::run_function(){
+	if(likely(function != nullptr)){
+		function();
+	}
 }

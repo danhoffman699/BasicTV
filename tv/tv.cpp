@@ -184,7 +184,7 @@ static tv_frame_t *tv_frame_gen_xor_frame(uint64_t x_, uint64_t y_, uint8_t bpc)
 		     TV_FRAME_DEFAULT_RED_MASK,
 		     TV_FRAME_DEFAULT_GREEN_MASK,
 		     TV_FRAME_DEFAULT_BLUE_MASK,
-		     TV_FRAME_DEFAULT_ALPHA_MASK,
+		     0,
 		     1000*1000,
 		     1,
 		     1,
@@ -340,9 +340,9 @@ static void tv_init_test_channel(){
 	menu->set_menu_entry(3, "to");
 	menu->set_menu_entry(4, "be");
 	menu->set_menu_entry(5, "great");
-	// menu->set_menu_entry(0, "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
-	//tv_frame_t *frame = tv_frame_gen_xor_frame(1920, 1080, 8);
 	channel->set_latest_frame_id(menu->get_frame_id());
+	//tv_frame_t *frame = tv_frame_gen_xor_frame(1920, 1080, 8);
+	//channel->set_latest_frame_id(frame->id.get_id());
 }
 
 void tv_init(){
