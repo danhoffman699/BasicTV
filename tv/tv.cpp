@@ -111,7 +111,9 @@ static uint32_t tv_render_get_frame_sdl_enum(tv_frame_t *frame){
 			pixel_format_enum = SDL_PIXELFORMAT_RGB24;
 		}
 		break;
-	case 5:
+	default:
+		print("non-standard BPC, rendering is going to be slower", P_SPAM);
+		/*case 5:
 		if(frame->get_red_mask() == 0b0000000000011111 &&
 		   frame->get_green_mask() == 0b0000001111100000 &&
 		   frame->get_blue_mask() == 0b0111110000000000){
@@ -121,21 +123,25 @@ static uint32_t tv_render_get_frame_sdl_enum(tv_frame_t *frame){
 			 frame->get_blue_mask() == 0b0000000000011111){
 			pixel_format_enum = SDL_PIXELFORMAT_BGR555;
 		}
-		break;
+		break;*/
 	}
 	return pixel_format_enum;
 }
 
+/*
+  This is only broken on rendering menus, so force using *_copy with
+  a nullptr return. I don't know what the problem is, but the XOR frame
+  seems to work fine with it (when enabled, it looks like a vertical scroll
+  like on old TVs, and some colors are thrown off, even though the frame is
+  only white)
+ */
+
 static SDL_Surface* tv_render_frame_to_surface_ptr(tv_frame_t *frame){
+	return nullptr;
+	
 	const uint64_t width = frame->get_x_res();
 	const uint64_t height = frame->get_y_res();
-	P_V(width, P_SPAM);
-	P_V(height, P_SPAM);
 	const uint8_t bpc = frame->get_bpc();
-	const uint64_t red_mask = frame->get_red_mask();
-	const uint64_t green_mask = frame->get_green_mask();
-	const uint64_t blue_mask = frame->get_blue_mask();
-	const uint64_t alpha_mask = frame->get_alpha_mask();
 	uint32_t pixel_format_enum =
 		tv_render_get_frame_sdl_enum(frame);
 	if(pixel_format_enum == 0){
@@ -146,9 +152,9 @@ static SDL_Surface* tv_render_frame_to_surface_ptr(tv_frame_t *frame){
 				     width,
 				     height,
 				     bpc*3,
-				     red_mask,
-				     green_mask,
-				     blue_mask,
+				     0,
+				     0,
+				     0,
 				     0);
 	if(unlikely(retval == nullptr)){
 		print((std::string)"unable to generate surface:" + SDL_GetError(), P_ERR);
@@ -188,10 +194,6 @@ static tv_frame_t *tv_frame_gen_xor_frame(uint64_t x_, uint64_t y_, uint8_t bpc)
 	}
 	for(uint64_t y = 0;y < y_;y++){
 		for(uint64_t x = 0;x < x_;x++){
-			/*frame[(((x_*y)+x)*3)+0] = (x^y)&255;
-			frame[(((x_*y)+x)*3)+1] = (x^y)&255;
-			frame[(((x_*y)+x)*3)+2] = (x^y)&255;
-			*/
 			frame->set_pixel(x,
 					 y,
 					 std::make_tuple(
@@ -260,9 +262,6 @@ static void tv_render_frame_to_screen_surface(tv_frame_t *frame,
 			tv_render_frame_to_surface_copy(frame);
 		dereference_pixel_data = false;
 	}
-	//dereference_pixel_data = false;
-	//SDL_Surface *frame_surface =
-	//	tv_render_frame_to_surface_copy(frame);
 	if(unlikely(SDL_BlitScaled(frame_surface,
 				    NULL,
 				    sdl_window_surface,
@@ -364,128 +363,4 @@ void tv_init(){
 		SDL_MapRGB(SDL_GetWindowSurface(sdl_window)->format, 0, 0, 0));
 	SDL_UpdateWindowSurface(sdl_window);
 	tv_init_test_channel();
-}
-
-/*
-  tv::chan: channel functions. Does not directly interface with the channels
-  themselves, but does operations on the static list (count, next, prev, rand).
-
-  flags:
-  TV_CHAN_STREAMING: only use channels that are currently streaming. 
-  Streaming is a very broad definition, but should be an independent
-  variable inside of the tv_channel_t type
-  TV_CHAN_NO_AUDIO: only video only streams
-  TV_CHAN_NO_VIDEO: only audio only streams
-*/
-
-/*
-  tv::chan::count: returns a channel count of all channels. Channels that are
-  not currently streaming are co
- */
-
-uint64_t tv::chan::count(uint64_t flags){
-	uint64_t retval = 0;
-	std::vector<uint64_t> channel_id_list =
-		id_api::cache::get("tv_channel_t");
-	for(uint64_t i = 0;i < channel_id_list.size();i++){
-		try{
-			tv_channel_t *channel =
-				PTR_DATA(channel_id_list[i], tv_channel_t);
-			if((flags & TV_CHAN_STREAMING) && channel->is_streaming()){
-				retval++;
-				continue;
-			}
-			if((flags & TV_CHAN_NO_AUDIO) && !channel->is_audio()){
-				retval++;
-				continue;
-			}
-			if((flags & TV_CHAN_NO_VIDEO) && !channel->is_video()){
-				retval++;
-				continue;
-			}
-		}catch(std::runtime_error e){
-			continue;
-		}
-	}
-	return retval;
-}
-
-/*
-  TODO: implement actual sorting of channels on the fly. Possibly
-  embed that sorting into the PGP API?
-*/
-
-uint64_t tv::chan::next(uint64_t id, uint64_t flags){
-	std::vector<uint64_t> all_channels =
-		id_api::cache::get("tv_channel_t");
-	for(uint64_t i = 0;i < all_channels.size();i++){
-		tv_channel_t *channel = PTR_DATA(all_channels[i], tv_channel_t);
-		if(channel == nullptr){
-			continue;
-		}
-		const bool streaming =
-			channel->is_streaming() == (flags & TV_CHAN_STREAMING);
-		const bool audio =
-			(!channel->is_audio()) == (flags & TV_CHAN_NO_AUDIO);
-		const bool video =
-			(!channel->is_video()) == (flags & TV_CHAN_NO_VIDEO);
-		// checks for matches, not actual true statements
-		if(!(streaming && audio && video)){
-			all_channels.erase(all_channels.begin()+i);
-			i--;
-		}
-	}
-	const std::vector<uint64_t> pgp_sorted =
-		id_api::array::sort_by_pgp_pubkey(
-		        all_channels);
-	for(uint64_t i = 0;i < pgp_sorted.size();i++){
-		if(pgp_sorted[i] == id){
-			if(i != pgp_sorted.size()-2){
-				return pgp_sorted[i+1];
-			}
-		}
-	}
-	return 0;
-}
-
-uint64_t tv::chan::prev(uint64_t id, uint64_t flags){
-	std::vector<uint64_t> all_channels =
-		id_api::cache::get("tv_channel_t");
-	for(uint64_t i = 0;i < all_channels.size();i++){
-		tv_channel_t *channel =
-			PTR_DATA(all_channels[i], tv_channel_t);
-		if(channel == nullptr){
-			continue;
-		}
-		const bool streaming =
-			channel->is_streaming() == (flags & TV_CHAN_STREAMING);
-		const bool audio =
-			(!channel->is_audio()) == (flags & TV_CHAN_NO_AUDIO);
-		const bool video =
-			(!channel->is_video()) == (flags & TV_CHAN_NO_VIDEO);
-		// checks for matches, not actual true statements
-		if(!(streaming && audio && video)){
-			all_channels.erase(all_channels.begin()+i);
-			i--;
-		}
-	}
-	const std::vector<uint64_t> pgp_sorted =
-		id_api::array::sort_by_pgp_pubkey(
-		        all_channels);
-	for(uint64_t i = 0;i < pgp_sorted.size();i++){
-		if(pgp_sorted[i] == id){
-			if(i != 1){
-				return pgp_sorted[i-1];
-			}
-		}
-	}
-	return 0;
-}
-
-uint64_t tv::chan::rand(uint64_t flags){
-	uint64_t channel_count = count(flags);
-	uint64_t id_from_start = true_rand(0, channel_count-1);
-	std::vector<uint64_t> channel_id =
-		id_api::cache::get("tv_channel_t");
-	return channel_id.at(id_from_start);
 }

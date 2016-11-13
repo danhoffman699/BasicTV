@@ -110,7 +110,7 @@ uint64_t flip_bit_section(uint8_t begin, uint8_t end);
 // print var string
 #define P_V_S(a, b) print((std::string)__PRETTY_FUNCTION__ + ":" + (std::string)#a + " == '" + a + "'", b)
 // print var char
-#define P_V_C(a, b) print((std::string)__PRETTY_FUNCTION__ + ":" + (std::string)#a + " == '" + std::string(&a, 1) + "'", b)
+#define P_V_C(a, b) print((std::string)__PRETTY_FUNCTION__ + ":" + (std::string)#a + " == '" + std::string(1, a) + "'", b)
 // cannot use print here
 // print var as binary
 #define P_V_B(a, b) print(convert::number::to_binary(a), b);
@@ -129,6 +129,8 @@ uint64_t flip_bit_section(uint8_t begin, uint8_t end);
 #endif
 
 #define FIND_FIRST_ZERO(A, B, C) for(uint64_t A = 0; A < C;A++){if(B[A] == 0){break;}
+
+#define MASK(x) ((1 S_L x)-1)
 
 uint64_t get_time_microseconds();
 

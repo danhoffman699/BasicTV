@@ -73,22 +73,30 @@ uint64_t tv_frame_t::get_raw_pixel_pos(uint64_t x,
 	return raw_pixel_pos;
 }
 
+static void tv_frame_color_sanity_check(std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> color){
+	const uint64_t bpc = std::get<3>(color);
+	if(std::get<0>(color) > MASK(bpc) ||
+	   std::get<1>(color) > MASK(bpc) ||
+	   std::get<2>(color) > MASK(bpc)){
+		print("color is not withing BPC bounds", P_ERR);
+	}
+	if(bpc != 8){
+		print("BPC is not a valid value", P_ERR);
+	}
+}
+
 void tv_frame_t::set_pixel(uint64_t x,
 			   uint64_t y,
 			   std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> color){
 	const uint64_t pixel_pos =
 		get_raw_pixel_pos(x, y);
 	uint64_t *pixel = (uint64_t*)&(frame[pixel_pos]);
-	/*
-	  Can't use convert functions because of the small-ish sizes
-	  possible with this, and this is pretty elegant as it is. 
-	  Maybe another time?
-	 */
+	tv_frame_color_sanity_check(color);
 	color = convert::color::bpc(color, bpc);
 	(*pixel) &= ~flip_bit_section(0, bpc*3);
-	(*pixel) |= std::get<0>(color) & 255;
-	(*pixel) |= (std::get<1>(color) & 255) S_L (bpc);
-	(*pixel) |= (std::get<2>(color) & 255) S_L (bpc*2);
+	(*pixel) |= std::get<0>(color) & MASK(bpc);
+	(*pixel) |= (std::get<1>(color) & MASK(bpc)) S_L (bpc);
+	(*pixel) |= (std::get<2>(color) & MASK(bpc)) S_L (bpc*2);
 }
 
 std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> tv_frame_t::get_pixel(uint64_t x,
@@ -96,12 +104,14 @@ std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> tv_frame_t::get_pixel(uint64_t
 	std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> color;
 	const uint64_t *pixel =
 		(uint64_t*)&(frame[get_raw_pixel_pos(x, y)]);
-	const uint64_t bpc_mask =
-		flip_bit_section(0, bpc);
-	std::get<0>(color) = ((*pixel S_S (bpc*0)) & bpc_mask);
-	std::get<1>(color) = ((*pixel S_S (bpc*1)) & bpc_mask);
-	std::get<2>(color) = ((*pixel S_S (bpc*2)) & bpc_mask);
+	std::get<0>(color) = ((*pixel S_S (bpc*0)) & MASK(bpc));
+	std::get<1>(color) = ((*pixel S_S (bpc*1)) & MASK(bpc));
+	std::get<2>(color) = ((*pixel S_S (bpc*2)) & MASK(bpc));
 	std::get<3>(color) = bpc;
+	/*
+	  color sanity checks only check against BPC, which is used as the mask,
+	  so it is guaranteed to pass (even if it is wrong)
+	 */
 	return color;
 }
 
