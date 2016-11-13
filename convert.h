@@ -26,9 +26,6 @@
 
 #ifdef __ORDER_LITTLE_ENDIAN__
 
-#define SHIFT_SMALLER >>
-#define SHIFT_LARGER <<
-
 #ifdef __GNUC__
 
 #define NBO_64 __builtin_bswap64
@@ -48,9 +45,6 @@
 #endif
 
 #elif __ORDER_BIG_ENDIAN__
-#define SHIFT_SMALLER <<
-#define SHIFT_LARGER >>
-
 
 #define NBO_64(a) (a)
 #define NBO_32(a) (a)
@@ -61,10 +55,6 @@
 #define NBO_TO_NATIVE_32(a) (a)
 #define NBO_TO_NATIVE_64(a) (a)
 #endif
-
-#define S_S SHIFT_SMALLER
-#define S_L SHIFT_LARGER
-
 
 // mostly for time, but add the other ones
 #define MILLI_PREFIX (0.001)

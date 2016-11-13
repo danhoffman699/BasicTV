@@ -344,6 +344,22 @@ static void tv_menu_render_glyph_to_frame(int8_t glyph,
 	}
 }
 
+static void tv_menu_get_glyph_dimensions(std::array<uint64_t, TV_MENU_TEXT_LENGTH> ids,
+					 uint64_t *x,
+					 uint64_t *y){
+	for(uint64_t i = 0;i < ids.size();i++){
+		tv_menu_entry_t *entry_ =
+			PTR_DATA(ids[i], tv_menu_entry_t);
+		if(entry_ == nullptr){
+			*y = i;
+			return;
+		}
+		if(entry_->get_text().size() > *x){
+			*x = entry_->get_text().size();
+		}
+	}
+}
+
 void tv_menu_t::update_frame(){
 	tv_frame_t *frame =
 		PTR_DATA(frame_id, tv_frame_t);
@@ -352,59 +368,31 @@ void tv_menu_t::update_frame(){
 	}
 	uint64_t x_count = 0;
 	uint64_t y_count = 0;
-	for(uint64_t i = 0;i < 64;i++){
-		tv_menu_entry_t *entry_ =
-			PTR_DATA(entry[i], tv_menu_entry_t);
-		if(entry_ == nullptr){
-			y_count = i;
-			break;
-		}
-		if(entry_->get_text().size() == 0){
-			y_count = i;
-			break;
-		} // should this still be here?
-		if(entry_->get_text().size() > x_count){
-			x_count = entry_->get_text().size();
-		}
-	}
-	const uint64_t x_res_mul =
-		GLYPH_X;
-	const uint64_t y_res_mul =
-		GLYPH_Y;
-	const uint64_t x_res = x_count*x_res_mul;
-	const uint64_t y_res = y_count*y_res_mul;
-	P_V(x_res, P_SPAM);
-	P_V(y_res, P_SPAM);
-	frame->reset(x_res,
-		     y_res,
+	tv_menu_get_glyph_dimensions(entry,
+				     &x_count,
+				     &y_count);
+	frame->reset(x_count*GLYPH_X,
+		     y_count*GLYPH_Y,
 		     TV_FRAME_DEFAULT_BPC,
 		     TV_FRAME_DEFAULT_RED_MASK,
 		     TV_FRAME_DEFAULT_GREEN_MASK,
 		     TV_FRAME_DEFAULT_BLUE_MASK,
-		     0, // no alpha mask needed
+		     TV_FRAME_DEFAULT_ALPHA_MASK,
 		     1000*1000,
 		     1,
 		     1, // don't have any audio
 		     1);
 	for(uint64_t y = 0;y < y_count;y++){
-		const uint64_t y_pos =
-			(y*GLYPH_Y);
 		tv_menu_entry_t *entry_ =
 			PTR_DATA(entry[y], tv_menu_entry_t);
-		if(entry_ == nullptr){
-			continue;
-		}
+		CONTINUE_IF_NULL(entry_);
 		const std::string text =
 			entry_->get_text();
 		for(uint64_t x = 0;x < text.size();x++){
-			const uint64_t x_pos =
-				(x*GLYPH_X);
-			const int8_t current =
-				text[x];
-			tv_menu_render_glyph_to_frame(current,
+			tv_menu_render_glyph_to_frame(text[x],
 						      frame,
-						      x_pos,
-						      y_pos);
+						      x*GLYPH_X,
+						      y*GLYPH_Y);
 		}
 	}
 }

@@ -102,17 +102,17 @@ uint64_t convert::color::to(std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> co
 	uint64_t retval = 0;
 	const uint8_t bpc = std::get<3>(color);
 	retval |= std::get<0>(color);
-	retval |= std::get<1>(color) S_L bpc;
-	retval |= std::get<2>(color) S_L (bpc*2);
+	retval |= std::get<1>(color) << bpc;
+	retval |= std::get<2>(color) << (bpc*2);
 	return retval;
 }
 
 std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> convert::color::from(uint64_t color, uint8_t bpc){
 	std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> retval;
-	const uint64_t bpc_mask = (1 S_L bpc)-1;
-	std::get<0>(retval) = (color S_S (bpc*0)) & bpc_mask;
-	std::get<1>(retval) = (color S_S (bpc*1)) & bpc_mask;
-	std::get<2>(retval) = (color S_S (bpc*2)) & bpc_mask;
+	const uint64_t bpc_mask = (1 >> bpc)-1;
+	std::get<0>(retval) = (color >> (bpc*0)) & bpc_mask;
+	std::get<1>(retval) = (color >> (bpc*1)) & bpc_mask;
+	std::get<2>(retval) = (color >> (bpc*2)) & bpc_mask;
 	return retval;
 }
 

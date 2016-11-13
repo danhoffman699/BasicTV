@@ -12,10 +12,10 @@ static bool valid_masks(uint64_t red,
 			uint64_t green,
 			uint64_t blue,
 			uint64_t alpha){
-	// P_V_B(red, P_SPAM);
-	// P_V_B(green, P_SPAM);
-	// P_V_B(blue, P_SPAM);
-	// P_V_B(alpha, P_SPAM);
+	P_V_B(red, P_SPAM);
+	P_V_B(green, P_SPAM);
+	P_V_B(blue, P_SPAM);
+	P_V_B(alpha, P_SPAM);
 	return true;
 }
 
@@ -129,8 +129,8 @@ void tv_frame_t::set_pixel(uint64_t x,
 	color = convert::color::bpc(color, bpc);
 	(*pixel) &= ~flip_bit_section(0, bpc*3);
 	(*pixel) |= std::get<0>(color) & MASK(bpc);
-	(*pixel) |= (std::get<1>(color) & MASK(bpc)) S_L (bpc);
-	(*pixel) |= (std::get<2>(color) & MASK(bpc)) S_L (bpc*2);
+	(*pixel) |= (std::get<1>(color) & MASK(bpc)) << (bpc);
+	(*pixel) |= (std::get<2>(color) & MASK(bpc)) << (bpc*2);
 }
 
 std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> tv_frame_t::get_pixel(uint64_t x,
@@ -138,9 +138,9 @@ std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> tv_frame_t::get_pixel(uint64_t
 	std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> color;
 	const uint64_t *pixel =
 		(uint64_t*)&(frame[get_raw_pixel_pos(x, y)]);
-	std::get<0>(color) = ((*pixel S_S (bpc*0)) & MASK(bpc));
-	std::get<1>(color) = ((*pixel S_S (bpc*1)) & MASK(bpc));
-	std::get<2>(color) = ((*pixel S_S (bpc*2)) & MASK(bpc));
+	std::get<0>(color) = ((*pixel >> (bpc*0)) & MASK(bpc));
+	std::get<1>(color) = ((*pixel >> (bpc*1)) & MASK(bpc));
+	std::get<2>(color) = ((*pixel >> (bpc*2)) & MASK(bpc));
 	std::get<3>(color) = bpc;
 	/*
 	  color sanity checks only check against BPC, which is used as the mask,
