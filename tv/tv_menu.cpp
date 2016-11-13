@@ -23,9 +23,9 @@
 #define GLYPH_X 4
 #define GLYPH_X_BORDER 1
 #define GLYPH_Y_MAIN 6
-#define GLYPH_Y_FULL 8
+#define GLYPH_Y 8
 #define GLYPH_Y_BORDER 1
-static std::array<std::array<std::array<bool, GLYPH_X>, GLYPH_Y_FULL>, 256> char_data = {{{{{{0}}}}}};
+static std::array<std::array<std::array<bool, GLYPH_X>, GLYPH_Y>, 256> char_data = {{{{{{0}}}}}};
 
 static bool valid_char_data = false;
 
@@ -46,7 +46,7 @@ static void init_char_data(){
 			{{1, 1, 1, 0}},
 			{{1, 0, 0, 1}},
 			{{1, 0, 0, 1}},
-			{{1, 1, 1, 1}}
+			{{1, 1, 1, 0}}
 		}};
 	char_data['C'] = {{
 			{{0, 1, 1, 1}},
@@ -83,8 +83,8 @@ static void init_char_data(){
 	char_data['G'] = {{
 			{{1, 1, 1, 1}},
 			{{1, 0, 0, 0}},
+			{{1, 0, 0, 0}},
 			{{1, 0, 1, 1}},
-			{{1, 0, 0, 1}},
 			{{1, 0, 0, 1}},
 			{{1, 1, 1, 1}}
 		}};
@@ -306,6 +306,7 @@ tv_menu_t::tv_menu_t() : id(this, __FUNCTION__){
 	id.add_data(&frame_id, sizeof(frame_id));
 	id.add_id(&frame_id, 1);
 	frame_id = (new tv_frame_t)->id.get_id();
+	update_frame();
 	if(unlikely(valid_char_data == false)){
 		init_char_data();
 	}
@@ -319,7 +320,7 @@ static void tv_menu_render_glyph_to_frame(int8_t glyph,
 					  uint64_t x_,
 					  uint64_t y_){
 	for(uint64_t x = 0;x < GLYPH_X;x++){
-		for(uint64_t y = 0;y < GLYPH_Y_FULL;y++){
+		for(uint64_t y = 0;y < GLYPH_Y;y++){
 			const uint64_t frame_x =
 				x+x_;
 			const uint64_t frame_y =
@@ -350,22 +351,41 @@ void tv_menu_t::update_frame(){
 	if(never(frame == nullptr)){
 		print("menu frame is a nullptr", P_CRIT);
 	}
-	frame->reset(512,
-		     512,
-		     TV_FRAME_DEFAULT_BPC, // not needed, only for fast rendering
+	uint64_t x_count = 0;
+	uint64_t y_count = 0;
+	for(uint64_t i = 0;i < 64;i++){
+		if(menu_entries[i].size() == 0){
+			y_count = i;
+			break;
+		}
+		if(menu_entries[i].size() > x_count){
+			x_count = menu_entries[i].size();
+		}
+	}
+	
+	const uint64_t x_res_mul =
+		GLYPH_X + 2*GLYPH_X_BORDER;
+	const uint64_t y_res_mul =
+		GLYPH_Y + 2*GLYPH_Y_BORDER;
+	frame->reset(x_count*x_res_mul,
+		     y_count*y_res_mul,
+		     TV_FRAME_DEFAULT_BPC,
 		     TV_FRAME_DEFAULT_RED_MASK,
 		     TV_FRAME_DEFAULT_GREEN_MASK,
 		     TV_FRAME_DEFAULT_BLUE_MASK,
+		     0,// no alpha mask needed
 		     0, // not a typical frame, doesn't need a frame rate
 		     1,
 		     1, // don't have any audio
 		     1);
-	for(uint64_t line = 0;line < 64;line++){
-		const uint64_t y_pos = line*(GLYPH_Y_MAIN+GLYPH_Y_BORDER);
+	for(uint64_t line = 0;line < y_count;line++){
+		const uint64_t y_pos =
+			line*y_res_mul;
 		for(uint64_t curr_char = 0;
 		    curr_char < menu_entries[line].size();
 		    curr_char++){
-			const uint64_t x_pos = curr_char*(GLYPH_X+GLYPH_X_BORDER);
+			const uint64_t x_pos =
+				curr_char*x_res_mul;
 			tv_menu_render_glyph_to_frame(menu_entries[line][curr_char],
 						      frame,
 						      x_pos,

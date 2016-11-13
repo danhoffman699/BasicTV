@@ -73,7 +73,9 @@ static SDL_Surface* tv_render_frame_to_surface_copy(tv_frame_t *frame){
 				     0,
 				     0,
 				     0);
-	// probably doesn't work, but the reference copy does
+	if(unlikely(surface == nullptr)){
+		print((std::string)"surface is a nullptr:" + SDL_GetError(), P_ERR);
+	}
 	for(uint64_t x = 0;x < surface->w;x++){
 		for(uint64_t y = 0;y < surface->h;y++){
 			uint8_t *pixel_byte = (uint8_t*)surface->pixels + y * surface->pitch +
@@ -92,15 +94,58 @@ static SDL_Surface* tv_render_frame_to_surface_copy(tv_frame_t *frame){
 	}
 	return surface;
 }
+static uint32_t tv_render_get_frame_sdl_enum(tv_frame_t *frame){
+	uint32_t pixel_format_enum = 0;
+	if(frame->get_alpha_mask() != 0){
+		print("tv_frame_t doesn't support alpha", P_ERR);
+	}
+	switch(frame->get_bpc()){
+	case 8:
+		if(frame->get_red_mask() == 0x0000FF &&
+		   frame->get_green_mask() == 0x00FF00 &&
+		   frame->get_blue_mask() == 0xFF0000){
+			pixel_format_enum = SDL_PIXELFORMAT_BGR24;
+		}else if(frame->get_red_mask() == 0xFF0000 &&
+			 frame->get_green_mask() == 0x00FF00 &&
+			 frame->get_blue_mask() == 0x0000FF){
+			pixel_format_enum = SDL_PIXELFORMAT_RGB24;
+		}
+		break;
+	case 5:
+		if(frame->get_red_mask() == 0b0000000000011111 &&
+		   frame->get_green_mask() == 0b0000001111100000 &&
+		   frame->get_blue_mask() == 0b0111110000000000){
+			pixel_format_enum = SDL_PIXELFORMAT_RGB555;
+		}else if(frame->get_red_mask() == 0b0111110000000000 &&
+			 frame->get_green_mask() == 0b0000001111100000 &&
+			 frame->get_blue_mask() == 0b0000000000011111){
+			pixel_format_enum = SDL_PIXELFORMAT_BGR555;
+		}
+		break;
+	}
+	return pixel_format_enum;
+}
+
+// broken right now, I want to push the updated menu code
+
 
 static SDL_Surface* tv_render_frame_to_surface_ptr(tv_frame_t *frame){
+	return nullptr;
+	
 	const uint64_t width = frame->get_x_res();
 	const uint64_t height = frame->get_y_res();
-	const uint8_t bpc = frame->get_bpc(); // includes alpha
+	P_V(width, P_SPAM);
+	P_V(height, P_SPAM);
+	const uint8_t bpc = frame->get_bpc();
 	const uint64_t red_mask = frame->get_red_mask();
 	const uint64_t green_mask = frame->get_green_mask();
 	const uint64_t blue_mask = frame->get_blue_mask();
 	const uint64_t alpha_mask = frame->get_alpha_mask();
+	uint32_t pixel_format_enum =
+		tv_render_get_frame_sdl_enum(frame);
+	if(pixel_format_enum == 0){
+		return nullptr;
+	}
 	SDL_Surface *retval =
 		SDL_CreateRGBSurface(0,
 				     width,
@@ -113,7 +158,7 @@ static SDL_Surface* tv_render_frame_to_surface_ptr(tv_frame_t *frame){
 	if(unlikely(retval == nullptr)){
 		print((std::string)"unable to generate surface:" + SDL_GetError(), P_ERR);
 	}
-	retval = SDL_ConvertSurfaceFormat(retval, SDL_PIXELFORMAT_RGB24, 0);
+	retval = SDL_ConvertSurfaceFormat(retval, pixel_format_enum, 0);
 	if(unlikely(retval == nullptr)){
 		print((std::string)"cannot convert surface to desired format:" + SDL_GetError(), P_ERR);
 	}
@@ -185,55 +230,23 @@ static uint64_t tv_render_id_of_last_valid_frame(uint64_t current){
 	return current;
 }
 
-
 static void tv_render_frame_to_screen_surface(tv_frame_t *frame,
 					      SDL_Surface *sdl_window_surface,
 					      SDL_Rect sdl_window_rect){
-	SDL_Surface *frame_surface = nullptr;
-	bool surface_copied = false;
-	uint32_t pixel_format_enum = 0;
 	if(frame->get_alpha_mask() != 0){
 		print("alpha mask is not supported at this time", P_CRIT);
 	}
-	// verify these values with a non-grayscale image
-	switch(frame->get_bpc()){
-	case 8:
-		if(frame->get_red_mask() == 0x0000FF &&
-		   frame->get_green_mask() == 0x00FF00 &&
-		   frame->get_blue_mask() == 0xFF0000){
-			pixel_format_enum = SDL_PIXELFORMAT_RGB888;
-			surface_copied = false;
-		}else if(frame->get_red_mask() == 0xFF0000 &&
-			frame->get_green_mask() == 0x00FF00 &&
-			frame->get_blue_mask() == 0x0000FF){
-			pixel_format_enum = SDL_PIXELFORMAT_BGR888;
-			surface_copied = false;
-		}
-		break;
-	case 5:
-		if(frame->get_red_mask() == 0b0000000000011111 &&
-		   frame->get_green_mask() == 0b0000001111100000 &&
-		   frame->get_blue_mask() == 0b0111110000000000){
-			pixel_format_enum = SDL_PIXELFORMAT_RGB555;
-			surface_copied = false;
-		}else if(frame->get_red_mask() == 0b0111110000000000 &&
-		   frame->get_green_mask() == 0b0000001111100000 &&
-		   frame->get_blue_mask() == 0b0000000000011111){
-			pixel_format_enum = SDL_PIXELFORMAT_BGR555;
-			surface_copied = false;
-		}
-		break;
-	case 4:
-	default:
-		surface_copied = true;
-	}
-	if(likely(!surface_copied)){
-		frame_surface =
-			tv_render_frame_to_surface_ptr(frame);
-	}else{
+	bool dereference_pixel_data = true;
+	SDL_Surface *frame_surface =
+		tv_render_frame_to_surface_ptr(frame);
+	if(frame_surface == nullptr){
 		frame_surface =
 			tv_render_frame_to_surface_copy(frame);
+		dereference_pixel_data = false;
 	}
+	//dereference_pixel_data = false;
+	//SDL_Surface *frame_surface =
+	//	tv_render_frame_to_surface_copy(frame);
 	if(unlikely(SDL_BlitScaled(frame_surface,
 				    NULL,
 				    sdl_window_surface,
@@ -242,7 +255,7 @@ static void tv_render_frame_to_screen_surface(tv_frame_t *frame,
 	}else{
 		print("surface blit without errors", P_SPAM);
 	}
-	if(likely(!surface_copied)){
+	if(likely(dereference_pixel_data)){
 		frame_surface->pixels = nullptr;
 	}
 	SDL_FreeSurface(frame_surface);
@@ -267,6 +280,9 @@ static void tv_render_all(){
 		}catch(...){
 			print("tv_channel_t seed ID is invalid", P_ERR);
 			continue;
+		}
+		if(unlikely(frame == nullptr)){
+			print("frame is a nullptr", P_ERR);
 		}
 		SDL_Surface *sdl_window_surface =
 			SDL_GetWindowSurface(sdl_window);
@@ -303,13 +319,29 @@ static void tv_init_test_channel(){
 	window->set_channel_id(channel->id.get_id());
 	std::array<tv_frame_t*, TEST_FRAME_SIZE> tmp_frames = {{nullptr}};
 	tv_menu_t *menu = new tv_menu_t;
-	/*menu->set_menu_entry(0, "BasicTV");
+	menu->set_menu_entry(0, "BasicTV");
 	menu->set_menu_entry(1, "is");
 	menu->set_menu_entry(2, "going");
 	menu->set_menu_entry(3, "to");
 	menu->set_menu_entry(4, "be");
-	menu->set_menu_entry(5, "great");*/
-	menu->set_menu_entry(0, "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+	menu->set_menu_entry(5, "great");
+	//menu->set_menu_entry(0, "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+	// tv_frame_t *frame = new tv_frame_t;
+	// frame->reset(TV_FRAME_DEFAULT_X,
+	// 	     TV_FRAME_DEFAULT_Y,
+	// 	     TV_FRAME_DEFAULT_BPC,
+	// 	     TV_FRAME_DEFAULT_RED_MASK,
+	// 	     TV_FRAME_DEFAULT_GREEN_MASK,
+	// 	     TV_FRAME_DEFAULT_BLUE_MASK,
+	// 	     0,
+	// 	     1000*1000,
+	// 	     1,
+	// 	     1,
+	// 	     1);
+	// tv_frame_gen_xor_frame((uint8_t*)frame->get_pixel_data_ptr(),
+	// 		       frame->get_x_res(),
+	// 		       frame->get_y_res(),
+	// 		       frame->get_bpc());
 	channel->set_latest_frame_id(menu->get_frame_id());
 }
 

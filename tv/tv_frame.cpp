@@ -39,16 +39,17 @@ void tv_frame_t::reset(uint64_t x,
 	}
 	x_res = x;
 	y_res = y;
+	P_V(bpc, P_SPAM);
 	bpc = bpc_;
+	red_mask = red_mask_;
+	green_mask = green_mask_;
+	blue_mask = blue_mask_;
+	alpha_mask = alpha_mask_;
 	time_to_live_micro_s = time_to_live_micro_s_;
 	channel_count = channel_count_;
 	amp_depth = amp_depth_;
 	frame.fill(0);
 	timestamp_micro_s = get_time_microseconds();
-	red_mask = red_mask_;
-	green_mask = green_mask_;
-	blue_mask = blue_mask_;
-	alpha_mask = alpha_mask_;
 }
 
 #define COLOR_RED 0
@@ -57,7 +58,7 @@ void tv_frame_t::reset(uint64_t x,
 
 uint64_t tv_frame_t::get_raw_pixel_pos(uint64_t x,
 				       uint64_t y){
-	if(unlikely(x > x_res || y > y_res)){
+	if(unlikely(x >= x_res || y >= y_res)){
 		print("resolution out of bounds", P_CRIT);
 	}
 	const uint64_t major =
@@ -128,13 +129,15 @@ uint64_t tv_frame_t::get_y_res(){
 }
 
 uint8_t tv_frame_t::get_bpc(){
+	if(unlikely(bpc == 0)){
+		print("invalid bpc", P_ERR);
+	}
 	return bpc;
 }
 
 uint64_t tv_frame_t::get_red_mask(){
 	return red_mask;
 }
-
 
 uint64_t tv_frame_t::get_green_mask(){
 	return green_mask;

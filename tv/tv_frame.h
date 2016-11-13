@@ -83,17 +83,17 @@ public:
 	/*
 	  most settings cannot be changed OTF
 	 */
-	void reset(uint64_t x = TV_FRAME_DEFAULT_X,
-		   uint64_t y = TV_FRAME_DEFAULT_Y,
-		   uint8_t bpc_ = TV_FRAME_DEFAULT_BPC,
-		   uint64_t red_mask_ = TV_FRAME_DEFAULT_RED_MASK,
-		   uint64_t green_mask_ = TV_FRAME_DEFAULT_GREEN_MASK,
-		   uint64_t blue_mask_ = TV_FRAME_DEFAULT_BLUE_MASK,
-		   uint64_t alpha_mask_ = TV_FRAME_DEFAULT_ALPHA_MASK,
-		   uint64_t time_to_live_micro_s_ = (uint64_t)((1/MICRO_PREFIX)*TV_FRAME_DEFAULT_TIME_TO_LIVE),
-		   uint64_t sampling_rate_ = TV_FRAME_DEFAULT_SAMPLING_RATE,
-		   uint8_t channel_count_ = TV_FRAME_DEFAULT_CHANNEL_COUNT,
-		   uint8_t amp_depth_ = TV_FRAME_DEFAULT_AMP_DEPTH);
+	void reset(uint64_t x,
+		   uint64_t y,
+		   uint8_t bpc_,
+		   uint64_t red_mask_,
+		   uint64_t green_mask_,
+		   uint64_t blue_mask_,
+		   uint64_t alpha_mask_,
+		   uint64_t time_to_live_micro_s_,
+		   uint64_t sampling_rate_,
+		   uint8_t channel_count_,
+		   uint8_t amp_depth_);
 	void set_pixel(uint64_t x, uint64_t y, std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> color);
 	std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> get_pixel(uint64_t x, uint64_t y);
 	void set_pixel_data(std::array<uint8_t, TV_FRAME_SIZE> frame_);
