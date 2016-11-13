@@ -18,20 +18,13 @@ tv_frame_t::tv_frame_t() : id(this, __FUNCTION__){
 tv_frame_t::~tv_frame_t(){
 }
 
-/*
-  NOTE:
-  Colors are stored in 1-4 bytes, 1 byte uses a lookup table, 2-4 use
-  actual byte-data. They are stored in little-endian
- */
-
-/*
-  TODO: Instead of throwing errors on too large of data, implement some
-  conversion/downsampling functions. It should never run anyways
- */
-
 void tv_frame_t::reset(uint64_t x,
 		       uint64_t y,
 		       uint8_t bpc_,
+		       uint64_t red_mask_,
+		       uint64_t green_mask_,
+		       uint64_t blue_mask_,
+		       uint64_t alpha_mask_,
 		       uint64_t time_to_live_micro_s_, 
 		       uint64_t sampling_rate_,
 		       uint8_t channel_count_,
@@ -52,6 +45,10 @@ void tv_frame_t::reset(uint64_t x,
 	amp_depth = amp_depth_;
 	frame.fill(0);
 	timestamp_micro_s = get_time_microseconds();
+	red_mask = red_mask_;
+	green_mask = green_mask_;
+	blue_mask = blue_mask_;
+	alpha_mask = alpha_mask_;
 }
 
 #define COLOR_RED 0
@@ -135,26 +132,20 @@ uint8_t tv_frame_t::get_bpc(){
 }
 
 uint64_t tv_frame_t::get_red_mask(){
-	switch(bpc){
-	case 8:
-		return (uint64_t)0xFF;
-	default:
-		print("unsupported bpc value", P_CRIT);
-	}
-	return 0;
+	return red_mask;
 }
 
 
 uint64_t tv_frame_t::get_green_mask(){
-	return (get_red_mask() S_L ((uint64_t)bpc));
+	return green_mask;
 }
 
 uint64_t tv_frame_t::get_blue_mask(){
-	return (get_green_mask() S_L ((uint64_t)bpc));
+	return blue_mask;
 }
 
 uint64_t tv_frame_t::get_alpha_mask(){
-	return (get_blue_mask() S_L ((uint64_t)bpc));
+	return alpha_mask;
 }
 
 uint64_t tv_frame_t::get_time_to_live_micro_s(){

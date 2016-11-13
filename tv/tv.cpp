@@ -190,9 +190,44 @@ static void tv_render_frame_to_screen_surface(tv_frame_t *frame,
 					      SDL_Surface *sdl_window_surface,
 					      SDL_Rect sdl_window_rect){
 	SDL_Surface *frame_surface = nullptr;
-	bool custom_pixel_data = frame->get_bpc() == 8;
-	// Bitmasks aren't special in BPC, but maybe check for byte order (BGR)?
-	if(custom_pixel_data){
+	bool surface_copied = false;
+	uint32_t pixel_format_enum = 0;
+	if(frame->get_alpha_mask() != 0){
+		print("alpha mask is not supported at this time", P_CRIT);
+	}
+	// verify these values with a non-grayscale image
+	switch(frame->get_bpc()){
+	case 8:
+		if(frame->get_red_mask() == 0x0000FF &&
+		   frame->get_green_mask() == 0x00FF00 &&
+		   frame->get_blue_mask() == 0xFF0000){
+			pixel_format_enum = SDL_PIXELFORMAT_RGB888;
+			surface_copied = false;
+		}else if(frame->get_red_mask() == 0xFF0000 &&
+			frame->get_green_mask() == 0x00FF00 &&
+			frame->get_blue_mask() == 0x0000FF){
+			pixel_format_enum = SDL_PIXELFORMAT_BGR888;
+			surface_copied = false;
+		}
+		break;
+	case 5:
+		if(frame->get_red_mask() == 0b0000000000011111 &&
+		   frame->get_green_mask() == 0b0000001111100000 &&
+		   frame->get_blue_mask() == 0b0111110000000000){
+			pixel_format_enum = SDL_PIXELFORMAT_RGB555;
+			surface_copied = false;
+		}else if(frame->get_red_mask() == 0b0111110000000000 &&
+		   frame->get_green_mask() == 0b0000001111100000 &&
+		   frame->get_blue_mask() == 0b0000000000011111){
+			pixel_format_enum = SDL_PIXELFORMAT_BGR555;
+			surface_copied = false;
+		}
+		break;
+	case 4:
+	default:
+		surface_copied = true;
+	}
+	if(likely(!surface_copied)){
 		frame_surface =
 			tv_render_frame_to_surface_ptr(frame);
 	}else{
@@ -207,7 +242,7 @@ static void tv_render_frame_to_screen_surface(tv_frame_t *frame,
 	}else{
 		print("surface blit without errors", P_SPAM);
 	}
-	if(custom_pixel_data){
+	if(likely(!surface_copied)){
 		frame_surface->pixels = nullptr;
 	}
 	SDL_FreeSurface(frame_surface);

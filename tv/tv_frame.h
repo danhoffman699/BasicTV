@@ -16,6 +16,11 @@
 #define TV_FRAME_DEFAULT_X 640
 #define TV_FRAME_DEFAULT_Y 480
 #define TV_FRAME_DEFAULT_BPC 8
+#define TV_FRAME_DEFAULT_RED_MASK 0xFF0000
+#define TV_FRAME_DEFAULT_GREEN_MASK 0x00FF00
+#define TV_FRAME_DEFAULT_BLUE_MASK 0x0000FF
+#define TV_FRAME_DEFAULT_ALPHA_MASK 0
+// alpha mask is only used on menus
 #define TV_FRAME_DEFAULT_REFRESH_RATE 30
 // 30Hz
 #define TV_FRAME_DEFAULT_TIME_TO_LIVE (1000*1000/30)
@@ -51,6 +56,10 @@ private:
 	uint64_t x_res = 0;
 	uint64_t y_res = 0;
 	uint8_t bpc = 0; // bits per color
+	uint64_t red_mask = 0;
+	uint64_t green_mask = 0;
+	uint64_t blue_mask = 0;
+	uint64_t alpha_mask = 0;
 	uint8_t amp_depth = 0; // amplitude, bit depth (in bytes)
 	// in Hz
 	uint64_t sampling_freq = 0;
@@ -77,6 +86,10 @@ public:
 	void reset(uint64_t x = TV_FRAME_DEFAULT_X,
 		   uint64_t y = TV_FRAME_DEFAULT_Y,
 		   uint8_t bpc_ = TV_FRAME_DEFAULT_BPC,
+		   uint64_t red_mask_ = TV_FRAME_DEFAULT_RED_MASK,
+		   uint64_t green_mask_ = TV_FRAME_DEFAULT_GREEN_MASK,
+		   uint64_t blue_mask_ = TV_FRAME_DEFAULT_BLUE_MASK,
+		   uint64_t alpha_mask_ = TV_FRAME_DEFAULT_ALPHA_MASK,
 		   uint64_t time_to_live_micro_s_ = (uint64_t)((1/MICRO_PREFIX)*TV_FRAME_DEFAULT_TIME_TO_LIVE),
 		   uint64_t sampling_rate_ = TV_FRAME_DEFAULT_SAMPLING_RATE,
 		   uint8_t channel_count_ = TV_FRAME_DEFAULT_CHANNEL_COUNT,

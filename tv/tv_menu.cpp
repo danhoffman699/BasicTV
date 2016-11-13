@@ -131,8 +131,8 @@ static void init_char_data(){
 	char_data['M'] = {{
 			{{1, 0, 0, 1}},
 			{{1, 1, 1, 1}},
-			{{1, 1, 1, 1}},
-			{{1, 0, 1, 1}},
+			{{1, 0, 0, 1}},
+			{{1, 0, 0, 1}},
 			{{1, 0, 0, 1}},
 			{{1, 0, 0, 1}}
 		}};
@@ -212,16 +212,16 @@ static void init_char_data(){
 			{{1, 0, 0, 1}},
 			{{1, 0, 0, 1}},
 			{{1, 0, 0, 1}},
-			{{1, 1, 0, 1}},
+			{{1, 0, 0, 1}},
 			{{1, 1, 1, 1}},
-			{{0, 1, 0, 1}}
+			{{1, 0, 0, 1}}
 		}};
 	char_data['X'] = {{
 			{{1, 0, 0, 1}},
 			{{1, 0, 0, 1}},
 			{{0, 1, 1, 0}},
 			{{0, 1, 1, 0}},
-			{{1, 0, ;0, 1}},
+			{{1, 0, 0, 1}},
 			{{1, 0, 0, 1}}
 		}};
 	char_data['Y'] = {{
@@ -353,6 +353,9 @@ void tv_menu_t::update_frame(){
 	frame->reset(512,
 		     512,
 		     TV_FRAME_DEFAULT_BPC, // not needed, only for fast rendering
+		     TV_FRAME_DEFAULT_RED_MASK,
+		     TV_FRAME_DEFAULT_GREEN_MASK,
+		     TV_FRAME_DEFAULT_BLUE_MASK,
 		     0, // not a typical frame, doesn't need a frame rate
 		     1,
 		     1, // don't have any audio
