@@ -70,7 +70,6 @@ uint64_t tv_frame_t::get_raw_pixel_pos(uint64_t x,
 	}
 	const uint64_t raw_pixel_pos = 
 		(major+minor)*3;
-	// TV_FRAME_SIZE should be checked against frame res
 	return raw_pixel_pos;
 }
 
@@ -99,9 +98,9 @@ std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> tv_frame_t::get_pixel(uint64_t
 		(uint64_t*)&(frame[get_raw_pixel_pos(x, y)]);
 	const uint64_t bpc_mask =
 		flip_bit_section(0, bpc);
-	std::get<0>(color) = ((*pixel S_S bpc*0) & bpc_mask);
-	std::get<1>(color) = ((*pixel S_S bpc*1) & bpc_mask);
-	std::get<2>(color) = ((*pixel S_S bpc*2) & bpc_mask);
+	std::get<0>(color) = ((*pixel S_S (bpc*0)) & bpc_mask);
+	std::get<1>(color) = ((*pixel S_S (bpc*1)) & bpc_mask);
+	std::get<2>(color) = ((*pixel S_S (bpc*2)) & bpc_mask);
 	std::get<3>(color) = bpc;
 	return color;
 }

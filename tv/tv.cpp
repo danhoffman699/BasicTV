@@ -126,12 +126,7 @@ static uint32_t tv_render_get_frame_sdl_enum(tv_frame_t *frame){
 	return pixel_format_enum;
 }
 
-// broken right now, I want to push the updated menu code
-
-
 static SDL_Surface* tv_render_frame_to_surface_ptr(tv_frame_t *frame){
-	return nullptr;
-	
 	const uint64_t width = frame->get_x_res();
 	const uint64_t height = frame->get_y_res();
 	P_V(width, P_SPAM);
@@ -175,17 +170,38 @@ static SDL_Surface* tv_render_frame_to_surface_ptr(tv_frame_t *frame){
   better as well. 
  */
 
-static void tv_frame_gen_xor_frame(uint8_t *frame, uint64_t x_, uint64_t y_, uint8_t bpc){
+static tv_frame_t *tv_frame_gen_xor_frame(uint64_t x_, uint64_t y_, uint8_t bpc){
+	tv_frame_t *frame = new tv_frame_t;
+	frame->reset(x_,
+		     y_,
+		     TV_FRAME_DEFAULT_BPC,
+		     TV_FRAME_DEFAULT_RED_MASK,
+		     TV_FRAME_DEFAULT_GREEN_MASK,
+		     TV_FRAME_DEFAULT_BLUE_MASK,
+		     TV_FRAME_DEFAULT_ALPHA_MASK,
+		     1000*1000,
+		     1,
+		     1,
+		     1);
 	if(unlikely(bpc != 8)){
 		print("BPC is not supported", P_ERR);
 	}
 	for(uint64_t y = 0;y < y_;y++){
 		for(uint64_t x = 0;x < x_;x++){
-			frame[(((x_*y)+x)*3)+0] = (x^y)&255;
+			/*frame[(((x_*y)+x)*3)+0] = (x^y)&255;
 			frame[(((x_*y)+x)*3)+1] = (x^y)&255;
 			frame[(((x_*y)+x)*3)+2] = (x^y)&255;
+			*/
+			frame->set_pixel(x,
+					 y,
+					 std::make_tuple(
+						 (x^y)&255,
+						 (x^y)&255,
+						 (x^y)&255,
+						 8));
 		}
 	}
+	return frame;
 }
 
 static SDL_Rect tv_render_gen_window_rect(tv_window_t *window,
@@ -325,34 +341,19 @@ static void tv_init_test_channel(){
 	menu->set_menu_entry(3, "to");
 	menu->set_menu_entry(4, "be");
 	menu->set_menu_entry(5, "great");
-	//menu->set_menu_entry(0, "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
-	// tv_frame_t *frame = new tv_frame_t;
-	// frame->reset(TV_FRAME_DEFAULT_X,
-	// 	     TV_FRAME_DEFAULT_Y,
-	// 	     TV_FRAME_DEFAULT_BPC,
-	// 	     TV_FRAME_DEFAULT_RED_MASK,
-	// 	     TV_FRAME_DEFAULT_GREEN_MASK,
-	// 	     TV_FRAME_DEFAULT_BLUE_MASK,
-	// 	     0,
-	// 	     1000*1000,
-	// 	     1,
-	// 	     1,
-	// 	     1);
-	// tv_frame_gen_xor_frame((uint8_t*)frame->get_pixel_data_ptr(),
-	// 		       frame->get_x_res(),
-	// 		       frame->get_y_res(),
-	// 		       frame->get_bpc());
+	// menu->set_menu_entry(0, "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+	//tv_frame_t *frame = tv_frame_gen_xor_frame(1920, 1080, 8);
 	channel->set_latest_frame_id(menu->get_frame_id());
 }
 
 void tv_init(){
 	SDL_Init(SDL_INIT_VIDEO);
 	sdl_window = SDL_CreateWindow("BasicTV",
-				  SDL_WINDOWPOS_CENTERED,
-				  SDL_WINDOWPOS_CENTERED,
-				  WINDOW_X_RES,
-				  WINDOW_Y_RES,
-				  SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+				      SDL_WINDOWPOS_CENTERED,
+				      SDL_WINDOWPOS_CENTERED,
+				      WINDOW_X_RES,
+				      WINDOW_Y_RES,
+				      SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
 	if(sdl_window == nullptr){
 		print((std::string)"window is nullptr:"+SDL_GetError(), P_ERR);
 	}

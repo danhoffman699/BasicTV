@@ -186,11 +186,11 @@ static void init_char_data(){
 		}};
 	char_data['T'] = {{
 			{{1, 1, 1, 1}},
-			{{0, 0, 1, 0}},
-			{{0, 0, 1, 0}},
-			{{0, 0, 1, 0}},
-			{{0, 0, 1, 0}},
-			{{0, 0, 1, 0}}
+			{{0, 1, 0, 0}},
+			{{0, 1, 0, 0}},
+			{{0, 1, 0, 0}},
+			{{0, 1, 0, 0}},
+			{{0, 1, 0, 0}}
 		}};
 	char_data['U'] = {{
 			{{1, 0, 0, 1}},
@@ -317,30 +317,29 @@ tv_menu_t::~tv_menu_t(){
 
 static void tv_menu_render_glyph_to_frame(int8_t glyph,
 					  tv_frame_t *frame,
-					  uint64_t x_,
-					  uint64_t y_){
+					  uint64_t start_x,
+					  uint64_t start_y){
 	for(uint64_t x = 0;x < GLYPH_X;x++){
 		for(uint64_t y = 0;y < GLYPH_Y;y++){
 			const uint64_t frame_x =
-				x+x_;
+				start_x+x;
 			const uint64_t frame_y =
-				y+y_;
+				start_y+y;
 			const uint64_t glyph_x =
 				x;
 			const uint64_t glyph_y =
 				y;
 			const int8_t map_entry =
 				char_data[glyph][glyph_y][glyph_x];
-			std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> color =
-				std::make_tuple(0, 0, 0, 8);
 			if(map_entry != 0){
-				color = std::make_tuple(
-					255,
-					255,
-					255,
-					8);
+				frame->set_pixel(frame_x,
+						 frame_y,
+						 std::make_tuple(
+							 255,
+							 255,
+							 255,
+							 8));
 			} // TODO: add alpha channel, at least in menu settings
-			frame->set_pixel(frame_x, frame_y, color);
 		}
 	}
 }
@@ -364,16 +363,16 @@ void tv_menu_t::update_frame(){
 	}
 	
 	const uint64_t x_res_mul =
-		GLYPH_X + 2*GLYPH_X_BORDER;
+		GLYPH_X;
 	const uint64_t y_res_mul =
-		GLYPH_Y + 2*GLYPH_Y_BORDER;
+		GLYPH_Y;
 	frame->reset(x_count*x_res_mul,
-		     y_count*y_res_mul,
+x		     y_count*y_res_mul,
 		     TV_FRAME_DEFAULT_BPC,
 		     TV_FRAME_DEFAULT_RED_MASK,
 		     TV_FRAME_DEFAULT_GREEN_MASK,
 		     TV_FRAME_DEFAULT_BLUE_MASK,
-		     0,// no alpha mask needed
+		     0, // no alpha mask needed
 		     0, // not a typical frame, doesn't need a frame rate
 		     1,
 		     1, // don't have any audio
