@@ -105,7 +105,6 @@ void id_api::array::add_data(std::vector<uint8_t> data_){
 	}
 	CHECK_TYPE(tv_channel_t);
 	CHECK_TYPE(tv_frame_t);
-	CHECK_TYPE(pgp_cite_t);
 	CHECK_TYPE(net_peer_t);
 	print("type isn't valid", P_ERR);
 }
@@ -120,9 +119,10 @@ std::vector<uint64_t> id_api::array::sort_by_pgp_pubkey(std::vector<uint64_t> tm
 			data_id_t *tmp_array[2] = {nullptr};
 			tmp_array[0] = PTR_ID(tmp[i-1], "");
 			tmp_array[1] = PTR_ID(tmp[i], "");
-			const bool pgp_greater_than =
-				pgp::cmp::greater_than(tmp_array[i-1]->get_pgp_cite_id(),
-						       tmp_array[i]->get_pgp_cite_id());
+			//const bool pgp_greater_than =
+			//	pgp::cmp::greater_than(tmp_array[i-1]->get_pgp_cite_id(),
+			//			       tmp_array[i]->get_pgp_cite_id());
+			const bool pgp_greater_than = false;
 			if(pgp_greater_than){
 				uint64_t tmp_ = tmp[i-1];
 				tmp[i-1] = tmp[i];

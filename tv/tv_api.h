@@ -1,3 +1,4 @@
+#include "../rsa.h"
 #ifndef TV_API_H
 #define TV_API_H
 namespace tv{
@@ -20,9 +21,9 @@ namespace tv{
 			// all windows ought to be the same res
 			std::pair<uint32_t, uint32_t> get_res();
 			uint64_t get_chan_id(uint8_t x, uint8_t y);
-			std::array<uint8_t, PGP_PUBKEY_SIZE> get_chan_pubkey(uint8_t x, uint8_t y);
+			std::array<uint8_t, RSA_MAX_KEY_LENGTH/8> get_chan_pubkey(uint8_t x, uint8_t y);
 			void set_chan_id(uint64_t id, uint8_t x, uint8_t y);
-			void set_chan_pubkey(std::array<uint8_t, PGP_PUBKEY_SIZE> pubkey, uint8_t x, uint8_t y);
+			void set_chan_pubkey(std::array<uint8_t, RSA_MAX_KEY_LENGTH> pubkey, uint8_t x, uint8_t y);
 		};
 		namespace monitor{
 			// unused, but would be pretty cool to have

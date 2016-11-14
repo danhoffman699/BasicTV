@@ -54,7 +54,7 @@ uint64_t tv::chan::count(uint64_t flags){
 */
 
 uint64_t tv::chan::next(uint64_t id, uint64_t flags){
-	std::vector<uint64_t> all_channels =
+/*	std::vector<uint64_t> all_channels =
 		id_api::cache::get("tv_channel_t");
 	for(uint64_t i = 0;i < all_channels.size();i++){
 		tv_channel_t *channel = PTR_DATA(all_channels[i], tv_channel_t);
@@ -82,12 +82,12 @@ uint64_t tv::chan::next(uint64_t id, uint64_t flags){
 				return pgp_sorted[i+1];
 			}
 		}
-	}
+		}*/
 	return 0;
 }
 
 uint64_t tv::chan::prev(uint64_t id, uint64_t flags){
-	std::vector<uint64_t> all_channels =
+	/*std::vector<uint64_t> all_channels =
 		id_api::cache::get("tv_channel_t");
 	for(uint64_t i = 0;i < all_channels.size();i++){
 		tv_channel_t *channel =
@@ -116,7 +116,7 @@ uint64_t tv::chan::prev(uint64_t id, uint64_t flags){
 				return pgp_sorted[i-1];
 			}
 		}
-	}
+		}*/
 	return 0;
 }
 

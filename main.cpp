@@ -2,7 +2,7 @@
 #include "settings.h"
 #include "file.h"
 #include "util.h"
-#include "pgp.h"
+#include "rsa.h"
 #include "ir.h"
 #include "tv/tv.h"
 #include "tv/tv_frame.h"
