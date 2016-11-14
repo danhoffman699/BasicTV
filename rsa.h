@@ -20,10 +20,11 @@ protected:
 public:
 	rsa_key_t();
 	~rsa_key_t();
+	void list_virtual_data(data_id_t *id);
 	void get_key(std::array<uint8_t, RSA_MAX_KEY_LENGTH/8> *key_,
-		     uint16_t *key_length);
+		     uint16_t *key_length_);
 	void set_key(std::array<uint8_t, RSA_MAX_KEY_LENGTH/8> key_,
-		     uint16_t key_length);
+		     uint16_t key_length_);
 };
 
 class rsa_priv_key_t : public rsa_key_t{
@@ -33,7 +34,7 @@ public:
 	~rsa_priv_key_t();
 };
 
-class rsa_pub_key_t{
+class rsa_pub_key_t : public rsa_key_t{
 public:
 	data_id_t id;
 	rsa_pub_key_t();

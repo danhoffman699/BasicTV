@@ -137,7 +137,7 @@ static uint32_t tv_render_get_frame_sdl_enum(tv_frame_t *frame){
  */
 
 static SDL_Surface* tv_render_frame_to_surface_ptr(tv_frame_t *frame){
-//	return nullptr;
+	return nullptr;
 	const uint64_t width = frame->get_x_res();
 	const uint64_t height = frame->get_y_res();
 	const uint8_t bpc = frame->get_bpc();
@@ -333,16 +333,16 @@ static void tv_init_test_channel(){
 		new tv_channel_t;
 	window->set_channel_id(channel->id.get_id());
 	std::array<tv_frame_t*, TEST_FRAME_SIZE> tmp_frames = {{nullptr}};
-	// tv_menu_t *menu = new tv_menu_t;
-	// menu->set_menu_entry(0, "BasicTV");
-	// menu->set_menu_entry(1, "is");
-	// menu->set_menu_entry(2, "going");
-	// menu->set_menu_entry(3, "to");
-	// menu->set_menu_entry(4, "be");
-	// menu->set_menu_entry(5, "great");
-	// channel->set_latest_frame_id(menu->get_frame_id());
-	tv_frame_t *frame = tv_frame_gen_xor_frame(1920, 1080, 8);
-	channel->set_latest_frame_id(frame->id.get_id());
+	tv_menu_t *menu = new tv_menu_t;
+	menu->set_menu_entry(0, "BasicTV");
+	menu->set_menu_entry(1, "is");
+	menu->set_menu_entry(2, "going");
+	menu->set_menu_entry(3, "to");
+	menu->set_menu_entry(4, "be");
+	menu->set_menu_entry(5, "great");
+	channel->set_latest_frame_id(menu->get_frame_id());
+	//tv_frame_t *frame = tv_frame_gen_xor_frame(1920, 1080, 8);
+	//channel->set_latest_frame_id(frame->id.get_id());
 }
 
 void tv_init(){

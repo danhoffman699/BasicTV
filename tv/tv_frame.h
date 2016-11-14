@@ -12,7 +12,7 @@
   for menus and other things that don't have to look pretty
 
   TODO: raise this when the compression is good enough all around
- */
+*/
 #define TV_FRAME_DEFAULT_X 640
 #define TV_FRAME_DEFAULT_Y 480
 #define TV_FRAME_DEFAULT_BPC 8
@@ -41,18 +41,65 @@
   TODO: crunch some numbers to see how far in advance data needs to be
   uploaded to get certain resolution streams over 56.6K (round down to 
   50K, actually, because of other data, overhead, and redundancy).
- */
+*/
+
+/*
+  It makes sense to set it up like this
+*/
+
+struct tv_frame_video_t{
+private:
+	std::array<uint8_t, TV_FRAME_SIZE> frame = {{0}};
+	uint16_t x_res = 0;
+	uint16_t y_res = 0;
+	uint8_t bpc = 0; // bits per color
+	/*
+	  Color masks should be 16-bit
+	  First 8-bit: number of binary ones
+	  Second 8-bit: number of shifts from LSB
+	  I do not know of one standard where the color mask is
+	  non-contiguous
+	*/
+	uint16_t red_mask = 0;
+	uint16_t green_mask = 0;
+	uint16_t blue_mask = 0;
+	uint16_t alpha_mask = 0;
+public:
+	data_id_t id;
+	tv_frame_video_t();
+	~tv_frame_video_t();
+	std::array<uint8_t, TV_FRAME_SIZE> get_frame_ptr();
+	void set_pixel(
+		uint64_t x_,
+		uint64_t y_,
+		std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> color);
+	std::tuple<uint64_t, uint64_t, uint64_t, uint8_t>
+		get_color(uint64_t x_,
+			  uint64_t y_);
+};
+
+struct tv_frame_audio_t{
+private:
+	std::array<uint8_t, TV_FRAME_AUDIO_SIZE> audio = {{0}};
+	uint8_t amp_depth = 0;
+	uint32_t sampling_freq = 0;
+	uint8_t channel_count = 0;
+public:
+	data_id_t id;
+	tv_frame_audio_t();
+	~tv_frame_audio_t();
+};
 
 struct tv_frame_t{
 private:
-	// raw information, parsed using following information
+// raw information, parsed using following information
 	std::array<uint8_t, TV_FRAME_SIZE> frame = {{0}};
 	std::array<uint8_t, TV_FRAME_AUDIO_SIZE> audio = {{0}};
-	// channel ID
+// channel ID
 	uint64_t channel_id = 0;
-	// frame_number, increment by one every time.
+// frame_number, increment by one every time.
 	uint64_t frame_number = 0;
-	// pretty basic settings
+// pretty basic settings
 	uint64_t x_res = 0;
 	uint64_t y_res = 0;
 	uint8_t bpc = 0; // bits per color
@@ -61,28 +108,25 @@ private:
 	uint64_t blue_mask = 0;
 	uint64_t alpha_mask = 0;
 	uint8_t amp_depth = 0; // amplitude, bit depth (in bytes)
-	// in Hz
+// in Hz
 	uint64_t sampling_freq = 0;
-	// time to live in microseconds (easier for dynamic refresh rate)
+// time to live in microseconds (easier for dynamic refresh rate)
 	uint64_t time_to_live_micro_s = 0;
-	// channel count (audio)
+// channel count (audio)
 	uint8_t channel_count = 1;
-	/*
-	  Milliseconds since the epoch as stated by std::chrono. I don't know
-	  how accurate it is per-system, but a better implementation can
-	  always be built and used (hopefully)
-	 */
 	uint64_t timestamp_micro_s = 0;
-	// second layer of encryption, used for "cacheing" data
+// second layer of encryption, used for "cacheing" data
 	uint64_t second_cite_id = 0;
+//uint64_t frame_video_id = 0;
+//uint64_t frame_audio_id = 0;
 	uint64_t get_raw_pixel_pos(uint64_t x, uint64_t y);
 public:
 	data_id_t id;
 	tv_frame_t();
 	~tv_frame_t();
-	/*
-	  most settings cannot be changed OTF
-	 */
+/*
+  most settings cannot be changed OTF
+*/
 	void reset(uint64_t x,
 		   uint64_t y,
 		   uint8_t bpc_,
@@ -103,8 +147,6 @@ public:
 	uint64_t get_frame_id_next();
 	uint64_t get_x_res();
 	uint64_t get_y_res();
-	// as much as C++'s chrono looks cool, I can't deviate from
-	// storing data as native types
 	void set_timestamp_micro_s(uint64_t timestamp_micro_s_);
 	uint64_t get_timestamp_micro_s();
 	uint64_t get_time_to_live_micro_s();

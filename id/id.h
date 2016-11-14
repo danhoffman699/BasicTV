@@ -86,7 +86,10 @@
   the big one, because verification after every send is
   going to be bad)
  */
+
 #define ID_DATA_CACHE (1 << 0)
+#define ID_DATA_NONET ID_DATA_CACHE
+
 /*
   force no PGP encryption on one specific variable, only
   used for core PGP functions (ID to pgp_cite_t and pgp_cite_t
