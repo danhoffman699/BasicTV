@@ -61,7 +61,7 @@ static void init_char_data(){
 			{{0, 1, 0, 0, 1, 0}},
 			{{0, 1, 0, 0, 1, 0}},
 			{{0, 1, 0, 0, 1, 0}},
-			{{0, 1, 1, 1, 1, 0}}
+			{{0, 1, 1, 1, 0, 0}}
 		}};
 	char_data['E'] = {{
 			{{0, 1, 1, 1, 1, 0}},
@@ -359,6 +359,22 @@ static void init_char_data(){
 			{{0, 1, 1, 0, 1, 0}},
 			{{0, 1, 1, 1, 1, 0}}
 		}};
+	char_data['\''] = {{
+			{{0, 0, 0, 1, 0, 0}},
+			{{0, 0, 0, 1, 0, 0}},
+			{{0, 0, 0, 0, 0, 0}},
+			{{0, 0, 0, 0, 0, 0}},
+			{{0, 0, 0, 0, 0, 0}},
+			{{0, 0, 0, 0, 0, 0}}
+		}};
+	char_data['-'] = {{
+			{{0, 0, 0, 0, 0, 0}},
+			{{0, 0, 0, 0, 0, 0}},
+			{{0, 1, 1, 1, 1, 0}},
+			{{0, 0, 0, 0, 0, 0}},
+			{{0, 0, 0, 0, 0, 0}},
+			{{0, 0, 0, 0, 0, 0}}
+		}};
 	// probably shouldn't do this
 	char_data['a'] = char_data['A'];
 	char_data['b'] = char_data['B'];
@@ -459,10 +475,6 @@ void tv_menu_t::update_frame(){
 	tv_menu_get_glyph_dimensions(entry,
 				     &x_count,
 				     &y_count);
-	// if(x_count > TV_MENU_WIDTH || y_count > TV_MENU_HEIGHT){
-	// 	print("text wrapping isn't supported yet", P_ERR);
-	// 	return;
-	// }
 	frame->reset(TV_MENU_WIDTH*GLYPH_X,
 		     TV_MENU_HEIGHT*GLYPH_Y,
 		     TV_FRAME_DEFAULT_BPC,
@@ -483,10 +495,10 @@ void tv_menu_t::update_frame(){
 	}
 	uint64_t x = 0;
 	uint64_t y = 0;
-	// TODO: Make a scrollbar
+	// TODO: implement oriented text, datatype already exists
 	for(uint64_t i = 0;i < data.size();i++){
 		if(data[i] == '\n'){
-			y++;
+			y += GLYPH_Y;
 			x = 0;
 			continue;
 		}
@@ -495,9 +507,9 @@ void tv_menu_t::update_frame(){
 					      x,
 					      y);
 		const bool x_roll =
-			x+(2*GLYPH_X) == TV_MENU_WIDTH*GLYPH_X;
+			x+(GLYPH_X) == TV_MENU_WIDTH*GLYPH_X;
 		const bool y_roll =
-			y+(2*GLYPH_Y) == TV_MENU_HEIGHT*GLYPH_Y;
+			y+(GLYPH_Y) == TV_MENU_HEIGHT*GLYPH_Y;
 		if(x_roll){
 			if(unlikely(y_roll)){
 				break;

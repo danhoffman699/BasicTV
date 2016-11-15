@@ -129,16 +129,7 @@ static uint32_t tv_render_get_frame_sdl_enum(tv_frame_t *frame){
 	return pixel_format_enum;
 }
 
-/*
-  This is only broken on rendering menus, so force using *_copy with
-  a nullptr return. I don't know what the problem is, but the XOR frame
-  seems to work fine with it (when enabled, it looks like a vertical scroll
-  like on old TVs, and some colors are thrown off, even though the frame is
-  only white)
- */
-
 static SDL_Surface* tv_render_frame_to_surface_ptr(tv_frame_t *frame){
-	return nullptr;
 	const uint64_t width = frame->get_x_res();
 	const uint64_t height = frame->get_y_res();
 	const uint8_t bpc = frame->get_bpc();
@@ -335,7 +326,7 @@ static void tv_init_test_channel(){
 	window->set_channel_id(channel->id.get_id());
 	std::array<tv_frame_t*, TEST_FRAME_SIZE> tmp_frames = {{nullptr}};
 	tv_menu_t *menu = new tv_menu_t;
-	menu->set_menu_entry(0, "BasicTV is going to be great guys");
+	menu->set_menu_entry(0, "adderal\nd\nd\ne\nr\na\nl");
 	channel->set_latest_frame_id(menu->get_frame_id());
 	//tv_frame_t *frame = tv_frame_gen_xor_frame(1920, 1080, 8);
 	//channel->set_latest_frame_id(frame->id.get_id());

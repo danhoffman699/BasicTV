@@ -146,13 +146,6 @@ int system_handler::run(std::string str){
 	return retval;
 }
 
-/*
-  I heard some bad things about the C-way of getting
-  command output, so this seems like the best way to pipe
-  it into a variable
- */
-
-
 void system_handler::write(std::string cmd, std::string file){
 	run(cmd + " > " + file);
 	file::wait_for_file(file);
@@ -256,16 +249,13 @@ uint64_t true_rand(uint64_t min, uint64_t max){
 		distribution(min, max);
 	return distribution(generator);
 }
-
-// there's a better way to do this, but I don't
-// care enough to bother right now. Little-endian
-// is the only allowable architecture right now
-
 uint64_t flip_bit_section(uint8_t begin, uint8_t end){
-	uint64_t retval = 0;
-	for(uint8_t i = begin;i <= end;i++){
+	// ?
+	uint64_t retval = ((((1 << end-begin-1)-1) << 1) | 1) << begin;
+	/*for(uint8_t i = begin;i <= end;i++){
 		retval |= ((uint64_t)1 << i);
-	}
+		}*/
+	
 	return retval;
 }
 

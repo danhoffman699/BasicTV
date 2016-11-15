@@ -4,12 +4,16 @@
 #include "array"
 #define TV_MENU_TEXT_LENGTH 64
 // TODO: define this in settings, not as macros
-#define TV_MENU_WIDTH 24
-#define TV_MENU_HEIGHT 24
-
+#define TV_MENU_WIDTH 16
+#define TV_MENU_HEIGHT 16
+#define TV_MENU_ORIENT_LEFT 0
+#define TV_MENU_ORIENT_MIDDLE 1
+#define TV_MENU_ORIENT_CENTER 1
+#define TV_MENU_ORIENT_RIGHT 2
 struct tv_menu_entry_t{
 private:
 	std::string text;
+	uint64_t orientation = TV_MENU_ORIENT_LEFT;
 	void (*function)(void) = nullptr;
 public:
 	data_id_t id;

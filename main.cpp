@@ -53,7 +53,7 @@ static void init(){
 	settings::set_setting("network_port", "58486");
 	// enable socks
 	settings::set_setting("socks_enable", "false");
-	// if SOCKS cannot be set up properly, then ignore
+	// if SOCKS cannot be set up properly, then terminate
 	settings::set_setting("socks_strict", "true");
 	// SOCKS proxy ip address in ASCII
 	settings::set_setting("socks_proxy_ip", "127.0.0.1");
