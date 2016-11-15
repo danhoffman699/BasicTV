@@ -3,6 +3,10 @@
 #define TV_MENU_H
 #include "array"
 #define TV_MENU_TEXT_LENGTH 64
+// TODO: define this in settings, not as macros
+#define TV_MENU_WIDTH 24
+#define TV_MENU_HEIGHT 24
+
 struct tv_menu_entry_t{
 private:
 	std::string text;

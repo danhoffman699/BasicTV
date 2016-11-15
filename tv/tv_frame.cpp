@@ -109,9 +109,9 @@ uint64_t tv_frame_t::get_raw_pixel_pos(uint64_t x,
 
 static void tv_frame_color_sanity_check(std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> color){
 	const uint64_t bpc = std::get<3>(color);
-	if(std::get<0>(color) > MASK(bpc) ||
-	   std::get<1>(color) > MASK(bpc) ||
-	   std::get<2>(color) > MASK(bpc)){
+	if(unlikely(std::get<0>(color) > MASK(bpc) ||
+		    std::get<1>(color) > MASK(bpc) ||
+		    std::get<2>(color) > MASK(bpc))){
 		print("color is not withing BPC bounds", P_ERR);
 	}
 	if(unlikely(!valid_bpc(bpc))){
@@ -122,10 +122,10 @@ static void tv_frame_color_sanity_check(std::tuple<uint64_t, uint64_t, uint64_t,
 void tv_frame_t::set_pixel(uint64_t x,
 			   uint64_t y,
 			   std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> color){
+	tv_frame_color_sanity_check(color);
 	const uint64_t pixel_pos =
 		get_raw_pixel_pos(x, y);
 	uint64_t *pixel = (uint64_t*)&(frame[pixel_pos]);
-	tv_frame_color_sanity_check(color);
 	color = convert::color::bpc(color, bpc);
 	(*pixel) &= ~flip_bit_section(0, bpc*3);
 	(*pixel) |= std::get<0>(color) & MASK(bpc);

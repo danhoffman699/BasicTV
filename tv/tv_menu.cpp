@@ -402,7 +402,7 @@ tv_menu_t::tv_menu_t() : id(this, __FUNCTION__){
 tv_menu_t::~tv_menu_t(){
 }
 
-static void tv_menu_render_glyph_to_frame(int8_t glyph,
+static void tv_menu_render_glyph_to_frame(uint8_t glyph,
 					  tv_frame_t *frame,
 					  uint64_t start_x,
 					  uint64_t start_y){
@@ -448,9 +448,6 @@ static void tv_menu_get_glyph_dimensions(std::array<uint64_t, TV_MENU_TEXT_LENGT
 	}
 }
 
-#define TV_MENU_WIDTH 32
-#define TV_MENU_HEIGHT 32
-
 void tv_menu_t::update_frame(){
 	tv_frame_t *frame =
 		PTR_DATA(frame_id, tv_frame_t);
@@ -462,10 +459,10 @@ void tv_menu_t::update_frame(){
 	tv_menu_get_glyph_dimensions(entry,
 				     &x_count,
 				     &y_count);
-	if(x_count > TV_MENU_WIDTH || y_count > TV_MENU_HEIGHT){
-		print("text wrapping isn't supported yet", P_ERR);
-		return;
-	}
+	// if(x_count > TV_MENU_WIDTH || y_count > TV_MENU_HEIGHT){
+	// 	print("text wrapping isn't supported yet", P_ERR);
+	// 	return;
+	// }
 	frame->reset(TV_MENU_WIDTH*GLYPH_X,
 		     TV_MENU_HEIGHT*GLYPH_Y,
 		     TV_FRAME_DEFAULT_BPC,
@@ -477,17 +474,39 @@ void tv_menu_t::update_frame(){
 		     1,
 		     1, // don't have any audio
 		     1);
+	std::string data;
 	for(uint64_t y = 0;y < y_count;y++){
 		tv_menu_entry_t *entry_ =
 			PTR_DATA(entry[y], tv_menu_entry_t);
 		CONTINUE_IF_NULL(entry_);
-		const std::string text =
-			entry_->get_text();
-		for(uint64_t x = 0;x < text.size();x++){
-			tv_menu_render_glyph_to_frame(text[x],
-						      frame,
-						      x*GLYPH_X,
-						      y*GLYPH_Y);
+		data += entry_->get_text() + '\n';
+	}
+	uint64_t x = 0;
+	uint64_t y = 0;
+	// TODO: Make a scrollbar
+	for(uint64_t i = 0;i < data.size();i++){
+		if(data[i] == '\n'){
+			y++;
+			x = 0;
+			continue;
+		}
+		tv_menu_render_glyph_to_frame(data[i],
+					      frame,
+					      x,
+					      y);
+		const bool x_roll =
+			x+(2*GLYPH_X) == TV_MENU_WIDTH*GLYPH_X;
+		const bool y_roll =
+			y+(2*GLYPH_Y) == TV_MENU_HEIGHT*GLYPH_Y;
+		if(x_roll){
+			if(unlikely(y_roll)){
+				break;
+				// ran out of room
+			}
+			y += GLYPH_Y;
+			x = 0;
+		}else{
+			x += GLYPH_X;
 		}
 	}
 }

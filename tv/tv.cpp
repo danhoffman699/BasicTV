@@ -94,6 +94,7 @@ static SDL_Surface* tv_render_frame_to_surface_copy(tv_frame_t *frame){
 	}
 	return surface;
 }
+
 static uint32_t tv_render_get_frame_sdl_enum(tv_frame_t *frame){
 	uint32_t pixel_format_enum = 0;
 	if(frame->get_alpha_mask() != 0){
@@ -334,12 +335,7 @@ static void tv_init_test_channel(){
 	window->set_channel_id(channel->id.get_id());
 	std::array<tv_frame_t*, TEST_FRAME_SIZE> tmp_frames = {{nullptr}};
 	tv_menu_t *menu = new tv_menu_t;
-	menu->set_menu_entry(0, "BasicTV");
-	menu->set_menu_entry(1, "is");
-	menu->set_menu_entry(2, "going");
-	menu->set_menu_entry(3, "to");
-	menu->set_menu_entry(4, "be");
-	menu->set_menu_entry(5, "great");
+	menu->set_menu_entry(0, "BasicTV is going to be great guys");
 	channel->set_latest_frame_id(menu->get_frame_id());
 	//tv_frame_t *frame = tv_frame_gen_xor_frame(1920, 1080, 8);
 	//channel->set_latest_frame_id(frame->id.get_id());
