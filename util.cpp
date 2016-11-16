@@ -250,13 +250,16 @@ uint64_t true_rand(uint64_t min, uint64_t max){
 	return distribution(generator);
 }
 uint64_t flip_bit_section(uint8_t begin, uint8_t end){
-	// ?
-	uint64_t retval = ((((1 << end-begin-1)-1) << 1) | 1) << begin;
-	/*for(uint8_t i = begin;i <= end;i++){
-		retval |= ((uint64_t)1 << i);
-		}*/
-	
-	return retval;
+	if(unlikely(end == begin)){
+		return 0;
+		/*
+		  This program actually flips all of the bits but the last one, 
+		  carries them over one, and ORs a 1 at the end, before shifting
+		  it again to the beginning. If there is no section, it would
+		  falsely report the mask as one
+		 */
+	}
+	return ((((1 << end-begin-1)-1) << 1) | 1) << begin;
 }
 
 uint64_t get_time_microseconds(){

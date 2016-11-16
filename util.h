@@ -102,8 +102,8 @@ namespace array_func{
 
 uint64_t flip_bit_section(uint8_t begin, uint8_t end);
 
-#define CONTINUE_IF_NULL(x) if(unlikely(x == nullptr)){continue;}
-#define CONTINUE_IF_TRUE(x) if((unlikely(!!x)){continue;}
+#define CONTINUE_IF_NULL(x) if(x == nullptr){continue;}
+#define CONTINUE_IF_TRUE(x) if(x){continue;}
 
 // print var
 #define P_V(a, b) print((std::string)__PRETTY_FUNCTION__ + ":" + (std::string)#a + " == '" + std::to_string(a) + "'", b)

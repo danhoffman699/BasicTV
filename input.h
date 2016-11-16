@@ -41,7 +41,7 @@
  */
 
 #define INPUT_IS_ASCII(x) (x >= 32 && x <= 126)
-#define INPUT_IS_LETTER(x) (x >= 'A' && x <= 'z')
+#define INPUT_IS_LETTER(x) ((x >= 'A' && x <= 'Z') || (x >= 'a' && x <= 'z'))
 #define INPUT_IS_NUMBER(x) (x >= '0' && x <= '9')
 
 /*

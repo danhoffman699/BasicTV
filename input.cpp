@@ -20,10 +20,19 @@ static void input_gather_from_keyboard(){
 		if(event.type != SDL_KEYDOWN){
 			continue;
 		}
+		/*
+		  Only need to catch non-alphanumerical keys
+		 */
 		switch(event.key.keysym.sym){
 		case SDLK_ESCAPE:
 			keyboard_vector.push_back(INPUT_KEY_ESCAPE);
 			break;
+		default:
+			if(INPUT_IS_LETTER(event.key.keysym.mod) ||
+			   INPUT_IS_NUMBER(event.key.keysym.mod)){
+				keyboard_vector.push_back(
+					event.key.keysym.mod);
+			}
 		}
 	}
 }

@@ -326,7 +326,7 @@ static void tv_init_test_channel(){
 	window->set_channel_id(channel->id.get_id());
 	std::array<tv_frame_t*, TEST_FRAME_SIZE> tmp_frames = {{nullptr}};
 	tv_menu_t *menu = new tv_menu_t;
-	menu->set_menu_entry(0, "adderal\nd\nd\ne\nr\na\nl");
+	menu->set_menu_entry(0, "Isn't this the sexiest font ever?");
 	channel->set_latest_frame_id(menu->get_frame_id());
 	//tv_frame_t *frame = tv_frame_gen_xor_frame(1920, 1080, 8);
 	//channel->set_latest_frame_id(frame->id.get_id());

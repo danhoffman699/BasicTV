@@ -4,4 +4,6 @@
 #include "tv_patch.cpp"
 #include "tv_window.cpp"
 #include "tv_menu.cpp"
-#include "tv_api.h"
+#include "tv_api.cpp"
+#include "tv_dev.cpp"
+

@@ -448,33 +448,12 @@ static void tv_menu_render_glyph_to_frame(uint8_t glyph,
 	}
 }
 
-static void tv_menu_get_glyph_dimensions(std::array<uint64_t, TV_MENU_TEXT_LENGTH> ids,
-					 uint64_t *x,
-					 uint64_t *y){
-	for(uint64_t i = 0;i < ids.size();i++){
-		tv_menu_entry_t *entry_ =
-			PTR_DATA(ids[i], tv_menu_entry_t);
-		if(entry_ == nullptr){
-			*y = i;
-			return;
-		}
-		if(entry_->get_text().size() > *x){
-			*x = entry_->get_text().size();
-		}
-	}
-}
-
 void tv_menu_t::update_frame(){
 	tv_frame_t *frame =
 		PTR_DATA(frame_id, tv_frame_t);
 	if(never(frame == nullptr)){
 		print("menu frame is a nullptr", P_CRIT);
 	}
-	uint64_t x_count = 0;
-	uint64_t y_count = 0;
-	tv_menu_get_glyph_dimensions(entry,
-				     &x_count,
-				     &y_count);
 	frame->reset(TV_MENU_WIDTH*GLYPH_X,
 		     TV_MENU_HEIGHT*GLYPH_Y,
 		     TV_FRAME_DEFAULT_BPC,
@@ -487,7 +466,7 @@ void tv_menu_t::update_frame(){
 		     1, // don't have any audio
 		     1);
 	std::string data;
-	for(uint64_t y = 0;y < y_count;y++){
+	for(uint64_t y = 0;y < 64;y++){
 		tv_menu_entry_t *entry_ =
 			PTR_DATA(entry[y], tv_menu_entry_t);
 		CONTINUE_IF_NULL(entry_);
@@ -513,7 +492,6 @@ void tv_menu_t::update_frame(){
 		if(x_roll){
 			if(unlikely(y_roll)){
 				break;
-				// ran out of room
 			}
 			y += GLYPH_Y;
 			x = 0;
