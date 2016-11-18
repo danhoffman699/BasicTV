@@ -7,6 +7,9 @@
 #include "vector"
 #include "random"
 
+#define ADD_DATA(x) (id.add_data(&x, sizeof(x)))
+#define ADD_DATA_PTR(x) (id->add_data(&x, sizeof(x)))
+
 /*
   Custom data types reference each other with IDs since
   pointers don't work over a network. This allows for easy

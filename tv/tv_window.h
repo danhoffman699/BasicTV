@@ -17,7 +17,7 @@
  */
 
 /*
-  tv_window_t: window class for tv_frame_t. Doesn't actually do much, just
+  tv_window_t: window class for tv_channel_t. Doesn't actually do much, just
   exists to store the layout of the screen
  */
 

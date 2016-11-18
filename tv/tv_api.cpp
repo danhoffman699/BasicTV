@@ -1,6 +1,8 @@
 #include "tv_api.h"
 #include "tv_channel.h"
-#include "tv_frame.h"
+#include "tv_frame_standard.h"
+#include "tv_frame_video.h"
+#include "tv_frame_audio.h"
 #include "tv_window.h"
 #include "tv_patch.h"
 #include "tv_menu.h"
@@ -29,15 +31,15 @@ uint64_t tv::chan::count(uint64_t flags){
 		try{
 			tv_channel_t *channel =
 				PTR_DATA(channel_id_list[i], tv_channel_t);
-			if((flags & TV_CHAN_STREAMING) && channel->is_streaming()){
+			if(flags & TV_CHAN_STREAMING && channel->is_streaming()){
 				retval++;
 				continue;
 			}
-			if((flags & TV_CHAN_NO_AUDIO) && !channel->is_audio()){
+			if((flags & TV_CHAN_AUDIO) && channel->is_audio()){
 				retval++;
 				continue;
 			}
-			if((flags & TV_CHAN_NO_VIDEO) && !channel->is_video()){
+			if((flags & TV_CHAN_VIDEO) && channel->is_video()){
 				retval++;
 				continue;
 			}

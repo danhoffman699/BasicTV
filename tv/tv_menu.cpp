@@ -1,5 +1,6 @@
 #include "tv_menu.h"
-#include "tv_frame.h"
+#include "tv_frame_standard.h"
+#include "tv_frame_video.h"
 
 /*
   tv_menu: a standardized menu setup. I want this program to be as simple,
@@ -408,7 +409,7 @@ static void init_char_data(){
 tv_menu_t::tv_menu_t() : id(this, __FUNCTION__){
 	id.add_data(&frame_id, sizeof(frame_id));
 	id.add_id(&frame_id, 1);
-	frame_id = (new tv_frame_t)->id.get_id();
+	frame_id = (new tv_frame_video_t)->id.get_id();
 	update_frame();
 	if(unlikely(valid_char_data == false)){
 		init_char_data();
@@ -419,7 +420,7 @@ tv_menu_t::~tv_menu_t(){
 }
 
 static void tv_menu_render_glyph_to_frame(uint8_t glyph,
-					  tv_frame_t *frame,
+					  tv_frame_video_t *frame,
 					  uint64_t start_x,
 					  uint64_t start_y){
 	for(uint64_t x = 0;x < GLYPH_X;x++){
@@ -449,22 +450,18 @@ static void tv_menu_render_glyph_to_frame(uint8_t glyph,
 }
 
 void tv_menu_t::update_frame(){
-	tv_frame_t *frame =
-		PTR_DATA(frame_id, tv_frame_t);
+	tv_frame_video_t *frame =
+		PTR_DATA(frame_id, tv_frame_video_t);
 	if(never(frame == nullptr)){
 		print("menu frame is a nullptr", P_CRIT);
 	}
-	frame->reset(TV_MENU_WIDTH*GLYPH_X,
-		     TV_MENU_HEIGHT*GLYPH_Y,
-		     TV_FRAME_DEFAULT_BPC,
-		     TV_FRAME_DEFAULT_RED_MASK,
-		     TV_FRAME_DEFAULT_GREEN_MASK,
-		     TV_FRAME_DEFAULT_BLUE_MASK,
-		     TV_FRAME_DEFAULT_ALPHA_MASK,
-		     1000*1000,
-		     1,
-		     1, // don't have any audio
-		     1);
+	frame->set_all(TV_MENU_WIDTH*GLYPH_X,
+		       TV_MENU_HEIGHT*GLYPH_Y,
+		       TV_FRAME_DEFAULT_BPC,
+		       TV_FRAME_DEFAULT_RED_MASK,
+		       TV_FRAME_DEFAULT_GREEN_MASK,
+		       TV_FRAME_DEFAULT_BLUE_MASK,
+		       TV_FRAME_DEFAULT_ALPHA_MASK);
 	std::string data;
 	for(uint64_t y = 0;y < 64;y++){
 		tv_menu_entry_t *entry_ =

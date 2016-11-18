@@ -3,22 +3,6 @@
   This is responsible for the output of the stream to the screen. This does
   not cover inputs to the system, nor does it cover broadcasting streams to
   the network.
-
-  The current tv_frame_t is rendered to the screen by loading the image
-  into OpenGL and stretching it properly or by using SDL (SDL is probably
-  better because of the GL ES thing with the RPi). All menus, text, etc. 
-  are done using built-in libraries that I made that directly interface
-  with tv_frame_t to display. That falls in sync with playing the audio
-  from tv_frame_t (uncompressed and raw 16/24-bit). Channel ordering is
-  done by alphabetizing PGP public keys, and there are reserved channels
-  that the software runs for testing purposes, help screens, settings, etc.
-  I plan to have a "test card" channel running with the sole intention of
-  relaying traffic and helping debug problems (compression gives me no
-  overhead, which is nice).
-
-  Channels are identified by the PGP public key of their respective owner.
-  Channel operators are not allowed to specify their own channel numbers
-  because of collisions between channels.
  */
 
 #include "../main.h"
@@ -27,9 +11,11 @@
 #include "../file.h"
 #include "../id/id.h"
 #include "../id/id_api.h"
+#include "../convert.h"
 #include "tv.h"
 #include "tv_channel.h"
-#include "tv_frame.h"
+#include "tv_frame_video.h"
+#include "tv_frame_audio.h"
 #include "tv_patch.h"
 #include "tv_window.h"
 #include "tv_menu.h"
@@ -54,21 +40,28 @@ static SDL_Window *sdl_window = nullptr;
 // this surface should fit the dimensions of the frame, let SDL
 // handle the resizing (at least for now)
 
-static SDL_Surface* tv_render_frame_to_surface_copy(tv_frame_t *frame){
-	const uint64_t width = frame->get_x_res();
-	const uint64_t height = frame->get_y_res();
-	const uint8_t depth = frame->get_bpc()*4; // includes alpha
-	const uint64_t red_mask = frame->get_red_mask();
-	const uint64_t green_mask = frame->get_green_mask();
-	const uint64_t blue_mask = frame->get_blue_mask();
-	const uint64_t alpha_mask = frame->get_alpha_mask();
+static SDL_Surface* tv_render_frame_to_surface_copy(tv_frame_video_t *frame){
+	uint64_t red_mask = 0;
+	uint64_t green_mask = 0;
+	uint64_t blue_mask = 0;
+	uint64_t alpha_mask = 0;
+	uint8_t bpc = 0;
+	frame->get_masks(&red_mask,
+			 &green_mask,
+			 &blue_mask,
+			 &alpha_mask,
+			 &bpc);
+	uint16_t x_res = 0;
+	uint16_t y_res = 0;
+	frame->get_res(&x_res,
+		       &y_res);
 	// TODO: actually stretch it to fit the frame
 	// older approach, very slow
 	SDL_Surface *surface =
 		SDL_CreateRGBSurface(0,
-				     width,
-				     height,
-				     depth,
+				     x_res,
+				     y_res,
+				     bpc*3,
 				     red_mask,
 				     green_mask,
 				     blue_mask,
@@ -95,20 +88,30 @@ static SDL_Surface* tv_render_frame_to_surface_copy(tv_frame_t *frame){
 	return surface;
 }
 
-static uint32_t tv_render_get_frame_sdl_enum(tv_frame_t *frame){
+static uint32_t tv_render_get_frame_sdl_enum(tv_frame_video_t *frame){
 	uint32_t pixel_format_enum = 0;
-	if(frame->get_alpha_mask() != 0){
-		print("tv_frame_t doesn't support alpha", P_ERR);
+	uint64_t red_mask = 0;
+	uint64_t green_mask = 0;
+	uint64_t blue_mask = 0;
+	uint64_t alpha_mask = 0;
+	uint8_t bpc = 0;
+	frame->get_masks(&red_mask,
+			 &green_mask,
+			 &blue_mask,
+			 &alpha_mask,
+			 &bpc);
+	if(alpha_mask != 0){
+		print("tv_frame_video_t doesn't support alpha", P_ERR);
 	}
-	switch(frame->get_bpc()){
+	switch(bpc){
 	case 8:
-		if(frame->get_red_mask() == 0x0000FF &&
-		   frame->get_green_mask() == 0x00FF00 &&
-		   frame->get_blue_mask() == 0xFF0000){
+		if(red_mask == 0x0000FF &&
+		   green_mask == 0x00FF00 &&
+		   blue_mask == 0xFF0000){
 			pixel_format_enum = SDL_PIXELFORMAT_BGR24;
-		}else if(frame->get_red_mask() == 0xFF0000 &&
-			 frame->get_green_mask() == 0x00FF00 &&
-			 frame->get_blue_mask() == 0x0000FF){
+		}else if(red_mask == 0xFF0000 &&
+			 green_mask == 0x00FF00 &&
+			 blue_mask == 0x0000FF){
 			pixel_format_enum = SDL_PIXELFORMAT_RGB24;
 		}
 		break;
@@ -129,10 +132,16 @@ static uint32_t tv_render_get_frame_sdl_enum(tv_frame_t *frame){
 	return pixel_format_enum;
 }
 
-static SDL_Surface* tv_render_frame_to_surface_ptr(tv_frame_t *frame){
-	const uint64_t width = frame->get_x_res();
-	const uint64_t height = frame->get_y_res();
-	const uint8_t bpc = frame->get_bpc();
+static SDL_Surface* tv_render_frame_to_surface_ptr(tv_frame_video_t *frame){
+	uint16_t width = 0;
+	uint16_t height = 0;
+	uint8_t bpc = 0;
+	frame->get_res(&width, &height);
+	frame->get_masks(nullptr,
+			 nullptr,
+			 nullptr,
+			 nullptr,
+			 &bpc);
 	uint32_t pixel_format_enum =
 		tv_render_get_frame_sdl_enum(frame);
 	if(pixel_format_enum == 0){
@@ -168,19 +177,15 @@ static SDL_Surface* tv_render_frame_to_surface_ptr(tv_frame_t *frame){
   better as well. 
  */
 
-static tv_frame_t *tv_frame_gen_xor_frame(uint64_t x_, uint64_t y_, uint8_t bpc){
-	tv_frame_t *frame = new tv_frame_t;
-	frame->reset(x_,
-		     y_,
-		     TV_FRAME_DEFAULT_BPC,
-		     TV_FRAME_DEFAULT_RED_MASK,
-		     TV_FRAME_DEFAULT_GREEN_MASK,
-		     TV_FRAME_DEFAULT_BLUE_MASK,
-		     0,
-		     1000*1000,
-		     1,
-		     1,
-		     1);
+static tv_frame_video_t *tv_frame_gen_xor_frame(uint64_t x_, uint64_t y_, uint8_t bpc){
+	tv_frame_video_t *frame = new tv_frame_video_t;
+	frame->set_all(x_,
+		       y_,
+		       TV_FRAME_DEFAULT_BPC,
+		       TV_FRAME_DEFAULT_RED_MASK,
+		       TV_FRAME_DEFAULT_GREEN_MASK,
+		       TV_FRAME_DEFAULT_BLUE_MASK,
+		       0);
 	if(unlikely(bpc != 8)){
 		print("BPC is not supported", P_ERR);
 	}
@@ -211,41 +216,23 @@ static SDL_Rect tv_render_gen_window_rect(tv_window_t *window,
 	return window_rect;
 }
 
-static bool tv_frame_valid(tv_frame_t *frame){
-	const uint64_t curr_time_micro_s =
-		get_time_microseconds();
-	const uint64_t frame_end_time_micro_s =
-		frame->get_end_time_micro_s();
-	if(curr_time_micro_s > frame_end_time_micro_s){
-		print("frame is old, re-running with new", P_SPAM);
-		return false;
-	}else{
-		print("frame is current, exiting loop", P_SPAM);
-		return true;
-	}
-
-}
-
 static uint64_t tv_render_id_of_last_valid_frame(uint64_t current){
 	// TODO: add support for patches
 	std::vector<uint64_t> frame_linked_list =
 		id_api::array::get_forward_linked_list(current, 0);
 	for(uint64_t i = 0;i < frame_linked_list.size();i++){
-		tv_frame_t *frame =
-			PTR_DATA(frame_linked_list[i], tv_frame_t);
-		if(tv_frame_valid(frame)){
+		tv_frame_video_t *frame =
+			PTR_DATA(frame_linked_list[i], tv_frame_video_t);
+		if(frame->valid()){
 			return frame_linked_list[i];
 		}
 	}
 	return current;
 }
 
-static void tv_render_frame_to_screen_surface(tv_frame_t *frame,
+static void tv_render_frame_to_screen_surface(tv_frame_video_t *frame,
 					      SDL_Surface *sdl_window_surface,
 					      SDL_Rect sdl_window_rect){
-	if(frame->get_alpha_mask() != 0){
-		print("alpha mask is not supported at this time", P_CRIT);
-	}
 	bool dereference_pixel_data = true;
 	SDL_Surface *frame_surface =
 		tv_render_frame_to_surface_ptr(frame);
@@ -255,9 +242,9 @@ static void tv_render_frame_to_screen_surface(tv_frame_t *frame,
 		dereference_pixel_data = false;
 	}
 	if(unlikely(SDL_BlitScaled(frame_surface,
-				    NULL,
-				    sdl_window_surface,
-				    &sdl_window_rect) < 0)){
+				   NULL,
+				   sdl_window_surface,
+				   &sdl_window_rect) < 0)){
 		print((std::string)"couldn't blit surface:"+SDL_GetError(), P_CRIT);
 	}else{
 		print("surface blit without errors", P_SPAM);
@@ -279,17 +266,18 @@ static void tv_render_all(){
 		tv_channel_t *channel =
 			PTR_DATA(window->get_channel_id(), tv_channel_t);
 		CONTINUE_IF_NULL(channel);
-		tv_frame_t *frame = nullptr;
-		try{
-			frame = PTR_DATA(tv_render_id_of_last_valid_frame(
-						 channel->get_latest_frame_id()),
-					 tv_frame_t);
-		}catch(...){
-			print("tv_channel_t seed ID is invalid", P_ERR);
-			continue;
+		tv_frame_video_t *frame_video = nullptr;
+		for(uint64_t i = 0;i < TV_CHAN_FRAME_LIST_SIZE;i++){
+			data_id_t *tmp_id =
+				id_api::array::ptr_id(channel->get_frame_id(i),
+						 "");
+			if(tmp_id->get_type() == "tv_frame_video_t"){
+				frame_video = (tv_frame_video_t*)tmp_id->get_ptr();
+				break;
+			}
 		}
-		if(unlikely(frame == nullptr)){
-			print("frame is a nullptr", P_ERR);
+		if(unlikely(frame_video == nullptr)){
+			print("frame_video is a nullptr", P_ERR);
 		}
 		SDL_Surface *sdl_window_surface =
 			SDL_GetWindowSurface(sdl_window);
@@ -299,7 +287,7 @@ static void tv_render_all(){
 		SDL_Rect sdl_window_rect = 
 			tv_render_gen_window_rect(window,
 						  sdl_window_surface);
-		tv_render_frame_to_screen_surface(frame,
+		tv_render_frame_to_screen_surface(frame_video,
 						  sdl_window_surface,
 						  sdl_window_rect);
 	}
@@ -323,13 +311,11 @@ static void tv_init_test_channel(){
 		new tv_window_t;
 	tv_channel_t *channel =
 		new tv_channel_t;
-	window->set_channel_id(channel->id.get_id());
-	std::array<tv_frame_t*, TEST_FRAME_SIZE> tmp_frames = {{nullptr}};
-	tv_menu_t *menu = new tv_menu_t;
+	tv_menu_t *menu =
+		new tv_menu_t;
 	menu->set_menu_entry(0, "Isn't this the sexiest font ever?");
-	channel->set_latest_frame_id(menu->get_frame_id());
-	//tv_frame_t *frame = tv_frame_gen_xor_frame(1920, 1080, 8);
-	//channel->set_latest_frame_id(frame->id.get_id());
+	channel->set_frame_id(0, menu->get_frame_id());
+	window->set_channel_id(channel->id.get_id());
 }
 
 void tv_init(){

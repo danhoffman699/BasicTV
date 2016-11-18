@@ -42,7 +42,6 @@ namespace id_api{
 			 std::string type);
 		std::vector<uint64_t> get(std::array<uint8_t, TYPE_LENGTH> type);
 		std::vector<uint64_t> get(std::string type);
-
 	}
 };
 #endif

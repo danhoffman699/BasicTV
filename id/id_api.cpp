@@ -104,7 +104,8 @@ void id_api::array::add_data(std::vector<uint8_t> data_){
 		}
 	}
 	CHECK_TYPE(tv_channel_t);
-	CHECK_TYPE(tv_frame_t);
+	CHECK_TYPE(tv_frame_audio_t);
+	CHECK_TYPE(tv_frame_video_t);
 	CHECK_TYPE(net_peer_t);
 	print("type isn't valid", P_ERR);
 }

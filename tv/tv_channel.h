@@ -5,36 +5,39 @@
 /*
   tv_channel_t: channel information. contains information about the stream
   and frames (video only, audio only, etc.)
-
-  TODO: possibly define behavior for when two streams have copied metadata
-  but have different PGP keys (is this needed?)
  */
 
+#define TV_CHAN_FRAME_LIST_SIZE 256
+
+/*
+  For simplicity, we can do this. However, I'm thinking about creating
+  a ternay system so 1.5 bits are used for three values instead of two.
+  Great for expansion, but I can never get a round value
+*/
+
 #define TV_CHAN_STREAMING (1 << 0)
-#define TV_CHAN_NO_AUDIO (1 << 1)
-#define TV_CHAN_NO_VIDEO (1 << 2)
+#define TV_CHAN_CHECKED_AUDIO (1 << 1)
+#define TV_CHAN_AUDIO (1 << 2)
+#define TV_CHAN_CHECKED_VIDEO (1 << 3)
+#define TV_CHAN_VIDEO (1 << 4)
+#define TV_CHAN_CHECKED_GUIDE (1 << 5)
+#define TV_CHAN_GUIDE (1 << 6)
+
+// When data is added to the stream_list, then just change the
+// status to reflect the types of data that were added (assuming
+// we have that information offhand)
 
 struct tv_channel_t{
 private:
-	/*
-	  Any frame ID will be valid here, but I would imagine opting
-	  for the lowest frame would be the best option (increases
-	  networkability, and prevents people from having to download
-	  one frame to get the linked list for the desired frame on
-	  a metered connection). The planned behavior is the lowest 
-	  quality frame.
-	 */
-	uint64_t latest_frame_id = 0;
-	// TODO: actually implement a TV Guide style system
-	uint64_t latest_guide_id = 0;
+	std::array<uint64_t, TV_CHAN_FRAME_LIST_SIZE> stream_list = {{0}};
 	uint64_t status = 0;
 public:
 	data_id_t id;
 	tv_channel_t();
 	~tv_channel_t();
-	void set_latest_frame_id(uint64_t latest_frame_id_);
-	uint64_t get_latest_frame_id();
-	uint64_t get_latest_guide_id();
+	uint64_t get_frame_id(uint64_t entry);
+	void set_frame_id(uint64_t entry,
+			   uint64_t stream_id);
 	bool is_streaming();
 	bool is_audio();
 	bool is_video();
