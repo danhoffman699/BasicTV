@@ -320,11 +320,17 @@ static void tv_init_test_channel(){
 
 void tv_init(){
 	SDL_Init(SDL_INIT_VIDEO);
+	uint16_t x_res = WINDOW_X_RES;
+	uint16_t y_res = WINDOW_Y_RES;
+	try{
+		x_res = std::stoi(settings::get_setting("window_x_res"));
+		y_res = std::stoi(settings::get_setting("window_y_res"));
+	}catch(...){}
 	sdl_window = SDL_CreateWindow("BasicTV",
 				      SDL_WINDOWPOS_CENTERED,
 				      SDL_WINDOWPOS_CENTERED,
-				      WINDOW_X_RES,
-				      WINDOW_Y_RES,
+				      x_res,
+				      y_res,
 				      SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
 	if(sdl_window == nullptr){
 		print((std::string)"window is nullptr:"+SDL_GetError(), P_ERR);

@@ -61,11 +61,11 @@ static void init(){
 	settings::set_setting("socks_proxy_ip", "127.0.0.1");
 	// SOCKS proxy port in ASCII
 	settings::set_setting("socks_proxy_port", "9050");
+	settings_init();
 	
 	tv_init();
 	input_init();
 	net_proto_init();
-	settings_init();
 }
 
 static void test_socket(){

@@ -5,6 +5,10 @@
 
 static std::vector<std::pair<std::string, std::string> > settings_vector;
 
+/*
+  TODO: allow appending settings to a settings file
+ */
+
 void settings::set_setting(std::string a, std::string b){
 	settings_vector.push_back(std::make_pair(a, b));
 }

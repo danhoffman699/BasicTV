@@ -455,8 +455,14 @@ void tv_menu_t::update_frame(){
 	if(never(frame == nullptr)){
 		print("menu frame is a nullptr", P_CRIT);
 	}
-	frame->set_all(TV_MENU_WIDTH*GLYPH_X,
-		       TV_MENU_HEIGHT*GLYPH_Y,
+	uint16_t x_res = TV_MENU_WIDTH;
+	uint16_t y_res = TV_MENU_HEIGHT;
+	try{
+		x_res = std::stoi(settings::get_setting("tv_menu_width"));
+		y_res = std::stoi(settings::get_setting("tv_menu_height"));
+	}catch(...){}
+	frame->set_all(x_res*GLYPH_X,
+		       y_res*GLYPH_Y,
 		       TV_FRAME_DEFAULT_BPC,
 		       TV_FRAME_DEFAULT_RED_MASK,
 		       TV_FRAME_DEFAULT_GREEN_MASK,
@@ -483,9 +489,9 @@ void tv_menu_t::update_frame(){
 					      x,
 					      y);
 		const bool x_roll =
-			x+(GLYPH_X) == TV_MENU_WIDTH*GLYPH_X;
+			x+(GLYPH_X) == x_res*GLYPH_X;
 		const bool y_roll =
-			y+(GLYPH_Y) == TV_MENU_HEIGHT*GLYPH_Y;
+			y+(GLYPH_Y) == y_res*GLYPH_Y;
 		if(x_roll){
 			if(unlikely(y_roll)){
 				break;
