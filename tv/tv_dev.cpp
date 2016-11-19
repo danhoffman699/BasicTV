@@ -123,7 +123,7 @@ void tv_dev_video_t::standard_init(){
 void tv_dev_video_t::request_buffers(){
 	v4l2_requestbuffers req;
 	CLEAR(req);
-	req.count = 1;
+	req.count = 2;
 	req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	req.memory = V4L2_MEMORY_USERPTR;
 	set_ioctl(VIDIOC_REQBUFS, &req);
@@ -218,7 +218,6 @@ void tv_dev_video_t::update_raw_pixel_data(){
 	buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	buf.memory = V4L2_MEMORY_USERPTR;
 	set_ioctl(VIDIOC_DQBUF, &buf);
-	assert(buf.m.userptr == (unsigned long)raw_pixel_data);
 }
 
 uint64_t tv_dev_video_t::update(){
