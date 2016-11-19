@@ -132,6 +132,9 @@ uint64_t flip_bit_section(uint8_t begin, uint8_t end);
 
 #define MASK(x) ((1 << x)-1)
 
+#define CLEAR(x) memset(&(x), 0, sizeof(x))
+
+
 uint64_t get_time_microseconds();
 
 #endif

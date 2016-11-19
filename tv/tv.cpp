@@ -19,6 +19,7 @@
 #include "tv_patch.h"
 #include "tv_window.h"
 #include "tv_menu.h"
+#include "tv_dev.h"
 
 #define TEST_FRAME_SIZE 120
 #define WINDOW_X_RES 1280
@@ -271,14 +272,13 @@ static void tv_render_all(){
 			data_id_t *tmp_id =
 				id_api::array::ptr_id(channel->get_frame_id(i),
 						 "");
+			CONTINUE_IF_NULL(tmp_id);
 			if(tmp_id->get_type() == "tv_frame_video_t"){
 				frame_video = (tv_frame_video_t*)tmp_id->get_ptr();
 				break;
 			}
 		}
-		if(unlikely(frame_video == nullptr)){
-			print("frame_video is a nullptr", P_ERR);
-		}
+		CONTINUE_IF_NULL(frame_video);
 		SDL_Surface *sdl_window_surface =
 			SDL_GetWindowSurface(sdl_window);
 		if(unlikely(sdl_window_surface == nullptr)){
@@ -291,10 +291,6 @@ static void tv_render_all(){
 						  sdl_window_surface,
 						  sdl_window_rect);
 	}
-	/*
-	  All surfaces that have been used for rendering have been blitted
-	  to the screen previously
-	 */
 	if(unlikely(SDL_UpdateWindowSurface(sdl_window) < 0)){
 		print((std::string)"cannot update sdl_window:"+SDL_GetError(), P_CRIT);
 	}else{
@@ -306,15 +302,26 @@ void tv_loop(){
 	tv_render_all();
 }
 
-static void tv_init_test_channel(){
+static void tv_init_test_menu(){
 	tv_window_t *window =
 		new tv_window_t;
 	tv_channel_t *channel =
 		new tv_channel_t;
 	tv_menu_t *menu =
 		new tv_menu_t;
-	menu->set_menu_entry(0, "Isn't this the sexiest font ever?");
+	menu->set_menu_entry(0, "BasicTV is going to be great");
 	channel->set_frame_id(0, menu->get_frame_id());
+	window->set_channel_id(channel->id.get_id());
+}
+
+static void tv_init_test_webcam(){
+	tv_window_t *window =
+		new tv_window_t;
+	tv_channel_t *channel =
+		new tv_channel_t;
+	tv_dev_video_t *dev =
+	 	new tv_dev_video_t("/dev/video0", 30);
+	channel->set_frame_id(0, dev->update());
 	window->set_channel_id(channel->id.get_id());
 }
 
@@ -341,5 +348,6 @@ void tv_init(){
 		NULL,
 		SDL_MapRGB(SDL_GetWindowSurface(sdl_window)->format, 0, 0, 0));
 	SDL_UpdateWindowSurface(sdl_window);
-	tv_init_test_channel();
+	//tv_init_test_menu();
+	tv_init_test_webcam();
 }
