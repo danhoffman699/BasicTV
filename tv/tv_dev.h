@@ -5,6 +5,7 @@
 #include "errno.h"
 #include "sys/ioctl.h"
 #include "linux/videodev2.h"
+#include "cassert"
 /*
   tv_dev: interface for Linux kernel devices
  */

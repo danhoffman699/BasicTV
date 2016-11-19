@@ -190,10 +190,22 @@ void tv_dev_video_t::update_pixel_data(){
 	CLEAR(fmt);
 	fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	set_ioctl(VIDIOC_G_FMT, &fmt);
+	uint64_t current_raw = 0;
+	uint64_t current_std = 0;
 	switch(fmt.fmt.pix.pixelformat){
 	case V4L2_PIX_FMT_YUYV:
 		// TODO: care about other cameras
-		
+		// Just to test it, conver the brightness into grayscale
+		while(current_raw+5 < raw_pixel_size &&
+			current_std+4 < pixel_size){
+			const uint8_t y_comp =
+				raw_pixel_data[current_raw];
+			pixel_data[current_std] = y_comp;
+			pixel_data[current_std+1] = y_comp;
+			pixel_data[current_std+2] = y_comp;
+			current_raw += 4;
+			current_std += 3;
+		}
 	default:
 		break;
 	}
@@ -206,6 +218,7 @@ void tv_dev_video_t::update_raw_pixel_data(){
 	buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	buf.memory = V4L2_MEMORY_USERPTR;
 	set_ioctl(VIDIOC_DQBUF, &buf);
+	assert(buf.m.userptr == (unsigned long)raw_pixel_data);
 }
 
 uint64_t tv_dev_video_t::update(){
