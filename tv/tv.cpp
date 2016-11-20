@@ -20,6 +20,8 @@
 #include "tv_window.h"
 #include "tv_menu.h"
 #include "tv_dev.h"
+#include "tv_dev_video.h"
+#include "tv_dev_audio.h"
 
 #define TEST_FRAME_SIZE 120
 #define WINDOW_X_RES 1280
