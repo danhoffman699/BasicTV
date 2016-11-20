@@ -317,6 +317,13 @@ static void tv_init_test_menu(){
 	window->set_channel_id(channel->id.get_id());
 }
 
+/*
+  I made no effort to match the actual speed with the replay speed.
+  This can be done easily by creating the TTL from the start time and
+  the creation time of the next frame. One advantage is how I can alter
+  the frame rate to see how fast the code can render it.
+ */
+
 static void tv_init_test_webcam(){
 	tv_window_t *window =
 		new tv_window_t;
