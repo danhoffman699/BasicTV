@@ -8,6 +8,10 @@
   zero
  */
 
+#define TV_FRAME_8K_RES (7680*4320)
+
+#define TV_FRAME_SIZE (1920*1080*4)
+
 #define TV_FRAME_DEFAULT_X 640
 #define TV_FRAME_DEFAULT_Y 480
 #define TV_FRAME_DEFAULT_BPC 8

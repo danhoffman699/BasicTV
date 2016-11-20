@@ -115,7 +115,7 @@ uint64_t flip_bit_section(uint8_t begin, uint8_t end);
 #define P_V_C(a, b) print((std::string)__PRETTY_FUNCTION__ + ":" + (std::string)#a + " == '" + std::string(1, a) + "'", b)
 // cannot use print here
 // print var as binary
-#define P_V_B(a, b) print(convert::number::to_binary(a), b);
+#define P_V_B(a, b) print((std::string)__PRETTY_FUNCTION__ + ":" + (std::string)#a + " == " + convert::number::to_binary(a), b);
 
 #ifdef SPAM_OUTPUT
 #define DEBUG_OUTPUT 1

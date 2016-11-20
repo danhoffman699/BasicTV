@@ -110,9 +110,9 @@ static uint32_t tv_render_get_frame_sdl_enum(tv_frame_video_t *frame){
 		   green_mask == 0x00FF00 &&
 		   blue_mask == 0xFF0000){
 			pixel_format_enum = SDL_PIXELFORMAT_BGR24;
-		}else if(red_mask == 0xFF0000 &&
+		}else if(red_mask ==   0xFF0000 &&
 			 green_mask == 0x00FF00 &&
-			 blue_mask == 0x0000FF){
+			 blue_mask ==  0x0000FF){
 			pixel_format_enum = SDL_PIXELFORMAT_RGB24;
 		}
 		break;
@@ -325,14 +325,18 @@ static void tv_init_test_webcam(){
 	tv_dev_video_t *dev =
 	 	new tv_dev_video_t("/dev/video0");
 	std::vector<uint64_t> vector_array;
-	const uint64_t micro_time = get_time_microseconds();
 	for(uint64_t i = 0;i < 60;i++){
 		tv_frame_video_t *video =
 			PTR_DATA(dev->update(), tv_frame_video_t);
-		video->set_standard(micro_time+(1000*1000*i),
-				    1000*1000,
-				    i);
 		vector_array.push_back(video->id.get_id());
+	}
+	const uint64_t micro_time = get_time_microseconds();
+	for(uint64_t i = 0;i < 60;i++){
+		tv_frame_video_t *video =
+			PTR_DATA(vector_array[i], tv_frame_video_t);
+		video->set_standard(micro_time+(1000*100*i),
+				    1000*100,
+				    i);
 	}
 	id_api::linked_list::link_vector(vector_array, 0);
 	channel->set_frame_id(0, vector_array[0]);

@@ -8,20 +8,27 @@ static uint64_t mask_16_to_64(uint16_t mask){
 		flip_bit_section(
 			mask_offset,
 			mask_offset+mask_length);
+	P_V_B(mask, P_SPAM);
+	P_V_B(retval, P_SPAM);
 	return retval;
 }
 
 static uint16_t mask_64_to_16(uint64_t mask){
 	uint8_t mask_length = 0;
-	uint8_t mask_offset = 0;
+	uint8_t mask_offset = 255;
 	for(uint8_t i = 0;i < 64;i++){
 		if((mask >> i) & 1){
-			if(mask_offset == 0){
+			if(mask_offset == 255){
 				mask_offset = i;
 			}
 			mask_length++;
 		}
 	}
+	if(mask_offset == 255){
+		mask_offset = 0;
+	}
+	P_V(mask_length, P_SPAM);
+	P_V(mask_offset, P_SPAM);
 	return SET_MASK_LENGTH(mask_length) |
 		SET_MASK_OFFSET(mask_offset);
 }
@@ -157,7 +164,7 @@ void tv_frame_video_t::set_all(uint16_t x_res_,
 	x_res = x_res_;
 	y_res = y_res_;
 	bpc = bpc_;
-	red_mask = (red_mask_);
+	red_mask = mask_64_to_16(red_mask_);
 	green_mask = mask_64_to_16(green_mask_);
 	blue_mask = mask_64_to_16(blue_mask_);
 	alpha_mask = mask_64_to_16(alpha_mask_);
