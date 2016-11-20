@@ -2,7 +2,9 @@
 
 tv_dev_t::tv_dev_t(){}
 
-tv_dev_t::~tv_dev_t(){}
+tv_dev_t::~tv_dev_t(){
+	close(file_descriptor);
+}
 
 void tv_dev_t::list_virtual_data(data_id_t *id){
 	// no need to include it
@@ -151,27 +153,6 @@ void tv_dev_video_t::start_capturing(){
 	set_ioctl(VIDIOC_STREAMON, &type);
 }
 
-tv_dev_video_t::tv_dev_video_t(std::string filename_) : id(this,
-							   __FUNCTION__){
-	list_virtual_data(&id);
-	open_dev(filename_);
-	try{
-		if(!is_compatible()){
-			print("video device is incompatible", P_ERR);
-		}
-		standard_init();
-		request_buffers();
-		start_capturing();
-		// break this up into smaller functions
-	}catch(std::runtime_error e){
-		print("unable to initialize tv_dev_video_t", P_ERR);
-	}
-	print("updated everything", P_SPAM);
-}
-
-tv_dev_video_t::~tv_dev_video_t(){
-}
-
 /*
   pixel_data is not what is directly read from V4L2, but is instead
   the RGB24 version of that information. Since my webcam (at least) doesn't
@@ -243,11 +224,35 @@ uint64_t tv_dev_video_t::update(){
 	return get_last_frame_id();
 }
 
+
+tv_dev_video_t::tv_dev_video_t(std::string filename_) : id(this,
+							   __FUNCTION__){
+	list_virtual_data(&id);
+	open_dev(filename_);
+	try{
+		if(!is_compatible()){
+			print("video device is incompatible", P_ERR);
+		}
+		standard_init();
+		request_buffers();
+		start_capturing();
+		// break this up into smaller functions
+	}catch(std::runtime_error e){
+		print("unable to initialize tv_dev_video_t", P_ERR);
+	}
+}
+
+tv_dev_video_t::~tv_dev_video_t(){
+	delete[] raw_pixel_data;
+	raw_pixel_data = 0;
+	delete[] pixel_data;
+	pixel_data = 0;
+
+}
+
 tv_dev_audio_t::tv_dev_audio_t() : id(this, __FUNCTION__){
 	list_virtual_data(&id);
 }
-
-// worry about destroying stuff safely later
 
 tv_dev_audio_t::~tv_dev_audio_t(){
 }

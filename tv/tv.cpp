@@ -341,8 +341,8 @@ static void tv_init_test_webcam(){
 	for(uint64_t i = 0;i < 60;i++){
 		tv_frame_video_t *video =
 			PTR_DATA(vector_array[i], tv_frame_video_t);
-		video->set_standard(micro_time+(1000*100*i),
-				    1000*100,
+		video->set_standard(micro_time+(1000*50*i),
+				    1000*50,
 				    i);
 	}
 	id_api::linked_list::link_vector(vector_array, 0);
