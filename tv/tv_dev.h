@@ -12,8 +12,6 @@
 // TODO: make this unexportable
 class tv_dev_t{
 private:
-	// refresh rate is defined in Hz
-	uint16_t refresh_rate = 0;
 	std::string filename;
 	int64_t file_descriptor = 0;
 	uint64_t last_frame_id = 0;
@@ -22,11 +20,9 @@ public:
 	tv_dev_t();
 	~tv_dev_t();
 	void list_virtual_data(data_id_t *id);
-	void open_dev(std::string filename_,
-		      uint16_t refresh_rate_);
+	void open_dev(std::string filename_);
 	uint64_t get_last_frame_id();
 	void set_last_frame_id(uint64_t last_frame_id_);
-	uint16_t get_refresh_rate();
 	uint64_t get_file_descriptor();
 	int set_ioctl(int request,
 		      void *arg);
@@ -42,8 +38,11 @@ private:
 	uint8_t *pixel_data = 0;
 	uint64_t raw_pixel_size = 0;
 	uint64_t pixel_size = 0;
-	uint16_t x_res = 0;
-	uint16_t y_res = 0;
+	/*
+	  Resolutions and the like are stored inside of the v4l2_format
+	  data type, which is loaded in through the standard init.
+	  Just refer to these variable to prevent continuity errors
+	 */
 	bool is_compatible();
 	void standard_init();
 	void userp_init(uint64_t image_size);
@@ -54,8 +53,7 @@ private:
 	void add_buffer();
 public:
 	data_id_t id;
-	tv_dev_video_t(std::string filename_,
-		       uint16_t refresh_rate);
+	tv_dev_video_t(std::string filename_);
 	~tv_dev_video_t();
 	uint64_t update();
 };

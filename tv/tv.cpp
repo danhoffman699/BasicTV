@@ -218,14 +218,14 @@ static SDL_Rect tv_render_gen_window_rect(tv_window_t *window,
 }
 
 static uint64_t tv_render_id_of_last_valid_frame(uint64_t current){
-	// TODO: add support for patches
 	std::vector<uint64_t> frame_linked_list =
 		id_api::array::get_forward_linked_list(current, 0);
 	for(uint64_t i = 0;i < frame_linked_list.size();i++){
 		tv_frame_video_t *frame =
 			PTR_DATA(frame_linked_list[i], tv_frame_video_t);
 		if(frame->valid()){
-			return frame_linked_list[i];
+			current = frame_linked_list[i];
+			break;
 		}
 	}
 	return current;
@@ -278,6 +278,9 @@ static void tv_render_all(){
 				break;
 			}
 		}
+		frame_video =
+			PTR_DATA(tv_render_id_of_last_valid_frame(frame_video->id.get_id()),
+				 tv_frame_video_t);
 		CONTINUE_IF_NULL(frame_video);
 		SDL_Surface *sdl_window_surface =
 			SDL_GetWindowSurface(sdl_window);
@@ -320,8 +323,19 @@ static void tv_init_test_webcam(){
 	tv_channel_t *channel =
 		new tv_channel_t;
 	tv_dev_video_t *dev =
-	 	new tv_dev_video_t("/dev/video0", 30);
-	channel->set_frame_id(0, dev->update());
+	 	new tv_dev_video_t("/dev/video0");
+	std::vector<uint64_t> vector_array;
+	const uint64_t micro_time = get_time_microseconds();
+	for(uint64_t i = 0;i < 60;i++){
+		tv_frame_video_t *video =
+			PTR_DATA(dev->update(), tv_frame_video_t);
+		video->set_standard(micro_time+(1000*1000*i),
+				    1000*1000,
+				    i);
+		vector_array.push_back(video->id.get_id());
+	}
+	id_api::linked_list::link_vector(vector_array, 0);
+	channel->set_frame_id(0, vector_array[0]);
 	window->set_channel_id(channel->id.get_id());
 }
 

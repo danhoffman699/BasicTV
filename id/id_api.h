@@ -43,5 +43,9 @@ namespace id_api{
 		std::vector<uint64_t> get(std::array<uint8_t, TYPE_LENGTH> type);
 		std::vector<uint64_t> get(std::string type);
 	}
+	namespace linked_list{
+		void link_vector(std::vector<uint64_t> vector,
+				 uint16_t position);
+	};
 };
 #endif

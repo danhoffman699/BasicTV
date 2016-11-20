@@ -35,5 +35,8 @@ void tv_frame_standard_t::get_standard(uint64_t *start_time_micro_s_,
 }
 
 bool tv_frame_standard_t::valid(){
-	return start_time_micro_s+ttl_micro_s > get_time_microseconds();
+	const bool retval = BETWEEN(start_time_micro_s,
+				    get_time_microseconds(),
+				    start_time_micro_s+(uint64_t)ttl_micro_s);
+	return retval;
 }

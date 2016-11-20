@@ -187,15 +187,26 @@ std::vector<uint64_t> id_api::cache::get(std::string type){
 }
 
 // TODO: make a forwards and backwards function too
-
+// redefine this in linked_list
 std::vector<uint64_t> id_api::array::get_forward_linked_list(uint64_t id,
 							     uint64_t height){
 	std::vector<uint64_t> retval;
 	while(id != 0){
 		data_id_t *id_ptr = PTR_ID(id, );
 		retval.push_back(id);
-		P_V(id, P_SPAM);
 		id = id_ptr->get_next_linked_list(height);
 	}
 	return retval;
+}
+
+void id_api::linked_list::link_vector(std::vector<uint64_t> vector,
+				      uint16_t position){
+	PTR_ID(vector[0], )->set_next_linked_list(position, vector[1]);
+	for(uint64_t i = 1;i < vector.size()-1;i++){
+		data_id_t *id = PTR_ID(vector[i], );
+		id->set_next_linked_list(position, vector[i+1]);
+		id->set_prev_linked_list(position, vector[i-1]);
+	}
+	PTR_ID(vector[vector.size()-1], )->set_prev_linked_list(position,
+								vector[vector.size()-2]);
 }

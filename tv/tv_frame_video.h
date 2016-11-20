@@ -11,9 +11,9 @@
 #define TV_FRAME_DEFAULT_X 640
 #define TV_FRAME_DEFAULT_Y 480
 #define TV_FRAME_DEFAULT_BPC 8
-#define TV_FRAME_DEFAULT_RED_MASK 0xFF0000
+#define TV_FRAME_DEFAULT_RED_MASK   0xFF0000
 #define TV_FRAME_DEFAULT_GREEN_MASK 0x00FF00
-#define TV_FRAME_DEFAULT_BLUE_MASK 0x0000FF
+#define TV_FRAME_DEFAULT_BLUE_MASK  0x0000FF
 #define TV_FRAME_DEFAULT_ALPHA_MASK 0
 
 #define SET_MASK_OFFSET(x) (x << 8)
@@ -26,7 +26,7 @@ private:
 	std::array<uint8_t, TV_FRAME_SIZE> frame = {{0}};
 	uint16_t x_res = 0;
 	uint16_t y_res = 0;
-	uint8_t bpc = 0; // bits per color
+	uint8_t bpc = 0; // bits per component
 	uint16_t red_mask = 0;
 	uint16_t green_mask = 0;
 	uint16_t blue_mask = 0;

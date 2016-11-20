@@ -8,15 +8,13 @@ void tv_dev_t::list_virtual_data(data_id_t *id){
 	// no need to include it
 }
 
-void tv_dev_t::open_dev(std::string filename_,
-			uint16_t refresh_rate_){
+void tv_dev_t::open_dev(std::string filename_){
 	file_descriptor = open(filename_.c_str(),
 			       O_RDWR | O_NONBLOCK,
 			       0);
 	if(file_descriptor == -1){
 		print("unable to open file descriptor:" + std::to_string(errno), P_ERR);
 	}
-	refresh_rate = refresh_rate_;
 }
 
 uint64_t tv_dev_t::get_last_frame_id(){
@@ -27,9 +25,6 @@ void tv_dev_t::set_last_frame_id(uint64_t last_frame_id_){
 	last_frame_id = last_frame_id_;
 }
 
-uint16_t tv_dev_t::get_refresh_rate(){
-	return refresh_rate;
-}
 
 uint64_t tv_dev_t::get_file_descriptor(){
 	return file_descriptor;
@@ -156,12 +151,10 @@ void tv_dev_video_t::start_capturing(){
 	set_ioctl(VIDIOC_STREAMON, &type);
 }
 
-tv_dev_video_t::tv_dev_video_t(std::string filename_,
-			       uint16_t refresh_rate_) : id(this,
-							    __FUNCTION__){
+tv_dev_video_t::tv_dev_video_t(std::string filename_) : id(this,
+							   __FUNCTION__){
 	list_virtual_data(&id);
-	open_dev(filename_,
-		 refresh_rate_);
+	open_dev(filename_);
 	try{
 		if(!is_compatible()){
 			print("video device is incompatible", P_ERR);
@@ -183,6 +176,9 @@ tv_dev_video_t::~tv_dev_video_t(){
   pixel_data is not what is directly read from V4L2, but is instead
   the RGB24 version of that information. Since my webcam (at least) doesn't
   have native support for it, handle all of the conversions here.
+
+  I have no plans to support YUV formats, and it will be converted to
+  RGB as soon as possible. 
  */
 
 void tv_dev_video_t::update_pixel_data(){
@@ -193,11 +189,9 @@ void tv_dev_video_t::update_pixel_data(){
 	uint64_t current_raw = 0;
 	uint64_t current_std = 0;
 	switch(fmt.fmt.pix.pixelformat){
-	case V4L2_PIX_FMT_YUYV:
-		// TODO: care about other cameras
-		// Just to test it, conver the brightness into grayscale
+	case V4L2_PIX_FMT_YUYV: // most webcams, only does grayscale for now
 		while(current_raw+5 < raw_pixel_size &&
-			current_std+4 < pixel_size){
+		      current_std+4 < pixel_size){
 			const uint8_t y_comp =
 				raw_pixel_data[current_raw];
 			pixel_data[current_std] = y_comp;
@@ -206,6 +200,13 @@ void tv_dev_video_t::update_pixel_data(){
 			current_raw += 4;
 			current_std += 3;
 		}
+		break;
+	case V4L2_PIX_FMT_RGB24: // native format
+		std::memcpy(raw_pixel_data,
+			    pixel_data,
+			    (pixel_size > raw_pixel_size) ?
+			    raw_pixel_size : pixel_size);
+		break;
 	default:
 		break;
 	}

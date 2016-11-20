@@ -89,6 +89,9 @@ static void test_socket(){
 }
 
 static void test(){
+	while(true){
+		P_V(get_time_microseconds(), P_SPAM);
+	}
 }
 
 int main(int argc_, char **argv_){

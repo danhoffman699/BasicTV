@@ -26,6 +26,8 @@
 #define likely(x)      __builtin_expect(!!(x), 1)
 #define unlikely(x)    __builtin_expect(!!(x), 0)
 
+#define BETWEEN(a, b, c) ((a <= b) && (b <= c))
+
 /*
   A lot of times, never and always are paired with error messages
   that can easily be fixed. However, always and never are in direct
