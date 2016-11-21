@@ -33,15 +33,18 @@ uint64_t tv_dev_t::get_file_descriptor(){
 }
 
 int tv_dev_t::set_ioctl(int request, void *arg){
-	if(file_descriptor <= 0){
+	if(unlikely(file_descriptor <= 0)){
 		print("invalid file descriptor", P_SPAM);
 	}
 	int retval;
-	do{
-		retval = ioctl(file_descriptor, request, arg);
-	}while(unlikely(retval == -1 && (errno == EINTR || errno == EAGAIN)));
-	if(retval == -1){
-		print("ioctl (" + convert::number::to_binary(request) + ") failed on a non-EINTR error:" + std::to_string(errno), P_ERR);
+ioctl_start:
+	retval = ioctl(file_descriptor, request, arg);
+
+	if(unlikely(retval == -1)){
+		if(errno == EAGAIN || errno == EINTR){
+			goto ioctl_start;
+		}
+		print("ioctl (" + convert::number::to_binary(request) + ") failed on a non-fixable error:" + std::to_string(errno), P_ERR);
 	}else{
 		print("ioctl (" + convert::number::to_binary(request) + ") succeeded", P_SPAM);
 	}

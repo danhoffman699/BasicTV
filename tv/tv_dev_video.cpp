@@ -56,7 +56,7 @@ void tv_dev_video_t::standard_init(){
 	// RGB24 isn't too common for webcams, so I need a
 	// lightweight function to convert this to RGB
 	if(fmt.fmt.pix.pixelformat != V4L2_PIX_FMT_RGB24){
-		print("pixel format has changed", P_WARN);
+		print("pixel format has changed", P_NOTE);
 	}
 	// TODO: reflect possible size changes
 	uint64_t min = fmt.fmt.pix.width * 2;
@@ -120,12 +120,18 @@ void tv_dev_video_t::update_pixel_data(){
 	CLEAR(fmt);
 	fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	set_ioctl(VIDIOC_G_FMT, &fmt);
-	uint64_t current_raw = 0;
-	uint64_t current_std = 0;
+	uint32_t current_raw = 0;
+	uint32_t current_std = 0;
+	const uint32_t raw_pixel_size_yuyv = raw_pixel_size-5;
+	const uint32_t pixel_size_yuyv = pixel_size_yuyv-4;
+	if(unlikely(raw_pixel_size < 5 ||
+		    pixel_size < 4)){
+		print("resolution is too small for conversion", P_ERR);
+	}
 	switch(fmt.fmt.pix.pixelformat){
 	case V4L2_PIX_FMT_YUYV: // most webcams, only does grayscale for now
-		while(current_raw+5 < raw_pixel_size &&
-		      current_std+4 < pixel_size){
+		while(likely(current_raw < raw_pixel_size_yuyv) &&
+		      likely(current_std < pixel_size_yuyv)){
 			const uint8_t y_comp =
 				raw_pixel_data[current_raw];
 			pixel_data[current_std] = y_comp;

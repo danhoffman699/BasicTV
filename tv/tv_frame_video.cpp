@@ -8,8 +8,6 @@ static uint64_t mask_16_to_64(uint16_t mask){
 		flip_bit_section(
 			mask_offset,
 			mask_offset+mask_length);
-	P_V_B(mask, P_SPAM);
-	P_V_B(retval, P_SPAM);
 	return retval;
 }
 
@@ -27,8 +25,6 @@ static uint16_t mask_64_to_16(uint64_t mask){
 	if(mask_offset == 255){
 		mask_offset = 0;
 	}
-	P_V(mask_length, P_SPAM);
-	P_V(mask_offset, P_SPAM);
 	return SET_MASK_LENGTH(mask_length) |
 		SET_MASK_OFFSET(mask_offset);
 }

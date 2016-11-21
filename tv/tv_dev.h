@@ -30,4 +30,6 @@ public:
 
 // virtual classes live off the ID of the implementor
 
+#include "tv_dev_audio.h"
+#include "tv_dev_video.h"
 #endif
