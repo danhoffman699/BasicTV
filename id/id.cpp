@@ -111,10 +111,10 @@ void data_id_t::add_data(void *ptr_, uint32_t size_, uint64_t flags){
 
 void data_id_t::add_id(uint64_t *ptr_, uint32_t size_){
 	for(uint64_t i = 0;i < ID_PTR_LENGTH;i++){
-		if(id_ptr[i] == NULL){
+		if(id_ptr[i] == nullptr){
 			id_ptr[i] = ptr_;
 			id_size[i] = size_;
-			// no flags needed, since no networking happens
+			return;
 		}
 	}
 }
