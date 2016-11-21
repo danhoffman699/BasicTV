@@ -225,7 +225,7 @@ static uint64_t tv_render_id_of_last_valid_frame(uint64_t current){
 	for(uint64_t i = 0;i < frame_linked_list.size();i++){
 		tv_frame_video_t *frame =
 			PTR_DATA(frame_linked_list[i], tv_frame_video_t);
-		if(frame->valid()){
+		if(unlikely(frame->valid())){
 			current = frame_linked_list[i];
 			break;
 		}
@@ -259,36 +259,44 @@ static void tv_render_frame_to_screen_surface(tv_frame_video_t *frame,
 	frame_surface = nullptr;
 }
 
+static uint64_t tv_render_get_preferable_frame_list(tv_channel_t *channel){
+	uint64_t retval = 0;
+	for(uint64_t i = 0;i < TV_CHAN_FRAME_LIST_SIZE;i++){
+		const uint64_t tmp_id =
+			channel->get_frame_id(i);
+		const data_id_t *tmp =
+			id_api::array::ptr_id(tmp_id, "tv_frame_video_t");
+		// TODO: actually do some work here
+		if(tmp != nullptr){
+			retval = tmp_id;
+		}
+	}
+	return retval;
+}
+
 static void tv_render_all(){
 	std::vector<uint64_t> all_windows =
 		id_api::cache::get("tv_window_t");
+	SDL_Surface *sdl_window_surface =
+		SDL_GetWindowSurface(sdl_window);
+	if(unlikely(sdl_window_surface == nullptr)){
+		print("sdl_window_surface is nullptr", P_ERR);
+	}
 	for(uint64_t i = 0;i < all_windows.size();i++){
-		print("found a window", P_SPAM);
-		tv_window_t *window = PTR_DATA(all_windows[i], tv_window_t);
-		CONTINUE_IF_NULL(window);
-		tv_channel_t *channel =
-			PTR_DATA(window->get_channel_id(), tv_channel_t);
-		CONTINUE_IF_NULL(channel);
+		tv_window_t *window = nullptr;
+		tv_channel_t *channel = nullptr;
 		tv_frame_video_t *frame_video = nullptr;
-		for(uint64_t i = 0;i < TV_CHAN_FRAME_LIST_SIZE;i++){
-			data_id_t *tmp_id =
-				id_api::array::ptr_id(channel->get_frame_id(i),
-						 "");
-			CONTINUE_IF_NULL(tmp_id);
-			if(tmp_id->get_type() == "tv_frame_video_t"){
-				frame_video = (tv_frame_video_t*)tmp_id->get_ptr();
-				break;
-			}
-		}
+		//tv_frame_audio_t *frame_audio = nullptr; // currently unused
+		window = PTR_DATA(all_windows[i], tv_window_t);
+		CONTINUE_IF_NULL(window);
+		channel = PTR_DATA(window->get_channel_id(), tv_channel_t);
+		CONTINUE_IF_NULL(channel);
 		frame_video =
-			PTR_DATA(tv_render_id_of_last_valid_frame(frame_video->id.get_id()),
+			PTR_DATA(tv_render_id_of_last_valid_frame(
+					 tv_render_get_preferable_frame_list(
+						 channel)),
 				 tv_frame_video_t);
 		CONTINUE_IF_NULL(frame_video);
-		SDL_Surface *sdl_window_surface =
-			SDL_GetWindowSurface(sdl_window);
-		if(unlikely(sdl_window_surface == nullptr)){
-			print("sdl_window_surface is nullptr", P_ERR);
-		}
 		SDL_Rect sdl_window_rect = 
 			tv_render_gen_window_rect(window,
 						  sdl_window_surface);
@@ -314,7 +322,7 @@ static void tv_init_test_menu(){
 		new tv_channel_t;
 	tv_menu_t *menu =
 		new tv_menu_t;
-	menu->set_menu_entry(0, "BasicTV is going to be great");
+	menu->set_menu_entry(0, "I made this in SDL2 with raw acces to SDL_Surface");
 	channel->set_frame_id(0, menu->get_frame_id());
 	window->set_channel_id(channel->id.get_id());
 }
@@ -343,8 +351,8 @@ static void tv_init_test_webcam(){
 	for(uint64_t i = 0;i < 60;i++){
 		tv_frame_video_t *video =
 			PTR_DATA(vector_array[i], tv_frame_video_t);
-		video->set_standard(micro_time+(1000*50*i),
-				    1000*50,
+		video->set_standard(micro_time+(1000*1000*i),
+				    1000*1000,
 				    i);
 	}
 	id_api::linked_list::link_vector(vector_array, 0);
@@ -375,6 +383,6 @@ void tv_init(){
 		NULL,
 		SDL_MapRGB(SDL_GetWindowSurface(sdl_window)->format, 0, 0, 0));
 	SDL_UpdateWindowSurface(sdl_window);
-	//tv_init_test_menu();
-	tv_init_test_webcam();
+	tv_init_test_menu();
+	//tv_init_test_webcam();
 }
