@@ -54,4 +54,6 @@ public:
 
 extern void net_proto_init();
 extern void net_proto_loop();
+extern void net_proto_close();
+
 #endif

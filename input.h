@@ -55,5 +55,6 @@
 
 extern void input_init();
 extern void input_loop();
+extern void input_close();
 
 #endif

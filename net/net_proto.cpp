@@ -116,3 +116,8 @@ void net_proto_init(){
 		incoming->connect({"", tmp_port});
 	}
 }
+
+void net_proto_close(){
+	// doesn't do anything, GC takes care of all data types
+	// All data types should destroy any internal data
+}

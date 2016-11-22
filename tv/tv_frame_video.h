@@ -10,7 +10,7 @@
 
 #define TV_FRAME_8K_RES (7680*4320)
 
-#define TV_FRAME_SIZE (1920*1080*4)
+#define TV_FRAME_VIDEO_SIZE (1920*1080*4)
 
 #define TV_FRAME_DEFAULT_X 640
 #define TV_FRAME_DEFAULT_Y 480
@@ -27,7 +27,7 @@
 
 class tv_frame_video_t : public tv_frame_standard_t{
 private:
-	std::array<uint8_t, TV_FRAME_SIZE> frame = {{0}};
+	std::array<uint8_t, TV_FRAME_VIDEO_SIZE> frame = {{0}};
 	uint16_t x_res = 0;
 	uint16_t y_res = 0;
 	uint8_t bpc = 0; // bits per component
@@ -54,7 +54,7 @@ public:
 		       uint8_t *bpc_);
 	void get_res(uint16_t *x_res,
 		     uint16_t *y_res);
-	std::array<uint8_t, TV_FRAME_SIZE>* get_pixel_data_ptr();
+	std::array<uint8_t, TV_FRAME_VIDEO_SIZE>* get_pixel_data_ptr();
 	void set_all(uint16_t x_res_,
 		     uint16_t y_res_,
 		     uint8_t bpc_,

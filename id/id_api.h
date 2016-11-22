@@ -47,5 +47,7 @@ namespace id_api{
 		void link_vector(std::vector<uint64_t> vector,
 				 uint16_t position);
 	};
+	std::vector<uint64_t> get_all();
+	void destroy_all_data();
 };
 #endif

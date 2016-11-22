@@ -1,6 +1,12 @@
 #include "id.h"
 #include "id_api.h"
 
+#include "../tv/tv_dev_audio.h"
+#include "../tv/tv_dev_video.h"
+#include "../tv/tv_frame_audio.h"
+#include "../tv/tv_frame_video.h"
+#include "../net/net_proto.h"
+
 static data_id_t **id_list = nullptr;
 static std::vector<std::pair<std::vector<uint64_t>, std::array<uint8_t, TYPE_LENGTH> > > type_cache;
 
@@ -81,12 +87,15 @@ void id_api::array::del(uint64_t id){
 		}
 		if(id_list[i]->get_id() == id){
 			id_list[i] = nullptr;
+			return;
 		}
 	}
 	print("cannot find ID in list", P_ERR);
 }
 
 #define CHECK_TYPE(a) if(convert::array::type::from(type) == #a){(new a)->id.import_data(data_);return;}
+
+// interprets network data and populates it
 
 void id_api::array::add_data(std::vector<uint8_t> data_){
 	uint64_t id = 0;
@@ -209,4 +218,39 @@ void id_api::linked_list::link_vector(std::vector<uint64_t> vector,
 	}
 	PTR_ID(vector[vector.size()-1], )->set_prev_linked_list(position,
 								vector[vector.size()-2]);
+}
+
+std::vector<uint64_t> id_api::get_all(){
+	std::vector<uint64_t> retval;
+	for(uint64_t i = 0;i < ID_ARRAY_SIZE;i++){
+		if(id_list[i] != nullptr){
+			retval.push_back(id_list[i]->get_id());
+		}
+	}
+	return retval;
+}
+
+#define DELETE_TYPE(a) if(ptr->get_type() == #a){delete (a*)ptr->get_ptr();continue;}
+
+// refactor
+
+void id_api::destroy_all_data(){
+	check_and_allocate_list();
+	for(uint64_t i = 0;i < ID_ARRAY_SIZE;i++){
+		if(id_list[i] == nullptr){
+			continue;
+		}
+		try{
+			data_id_t *ptr = id_list[i];
+			DELETE_TYPE(tv_frame_video_t);
+			DELETE_TYPE(tv_frame_audio_t);
+			DELETE_TYPE(tv_channel_t);
+			DELETE_TYPE(tv_window_t);
+			DELETE_TYPE(tv_dev_video_t);
+			DELETE_TYPE(tv_dev_audio_t);
+			DELETE_TYPE(net_socket_t);
+			print("unknown type:" + ptr->get_type(), P_WARN);
+		}catch(...){}
+	}
+	delete[] id_list;
 }

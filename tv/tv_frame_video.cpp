@@ -113,7 +113,7 @@ std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> tv_frame_video_t::get_pixel(ui
 	return color;
 }
 
-std::array<uint8_t, TV_FRAME_SIZE>* tv_frame_video_t::get_pixel_data_ptr(){
+std::array<uint8_t, TV_FRAME_VIDEO_SIZE>* tv_frame_video_t::get_pixel_data_ptr(){
 	return &frame;
 }
 

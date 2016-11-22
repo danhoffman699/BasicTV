@@ -151,26 +151,30 @@ static SDL_Surface* tv_render_frame_to_surface_ptr(tv_frame_video_t *frame){
 		print("no known SDL analog for frame, copying", P_WARN);
 		return nullptr;
 	}
+	SDL_Surface *tmp = SDL_CreateRGBSurface(0,
+						width,
+						height,
+						bpc*3,
+						0,
+						0,
+						0,
+						0);
 	SDL_Surface *retval =
-		SDL_CreateRGBSurface(0,
-				     width,
-				     height,
-				     bpc*3,
-				     0,
-				     0,
-				     0,
-				     0);
-	if(unlikely(retval == nullptr)){
-		print((std::string)"unable to generate surface:" + SDL_GetError(), P_ERR);
-	}
-	retval = SDL_ConvertSurfaceFormat(retval, pixel_format_enum, 0);
+		SDL_ConvertSurfaceFormat(tmp,
+					 pixel_format_enum,
+					 0);
+	SDL_FreeSurface(tmp);
+	tmp = nullptr;
 	if(unlikely(retval == nullptr)){
 		print((std::string)"cannot convert surface to desired format:" + SDL_GetError(), P_ERR);
 	}
 	if(unlikely(SDL_LockSurface(retval) < 0)){
 		print((std::string)"unable to lock surface:"+SDL_GetError(), P_ERR);
 	}
-	retval->pixels = frame->get_pixel_data_ptr();
+	// TODO: is there better bounds checking?
+	std::memcpy(retval->pixels,
+		    frame->get_pixel_data_ptr(),
+		    width*height*(bpc*3/8));
 	SDL_UnlockSurface(retval);
 	return retval;
 }
@@ -196,6 +200,7 @@ static tv_frame_video_t *tv_frame_gen_xor_frame(uint64_t x_, uint64_t y_, uint8_
 		for(uint64_t x = 0;x < x_;x++){
 			frame->set_pixel(x,
 					 y,
+
 					 std::make_tuple(
 						 (x^y)&255,
 						 (x^y)&255,
@@ -236,13 +241,13 @@ static uint64_t tv_render_id_of_last_valid_frame(uint64_t current){
 static void tv_render_frame_to_screen_surface(tv_frame_video_t *frame,
 					      SDL_Surface *sdl_window_surface,
 					      SDL_Rect sdl_window_rect){
-	bool dereference_pixel_data = true;
+	// directly copy the data over, don't actually use a pointer
 	SDL_Surface *frame_surface =
 		tv_render_frame_to_surface_ptr(frame);
-	if(frame_surface == nullptr){
+	if(unlikely(frame_surface == nullptr)){
+		// pixel by pixel copy, very slow
 		frame_surface =
 			tv_render_frame_to_surface_copy(frame);
-		dereference_pixel_data = false;
 	}
 	if(unlikely(SDL_BlitScaled(frame_surface,
 				   NULL,
@@ -251,9 +256,6 @@ static void tv_render_frame_to_screen_surface(tv_frame_video_t *frame,
 		print((std::string)"couldn't blit surface:"+SDL_GetError(), P_CRIT);
 	}else{
 		print("surface blit without errors", P_SPAM);
-	}
-	if(likely(dereference_pixel_data)){
-		frame_surface->pixels = nullptr;
 	}
 	SDL_FreeSurface(frame_surface);
 	frame_surface = nullptr;
@@ -385,4 +387,9 @@ void tv_init(){
 	SDL_UpdateWindowSurface(sdl_window);
 	//tv_init_test_menu();
 	tv_init_test_webcam();
+}
+
+void tv_close(){
+	SDL_QuitSubSystem(SDL_INIT_VIDEO);
+	// don't delete any data types, GC will take care of that
 }

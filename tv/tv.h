@@ -7,10 +7,8 @@
 // hopefully that is too low some day
 #define TV_CHANNEL_SIZE 65536
 #define TV_WINDOW_SIZE 16
-#define TV_FRAME_BUFFER_SIZE 65536
-#define TV_FRAME_RETAIN_SIZE 1024
-#define TV_FRAME_SIZE (1920*1080*4)
-#define TV_FRAME_AUDIO_SIZE (96000*10)
+/* #define TV_FRAME_BUFFER_SIZE 65536 */
+/* #define TV_FRAME_RETAIN_SIZE 1024 */
 
 /*
   tv_client_t: Preferred settings for a stream
@@ -29,6 +27,7 @@ public:
 
 extern void tv_init();
 extern void tv_loop();
+extern void tv_close();
 
 #endif
 #include "tv_api.h"

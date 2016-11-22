@@ -7,6 +7,7 @@
 
   TODO: define behavior for multiple conflicting streams of input
  */
+#include "main.h"
 #include "input.h"
 #include "ir.h"
 #include "util.h"
@@ -44,8 +45,7 @@ static void input_run_input(std::vector<uint64_t> vector){
 	for(uint64_t i = 0;i < vector.size();i++){
 		switch(vector[i]){
 		case INPUT_KEY_ESCAPE:
-			print("terminating program", P_CRIT);
-			exit(0); // really shouldn't be needed
+			running = false;
 			break;
 		default:
 			break;
@@ -73,3 +73,6 @@ void input_init(){
 	SDL_Init(SDL_INIT_EVENTS);
 }
 
+void input_close(){
+	SDL_QuitSubSystem(SDL_INIT_EVENTS);
+}

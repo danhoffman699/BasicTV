@@ -123,7 +123,7 @@ void tv_dev_video_t::update_pixel_data(){
 	uint32_t current_raw = 0;
 	uint32_t current_std = 0;
 	const uint32_t raw_pixel_size_yuyv = raw_pixel_size-5;
-	const uint32_t pixel_size_yuyv = pixel_size_yuyv-4;
+	const uint32_t pixel_size_yuyv = pixel_size-4;
 	if(unlikely(raw_pixel_size < 5 ||
 		    pixel_size < 4)){
 		print("resolution is too small for conversion", P_ERR);

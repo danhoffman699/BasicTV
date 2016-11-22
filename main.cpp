@@ -10,9 +10,14 @@
 #include "tv/tv_frame_video.h"
 #include "tv/tv_window.h"
 #include "tv/tv_patch.h"
+#include "tv/tv_dev_video.h"
+#include "tv/tv_dev_audio.h"
+#include "tv/tv_dev.h"
+#include "tv/tv_channel.h"
 #include "input.h"
 #include "net/net_proto.h"
 #include "net/net.h" // two seperate units (right now)
+#include "id/id_api.h"
 
 /*
   TODO:
@@ -68,6 +73,13 @@ static void init(){
 	net_proto_init();
 }
 
+static void close(){
+	tv_close();
+	input_close();
+	net_proto_close();
+	id_api::destroy_all_data();
+}
+
 static void test_socket(){
 	/*
 	  I cannot locally connect to this computer without using another IP
@@ -89,10 +101,10 @@ static void test_socket(){
 }
 
 static void test(){
-	while(true){
-		P_V(get_time_microseconds(), P_SPAM);
-	}
 }
+
+// TODO: define some ownership, don't actually use this
+// in production, but just as a leak checker
 
 int main(int argc_, char **argv_){
 	argc = argc_;
@@ -109,4 +121,6 @@ int main(int argc_, char **argv_){
 			std::cout << "iterated" << std::endl;
 		}
 	}
+	close();
+	return 0;
 }
