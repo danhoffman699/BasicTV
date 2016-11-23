@@ -22,17 +22,24 @@
 #include "vector"
 #include "random"
 
+#define PREFETCH_STRIDE 64 // estimate
+
 // branch prediction
 #define likely(x)      __builtin_expect(!!(x), 1)
 #define unlikely(x)    __builtin_expect(!!(x), 0)
 
+#ifdef __GNUC__
+// This can be used somewhere
+#define prefetch(addr, rw, locality) __builtin_prefetch(addr, rw, locality)
+#else
+#define prefetch(addr, rw, locality)
+#endif
+
 #define BETWEEN(a, b, c) ((a <= b) && (b <= c))
 
 /*
-  A lot of times, never and always are paired with error messages
-  that can easily be fixed. However, always and never are in direct
-  defiance of the defined behavior, and any instance where an always
-  or never flag is wrong means something internal is wrong
+  never and always are reserved for insane and impossible
+  situations, mostly in tight loops.
  */
 
 #ifdef DEBUG
@@ -138,5 +145,7 @@ uint64_t flip_bit_section(uint8_t begin, uint8_t end);
 
 
 uint64_t get_time_microseconds();
+
+void prefetch_range(void* addr, uint32_t range);
 
 #endif

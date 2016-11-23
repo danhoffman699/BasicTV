@@ -8,6 +8,8 @@
 #include "random"
 
 #define ADD_DATA(x) (id.add_data(&x, sizeof(x)))
+#define ADD_DATA_ARRAY(x, y, z) (id.add_data(&(x[0]), y*z))
+#define ADD_DATA_NONET(x) (id.add_data(&x, sizeof(x), ID_DATA_NONET))
 #define ADD_DATA_PTR(x) (id->add_data(&x, sizeof(x)))
 
 /*
@@ -15,21 +17,6 @@
   pointers don't work over a network. This allows for easy
   transmission of multiple different structures reliant
   upon statically allocated data types.
- */
-
-/*
-  TODO: possibly add PGP public key to ID requests to ensure
-  that intentionally malformed IDs for items that have left
-  most of the nodes' memory isn't confused for another version
-  of the data? Odds are, if we know one of the IDs, we should 
-  know the owner of the other one as well.
- */
-
-/*
-  TODO: order reading in such a way as to allow 64-bit integers
-  to be networked with the smallest amount of data possible (no
-  zeroes at the beginning). Make this seamless so it can act as 
-  an all around performance boost versys a pedantic little one
  */
 
 /*
@@ -92,13 +79,6 @@
 
 #define ID_DATA_CACHE (1 << 0)
 #define ID_DATA_NONET ID_DATA_CACHE
-
-/*
-  force no PGP encryption on one specific variable, only
-  used for core PGP functions (ID to pgp_cite_t and pgp_cite_t
-  internal variables).
- */
-#define ID_DATA_NOPGP (1 << 1)
 
 /*
   Array is dunamically allocated to prevent the stack from

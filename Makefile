@@ -1,4 +1,4 @@
-CXXFLAGS+=-Wall -Wextra -std=c++11 -Wpedantic -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-padded -Wno-old-style-cast -O0 -g
+CXXFLAGS+=-Wall -Wextra -std=c++11 -Wpedantic -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-padded -Wno-old-style-cast
 LDFLAGS+=-lstdc++ -lcurl -lSDL2_net -lSDL2
 #changed for personal reasons, clang++ is faster at compiling
 CXX:=clang++
@@ -19,6 +19,9 @@ all: tv net
 
 debug: tv net
 	$(CXX) $(CXXFLAGS) -DDEBUG -O0 -g tv_unified.o net_unified.o id_unified.o *.cpp $(LDFLAGS) 
+
+fast: tv net
+	$(CXX) $(CXXFLAGS) -Ofast -march=native tv_unified.o net_unified.o id_unified.o *.cpp $(LDFLAGS)
 
 clean:
 	rm tv_unified.o net_unified.o id_unified.o a.out id/*~ tv/*~ *~

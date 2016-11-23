@@ -9,18 +9,10 @@
   it goes here. If it needs external libraries, or needs special access
   to static variables, then it shouldn't be here (unless, of course, they
   are here first)
-
-  Also provides macros for universal bitwise manipulation across big and
-  little endian
  */
 
 // TODO: implement some builtin functions for VC++ and other compilers
 // before opting for the slowest method
-
-/*
-  TODO: to make this code more portable, use SHIFT_SMALLER and SHIFT_LARGER
-  instead of >> and << directly to prevent endian mixups
- */
 
 // NBO: network byte order
 
@@ -63,11 +55,6 @@
 #define MICRO MICRO_PREFIX
 
 #define METRIC(a, b) (a/b)
-
-
-#ifndef __ORDER_LITTLE_ENDIAN__
-#error "convert CROP_LSB functions to big-endian machines"
-#endif
 
 #define CROP_LSB(data, bits_out) (data & ~((~0) << bits_out))
 

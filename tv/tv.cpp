@@ -72,10 +72,13 @@ static SDL_Surface* tv_render_frame_to_surface_copy(tv_frame_video_t *frame){
 	if(unlikely(surface == nullptr)){
 		print((std::string)"surface is a nullptr:" + SDL_GetError(), P_ERR);
 	}
-	for(uint64_t x = 0;x < surface->w;x++){
-		for(uint64_t y = 0;y < surface->h;y++){
-			uint8_t *pixel_byte = (uint8_t*)surface->pixels + y * surface->pitch +
-				x * surface->format->BytesPerPixel;
+	for(uint32_t x = 0;x < surface->w;x++){
+		const uint32_t x_offset =
+			x * surface->format->BytesPerPixel;
+		for(uint32_t y = 0;y < surface->h;y++){
+			const uint32_t y_offset = y * surface->pitch;
+			uint8_t *pixel_byte =
+				&((uint8_t*)surface->pixels)[x_offset+y_offset];
 			const std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> color =
 				convert::color::bpc(
 					frame->get_pixel(x, y), 8);
@@ -224,13 +227,14 @@ static SDL_Rect tv_render_gen_window_rect(tv_window_t *window,
 	return window_rect;
 }
 
-static uint64_t tv_render_id_of_last_valid_frame(uint64_t current){
+static uint64_t tv_render_id_of_last_valid_frame(uint64_t current,
+						 uint64_t timestamp_micro_s){
 	std::vector<uint64_t> frame_linked_list =
 		id_api::array::get_forward_linked_list(current, 0);
 	for(uint64_t i = 0;i < frame_linked_list.size();i++){
 		tv_frame_video_t *frame =
 			PTR_DATA(frame_linked_list[i], tv_frame_video_t);
-		if(unlikely(frame->valid())){
+		if(unlikely(frame->valid(timestamp_micro_s))){
 			current = frame_linked_list[i];
 			break;
 		}
@@ -243,7 +247,8 @@ static void tv_render_frame_to_screen_surface(tv_frame_video_t *frame,
 					      SDL_Rect sdl_window_rect){
 	// directly copy the data over, don't actually use a pointer
 	SDL_Surface *frame_surface =
-		tv_render_frame_to_surface_ptr(frame);
+		nullptr; // benchmarking with prefetch
+		//	tv_render_frame_to_surface_ptr(frame);
 	if(unlikely(frame_surface == nullptr)){
 		// pixel by pixel copy, very slow
 		frame_surface =
@@ -293,10 +298,13 @@ static void tv_render_all(){
 		CONTINUE_IF_NULL(window);
 		channel = PTR_DATA(window->get_channel_id(), tv_channel_t);
 		CONTINUE_IF_NULL(channel);
+		uint64_t timestamp_micro_s = 
+			get_time_microseconds();
 		frame_video =
 			PTR_DATA(tv_render_id_of_last_valid_frame(
 					 tv_render_get_preferable_frame_list(
-						 channel)),
+						 channel),
+					 timestamp_micro_s),
 				 tv_frame_video_t);
 		CONTINUE_IF_NULL(frame_video);
 		SDL_Rect sdl_window_rect = 
@@ -385,11 +393,10 @@ void tv_init(){
 		NULL,
 		SDL_MapRGB(SDL_GetWindowSurface(sdl_window)->format, 0, 0, 0));
 	SDL_UpdateWindowSurface(sdl_window);
-	//tv_init_test_menu();
-	tv_init_test_webcam();
+	tv_init_test_menu();
+	//tv_init_test_webcam();
 }
 
 void tv_close(){
 	SDL_QuitSubSystem(SDL_INIT_VIDEO);
-	// don't delete any data types, GC will take care of that
 }

@@ -268,3 +268,12 @@ uint64_t get_time_microseconds(){
 			std::chrono::system_clock::now().time_since_epoch());
 	return micro_s.count();
 }
+
+// get some solid variables for rw and locality?
+void prefetch_range(void *addr, uint32_t range){
+	const uint8_t *addr_ = (uint8_t*)addr;
+	const uint8_t *end_ = addr_ + range;
+	for(;addr_ < end_;addr_ += PREFETCH_STRIDE){
+		prefetch(addr_, 0, 0);
+	}
+}

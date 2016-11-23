@@ -45,3 +45,11 @@ Make a legitimate website or web-based interface into the network
 	Not really streaming directly to the web browser (I don't know how well web browsers can
 	handle that sort of networking, on the fly decoding, and other items), but instead just \
 	have a TV Guide setup and channel meta-data
+
+
+Create some sort of audio interface so there doesn't have to be a screen to use it. Just connect
+it to a radio, and use the IR remotes and other controlling systems to create just a radio system
+for a full house solution
+
+Create a method of easily controlling local BasicTV nodes, so they can work together in some sort
+of surround sound system or something like that (mostly surround sound)

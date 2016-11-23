@@ -119,8 +119,17 @@ std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> convert::color::from(uint64_t 
 std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> convert::color::bpc(std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> color,
 								      uint8_t new_bpc){
 	const uint8_t old_bpc = std::get<3>(color);
-	std::get<0>(color) *= pow(2, new_bpc)/pow(2, old_bpc);
-	std::get<1>(color) *= pow(2, new_bpc)/pow(2, old_bpc);
-	std::get<2>(color) *= pow(2, new_bpc)/pow(2, old_bpc);
+	if(old_bpc == new_bpc){
+		return color;
+	}
+	long double mul = 0;
+	if(new_bpc > old_bpc && unlikely(new_bpc-old_bpc <= 31)){
+		mul = (uint32_t)((uint32_t)1 << new_bpc-old_bpc);
+	}else{
+		mul = pow(2, new_bpc-old_bpc);
+	}
+	std::get<0>(color) *= mul;
+	std::get<1>(color) *= mul;
+	std::get<2>(color) *= mul;
 	return color;
 }

@@ -100,8 +100,7 @@ static void test_socket(){
 	}
 }
 
-static void test(){
-}
+static void test(){}
 
 // TODO: define some ownership, don't actually use this
 // in production, but just as a leak checker

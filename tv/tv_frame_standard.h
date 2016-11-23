@@ -1,12 +1,11 @@
 #ifndef TV_FRAME_STANDARD_H
 #define TV_FRAME_STANDARD_H
+#define TV_FRAME_DEFAULT_FREQ 60
+#define TV_FRAME_DEFAULT_TTL (1/TV_FRAME_DEFAULT_FREQ)
 class tv_frame_standard_t{
 private:
-	// timestamp of the start time, just add
-	// TTL to this to get end time
 	uint64_t start_time_micro_s = 0;
 	uint32_t ttl_micro_s = 0;
-	// just a simple incrementer
 	uint64_t frame_entry = 0;
 public:
 	tv_frame_standard_t();
@@ -18,6 +17,6 @@ public:
 	void get_standard(uint64_t *start_time_micro_s_,
 			  uint32_t *ttl_micros_,
 			  uint64_t *frame_entry_);
-	bool valid();
+	bool valid(uint64_t timestamp_micro_s);
 };
 #endif

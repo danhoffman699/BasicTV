@@ -13,5 +13,8 @@ tv_dev_audio_t::tv_dev_audio_t(std::string filename_, uint8_t type_) : id(this, 
 tv_dev_audio_t::~tv_dev_audio_t(){
 }
 
-uint64_t tv_dev_audio_t::update(){
+uint64_t tv_dev_audio_t::update(uint64_t length_micro_s){
+	tv_frame_audio_t *audio =
+		new tv_frame_audio_t;
+	return audio->id.get_id();
 }
