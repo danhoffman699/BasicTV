@@ -81,8 +81,8 @@ static SDL_Surface* tv_render_frame_to_surface_copy(tv_frame_video_t *frame){
 				&((uint8_t*)surface->pixels)[x_offset+y_offset];
 			const std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> color =
 				convert::color::bpc(
-					frame->get_pixel(x, y), 8);
-			//  revert back once frame works reliably
+					frame->get_pixel(x, y),
+					8);
 			pixel_byte[0] = 
 				(uint8_t)std::get<0>(color);
 			pixel_byte[1] =
@@ -203,7 +203,6 @@ static tv_frame_video_t *tv_frame_gen_xor_frame(uint64_t x_, uint64_t y_, uint8_
 		for(uint64_t x = 0;x < x_;x++){
 			frame->set_pixel(x,
 					 y,
-
 					 std::make_tuple(
 						 (x^y)&255,
 						 (x^y)&255,
@@ -247,8 +246,7 @@ static void tv_render_frame_to_screen_surface(tv_frame_video_t *frame,
 					      SDL_Rect sdl_window_rect){
 	// directly copy the data over, don't actually use a pointer
 	SDL_Surface *frame_surface =
-		nullptr; // benchmarking with prefetch
-		//	tv_render_frame_to_surface_ptr(frame);
+		tv_render_frame_to_surface_ptr(frame);
 	if(unlikely(frame_surface == nullptr)){
 		// pixel by pixel copy, very slow
 		frame_surface =
@@ -332,7 +330,7 @@ static void tv_init_test_menu(){
 		new tv_channel_t;
 	tv_menu_t *menu =
 		new tv_menu_t;
-	menu->set_menu_entry(0, "I made this in SDL2 with raw acces to SDL_Surface");
+	menu->set_menu_entry(0, "BasicTV is going to be great");
 	channel->set_frame_id(0, menu->get_frame_id());
 	window->set_channel_id(channel->id.get_id());
 }

@@ -122,7 +122,7 @@ std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> convert::color::bpc(std::tuple
 	if(old_bpc == new_bpc){
 		return color;
 	}
-	long double mul = 0;
+	double mul;
 	if(new_bpc > old_bpc && unlikely(new_bpc-old_bpc <= 31)){
 		mul = (uint32_t)((uint32_t)1 << new_bpc-old_bpc);
 	}else{
