@@ -3,8 +3,8 @@
 #include "tv_dev.h"
 class tv_dev_video_t : public tv_dev_t{
 private:
-	uint8_t *raw_pixel_data = 0;
-	uint8_t *pixel_data = 0;
+	uint8_t *raw_pixel_data = nullptr;
+	uint8_t *pixel_data = nullptr;
 	uint64_t raw_pixel_size = 0;
 	uint64_t pixel_size = 0;
 	/*
@@ -25,6 +25,7 @@ public:
 	tv_dev_video_t(std::string filename_);
 	~tv_dev_video_t();
 	uint64_t update();
+	uint64_t get_frame_interval_micro_s();
 };
 
 #endif

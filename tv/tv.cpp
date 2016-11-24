@@ -23,16 +23,8 @@
 #include "tv_dev_video.h"
 #include "tv_dev_audio.h"
 
-#define TEST_FRAME_SIZE 120
 #define WINDOW_X_RES 1280
 #define WINDOW_Y_RES 720
-
-/*
-  TODO: clean up all of this code. I made it in a hurry to use as proof
-  that it all works fine. Most of what is here doesn't break anything
-  low level or would otherwise need large fixes, but it just needs
-  to be cleaned up a bit (and tv_frame as well)
- */
 
 /*
   channel and window arrays are created OTF with id_api::cache::get
@@ -43,7 +35,11 @@ static SDL_Window *sdl_window = nullptr;
 // this surface should fit the dimensions of the frame, let SDL
 // handle the resizing (at least for now)
 
-static SDL_Surface* tv_render_frame_to_surface_copy(tv_frame_video_t *frame){
+/*
+  Works fast enough on my desktop for the menu
+ */
+
+static SDL_Surface* tv_render_frame_to_surface_slow_copy(tv_frame_video_t *frame){
 	uint64_t red_mask = 0;
 	uint64_t green_mask = 0;
 	uint64_t blue_mask = 0;
@@ -79,7 +75,10 @@ static SDL_Surface* tv_render_frame_to_surface_copy(tv_frame_video_t *frame){
 			const uint32_t y_offset = y * surface->pitch;
 			uint8_t *pixel_byte =
 				&((uint8_t*)surface->pixels)[x_offset+y_offset];
-			const std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> color =
+			const std::tuple<uint64_t,
+					 uint64_t,
+					 uint64_t,
+					 uint8_t> color =
 				convert::color::bpc(
 					frame->get_pixel(x, y),
 					8);
@@ -138,7 +137,14 @@ static uint32_t tv_render_get_frame_sdl_enum(tv_frame_video_t *frame){
 	return pixel_format_enum;
 }
 
-static SDL_Surface* tv_render_frame_to_surface_ptr(tv_frame_video_t *frame){
+/*
+  Detects the format for the frame and, if it is compatiable, the copy it
+  over in one swoop with memcpy. The only supported format is RGB24, but
+  hopefully map everything over (RGB-based since tv_frame_video_t only
+  supports RGB currently)
+ */
+
+static SDL_Surface* tv_render_frame_to_surface_fast_copy(tv_frame_video_t *frame){
 	uint16_t width = 0;
 	uint16_t height = 0;
 	uint8_t bpc = 0;
@@ -244,13 +250,11 @@ static uint64_t tv_render_id_of_last_valid_frame(uint64_t current,
 static void tv_render_frame_to_screen_surface(tv_frame_video_t *frame,
 					      SDL_Surface *sdl_window_surface,
 					      SDL_Rect sdl_window_rect){
-	// directly copy the data over, don't actually use a pointer
 	SDL_Surface *frame_surface =
-		tv_render_frame_to_surface_ptr(frame);
+		tv_render_frame_to_surface_fast_copy(frame);
 	if(unlikely(frame_surface == nullptr)){
-		// pixel by pixel copy, very slow
 		frame_surface =
-			tv_render_frame_to_surface_copy(frame);
+			tv_render_frame_to_surface_slow_copy(frame);
 	}
 	if(unlikely(SDL_BlitScaled(frame_surface,
 				   NULL,
@@ -350,18 +354,20 @@ static void tv_init_test_webcam(){
 	tv_dev_video_t *dev =
 	 	new tv_dev_video_t("/dev/video0");
 	std::vector<uint64_t> vector_array;
+	// Without an offset, the frames are obsolete before they
+	// are rendered
+	const uint64_t refresh_rate = (1000.0*1000.0)/dev->get_frame_interval_micro_s(); // just an estimate
+	P_V(refresh_rate, P_SPAM);
+	const uint64_t time_start = get_time_microseconds();
+	const uint64_t offset = 20;
 	for(uint64_t i = 0;i < 60;i++){
 		tv_frame_video_t *video =
 			PTR_DATA(dev->update(), tv_frame_video_t);
-		vector_array.push_back(video->id.get_id());
-	}
-	const uint64_t micro_time = get_time_microseconds();
-	for(uint64_t i = 0;i < 60;i++){
-		tv_frame_video_t *video =
-			PTR_DATA(vector_array[i], tv_frame_video_t);
-		video->set_standard(micro_time+(1000*1000*i),
-				    1000*1000,
+		uint64_t time_new = get_time_microseconds();
+		video->set_standard(time_start+(i*(1000*1000/refresh_rate))+(1000*1000*20),
+				    (1000000/refresh_rate),
 				    i);
+		vector_array.push_back(video->id.get_id());
 	}
 	id_api::linked_list::link_vector(vector_array, 0);
 	channel->set_frame_id(0, vector_array[0]);
@@ -391,8 +397,8 @@ void tv_init(){
 		NULL,
 		SDL_MapRGB(SDL_GetWindowSurface(sdl_window)->format, 0, 0, 0));
 	SDL_UpdateWindowSurface(sdl_window);
-	tv_init_test_menu();
-	//tv_init_test_webcam();
+	//tv_init_test_menu();
+	tv_init_test_webcam();
 }
 
 void tv_close(){

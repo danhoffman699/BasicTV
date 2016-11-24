@@ -79,9 +79,6 @@ uint64_t tv_frame_video_t::get_raw_pixel_pos(uint16_t x,
 		x_res*y;
 	const uint64_t minor =
 		x;
-	if(unlikely(!valid_bpc(bpc))){
-		print("cannot support alternate frames at the time", P_ERR);
-	}
 	const uint64_t raw_pixel_pos = 
 		(major+minor)*3;
 	return raw_pixel_pos;
@@ -157,6 +154,9 @@ void tv_frame_video_t::set_all(uint16_t x_res_,
 			       uint64_t green_mask_,
 			       uint64_t blue_mask_,
 			       uint64_t alpha_mask_){
+	if(unlikely(!valid_bpc(bpc_))){
+		print("cannot support requested BPC at this time", P_ERR);
+	}
 	x_res = x_res_;
 	y_res = y_res_;
 	bpc = bpc_;

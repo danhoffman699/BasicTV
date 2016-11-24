@@ -18,10 +18,6 @@
   and it starts as a 512x512 (64x64 characters at the planned max size of 8x8).
  */
 
-// defined as an 4x8, only two colors for now
-// the last two are for characters that reach below the line, making the
-// practical size 4x6
-
 #define GLYPH_X 6
 #define GLYPH_Y 8
 
