@@ -8,6 +8,10 @@
   zero
  */
 
+#define TV_FRAME_TYPE_UNDEFINED 0
+#define TV_FRAME_TYPE_UNCOMPRESSED 1
+#define TV_FRAME_TYPE_VP9 2 // should
+
 #define TV_FRAME_8K_RES (7680*4320)
 
 #define TV_FRAME_VIDEO_SIZE (1920*1080*4)

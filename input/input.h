@@ -1,4 +1,5 @@
 #include "SDL2/SDL.h"
+#include "../id/id.h"
 #ifndef INPUT_H
 #define INPUT_H
 
@@ -52,6 +53,24 @@
   now because the internal networking is more important, but I did what
   I did as a proof of concept and to lay down some docs for the standard
  */
+
+#define INPUT_DEV_QUEUE_LENGTH 256
+
+struct input_dev_standard_t{
+protected:
+	/*
+	  I might want to move away from using std::array for everything,
+	  and towards only using it for types that can be exported and
+	  not just re-created from settings files
+	 */
+	std::array<uint8_t, INPUT_DEV_QUEUE_LENGTH> queue = {{0}};
+public:
+	data_id_t id;
+	input_dev_standard_t();
+	~input_dev_standard_t();
+	uint8_t get_latest_entry();
+	void set_latest_entry(uint8_t entry_);
+};
 
 extern void input_init();
 extern void input_loop();

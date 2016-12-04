@@ -398,7 +398,7 @@ void tv_init(){
 		SDL_MapRGB(SDL_GetWindowSurface(sdl_window)->format, 0, 0, 0));
 	SDL_UpdateWindowSurface(sdl_window);
 	//tv_init_test_menu();
-	tv_init_test_webcam();
+	//tv_init_test_webcam();
 }
 
 void tv_close(){

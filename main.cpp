@@ -3,7 +3,6 @@
 #include "file.h"
 #include "util.h"
 #include "rsa.h"
-#include "ir.h"
 #include "tv/tv.h"
 #include "tv/tv_frame_standard.h"
 #include "tv/tv_frame_audio.h"
@@ -14,10 +13,12 @@
 #include "tv/tv_dev_audio.h"
 #include "tv/tv_dev.h"
 #include "tv/tv_channel.h"
-#include "input.h"
+#include "input/input.h"
+#include "input/input_ir.h"
 #include "net/net_proto.h"
 #include "net/net.h" // two seperate units (right now)
 #include "id/id_api.h"
+#include "compress.h"
 
 /*
   TODO:
@@ -80,6 +81,23 @@ static void close(){
 	id_api::destroy_all_data();
 }
 
+static void test_compressor(){
+	std::vector<uint8_t> input_data;
+	for(uint64_t i = 0;i < 1024*1024;i++){
+		input_data.push_back(i&0xFF);
+	}
+	std::vector<uint8_t> output_data =
+		compressor::from_xz(
+			compressor::to_xz(
+				input_data,
+				0));
+	if(std::equal(input_data.begin(), input_data.end(), output_data.begin())){
+		print("Compressor works", P_NOTE);
+	}else{
+		print("input != output", P_ERR);
+	}
+}
+
 static void test_socket(){
 	/*
 	  I cannot locally connect to this computer without using another IP
@@ -109,6 +127,7 @@ int main(int argc_, char **argv_){
 	argc = argc_;
 	argv = argv_;
 	init();
+	test_compressor();
 	while(running){
 		tv_loop();
 		input_loop();

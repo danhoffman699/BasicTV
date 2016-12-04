@@ -8,17 +8,13 @@ Allow for both edited and unedited clips to be allowed
 Implement some sort of closed captioning system?
 Implement audio feeds in general?
 Implement some different audio feeds for different languages?
-	  Seperate the frame into two different types, video and audio
-Define tv_frame_t as tv_frames_t and use the pre-defined allocated space for an arbitrary number
-of frames, so that large chunks of RAM aren't being wasted
-	This can probably be done easily with adding an offset to the getters and setters, and
-	defining the number of frames in the type using a variable. It might make more sense to
-	do away with tv_patch_t in favor of storing patch data for different frames in tv_frame_t
 
 ID system
 Change entire system to allow for RSA fingerprint planting.
 Finish exporting system
 Allow for some basic level of lossless compression (before encryption)
+Allow for using std::vector<uint8_t> for possibly large (but defined) lengths
+      raw frame data for compressed frames drops to zero
 Allow for simple garbage collection and disk caching
 	Disk caching is one of the major selling points of this (possibly infinite DVR space)
 	There is no garbage collection for global variables, but local data types that cannot be networked

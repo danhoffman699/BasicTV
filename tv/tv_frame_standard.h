@@ -7,6 +7,7 @@ private:
 	uint64_t start_time_micro_s = 0;
 	uint32_t ttl_micro_s = 0;
 	uint64_t frame_entry = 0;
+	std::array<uint64_t, 256> dep = {{0}};
 public:
 	tv_frame_standard_t();
 	~tv_frame_standard_t();

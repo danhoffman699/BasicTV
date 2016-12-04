@@ -7,10 +7,10 @@
 
   TODO: define behavior for multiple conflicting streams of input
  */
-#include "main.h"
+#include "../main.h"
 #include "input.h"
-#include "ir.h"
-#include "util.h"
+#include "input_ir.h"
+#include "../util.h"
 
 static std::vector<uint64_t> ir_vector;
 static std::vector<uint64_t> keyboard_vector;
@@ -75,4 +75,25 @@ void input_init(){
 
 void input_close(){
 	SDL_QuitSubSystem(SDL_INIT_EVENTS);
+}
+
+input_dev_standard_t::input_dev_standard_t() : id(this, __FUNCTION__){
+	ADD_DATA_ARRAY(queue, sizeof(queue[0]), INPUT_DEV_QUEUE_LENGTH);
+}
+
+uint8_t input_dev_standard_t::get_latest_entry(){
+	uint8_t retval = queue[0];
+	for(uint16_t i = 0;i < INPUT_DEV_QUEUE_LENGTH;i++){
+		queue[i-1] = queue[i];
+	}
+	return retval;
+}
+
+void input_dev_standard_t::set_latest_entry(uint8_t entry_){
+	for(uint16_t i = 0;i < INPUT_DEV_QUEUE_LENGTH;i++){
+		if(queue[i] == 0){
+			queue[i] = entry_;
+			break;
+		}
+	}
 }
