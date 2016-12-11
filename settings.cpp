@@ -65,6 +65,24 @@ void settings::set_settings(std::string settings_file){
 		settings_vector.push_back(
 			std::make_pair(setting, var));
 	}
+	for(uint32_t i = 1;i < argc-1;i++){
+		const uint32_t argv_len =
+			strlen(argv[i]);
+		if(argv_len > 2 && argv[i][0] == '-' && argv[i][1] == '-'){
+			const std::string curr_setting =
+				std::string(
+					&argv[i][2],
+					argv_len-2);
+			const std::string value =
+				argv[i+1];
+			print("appending setting from argv: " + curr_setting + " == " + value, P_SPAM);
+			settings_vector.push_back(
+				std::make_pair(
+					curr_setting,
+					value));
+			i++; // skip over the value
+		}
+	}
 }
 
 // no real way to know the type, so leave that to the parent
@@ -75,7 +93,6 @@ void settings::set_settings(std::string settings_file){
 std::string settings::get_setting(std::string setting){
 	std::string retval;
 	bool found = false;
-	print("requesting setting " + setting, P_SPAM);
 	for(unsigned int i = 0;i < settings_vector.size();i++){
 		if(settings_vector[i].first == setting){
 			retval = settings_vector[i].second;

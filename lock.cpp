@@ -1,6 +1,7 @@
 #include "util.h"
 #include "main.h"
 #include "lock.h"
+#include "settings.h"
 
 /*
   locking system doesn't work right, and since this is a singlethreaded
@@ -28,22 +29,28 @@ void lock_t::lock(){
 		id = std::this_thread::get_id();
 		return;
 	}
+	bool spam = false;
+	try{
+		spam = std::stoi(
+			settings::get_setting(
+				"print_level")) == P_SPAM;
+	}catch(...){}
 	if(prev_state){ // was locked, is currently locking
 		if(same_thread){
-			if(search_for_argv("--spam") != -1){
+			if(spam){
 				std::cout << "[SPAM] same thread locking twice (hash:" << thread_id_str << ")" << std::endl;
 			}
 		}else{
-			if(search_for_argv("--spam") != -1){
+			if(spam){
 				std::cout << "[SPAM] thread id locking thread (hash:" << thread_id_str << ")" << std::endl;
 				mutex_lock.lock();
 			}
 		}
 	}else{ // was not locked, is currently
-		if(search_for_argv("--spam") != -1){
+		if(spam){
 			std::cout << "thread id locking thread (hash:" << thread_id_str << ")" << std::endl;
-			id = std::this_thread::get_id();
 		}
+		id = std::this_thread::get_id();
 	}
 	
 }

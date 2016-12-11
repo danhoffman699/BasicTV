@@ -11,56 +11,6 @@
 #define ADD_DATA_ARRAY(x, y, z) (id.add_data(&(x[0]), y*z))
 #define ADD_DATA_NONET(x) (id.add_data(&x, sizeof(x), ID_DATA_NONET))
 #define ADD_DATA_PTR(x) (id->add_data(&x, sizeof(x)))
-
-/*
-  Custom data types reference each other with IDs since
-  pointers don't work over a network. This allows for easy
-  transmission of multiple different structures reliant
-  upon statically allocated data types.
- */
-
-/*
-  Networking standard:
-  ID is the first 8 bytes
-  Next 24 bytes are the name of the data type, padded
-  with zeroes (null).
-  Next 8 bytes are the pgp_cite_t ID
-
-  The rest is formatted in the following blocks
-  2 byte for the entry in the data_ptr, should be enough
-  4 bytes for the size of the string to be parsed
-  The raw string is here
-
-  If an ID already exists and the type checks out, then
-  update the current version with the new version.
-
-  If an ID already exists and the type does not check out, then
-  discard the ID (possible attack vector)
-
-  It is assumed that, somehow, the connection between the
-  client and server is secured, so the actual content of 
-  the packets shouldn't be tampered with.
-
-  TODO: Establish cryptographic ownership of data
-  What I want to do is have an unencrypted string that
-  "cites" websites that have a copy of the PGP public key
-  that this is signed with, and run that by the end-user
-  through some sort of easy GUI system. All data_id_t
-  metadata is NOT encrypted, just data_ptr (id_ptr isn't sent)
-
-  All networked data between the client and server on
-  the "main" port should be done in this format, and 
-  other services that might pop up should use another
-  format
-
-  Information that originates from another server cannot be 
-  changed. The original, encrypted, information is kept locally
-  and is referenced when prompted by another peer for that info.
-  In the event that somebody tries to override that, the receiving
-  client will detect (somehow?) that the information was tampered
-  with and that the RSA decryption is invalid.
- */
-
 /*
   id_t: ID and pointer system for the networking system
  */

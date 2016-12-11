@@ -66,7 +66,6 @@ void net_socket_t::send(std::vector<uint8_t> data){
 	}else if(sent_bytes > 0 && sent_bytes != (int64_t)data.size()){
 		print("socket has closed", P_SPAM);
 		disconnect();
-		// socket has closed
 	}
 	print("sent " + std::to_string(sent_bytes) + " bytes", P_DEBUG);
 }
@@ -74,34 +73,18 @@ void net_socket_t::send(std::vector<uint8_t> data){
 /*
   net_socket_t::recv: reads byte_count amount of data. Flags can be passed
   NET_SOCKET_RECV_NO_HANG: check for activity on the socket
+
+  This is guaranteed to return maxlen bytes, but the SDLNet_TCP_Recv function
+  doesn't share that same behavior, so store all of the information in a local
+  buffer and just read from that when recv is called.
  */
 
-std::vector<uint8_t> net_socket_t::recv(uint64_t byte_count, uint64_t flags){
-	socket_check();
-	std::vector<uint8_t> retval = {};
-	if(!(flags & NET_SOCKET_RECV_NO_HANG)){
-		if(activity()){
-			// no activity on the socket, only nonblocking way to use TCP
-			
-			return retval;
-		}
-	}
-	uint8_t *byte_ptr = new uint8_t[byte_count];
-	const int64_t recv_bytes =
-		SDLNet_TCP_Recv(socket, byte_ptr, byte_count);
-	if(recv_bytes > 0){
-		for(uint64_t i = 0;i < (uint64_t)recv_bytes;i++){
-			retval.push_back(byte_ptr[i]);
-		}
-	}
-	delete[] byte_ptr;
-	byte_ptr = nullptr;
+static void net_socket_recv_posix_error_checking(int32_t error){
 #ifdef __linux
-	if(recv_bytes < 0){
-		switch(recv_bytes){
+	if(error < 0){
+		switch(error){
 		case -ENOTCONN:
 			print("not connected to socket", P_ERR);
-			disconnect(); // make it official
 			break;
 #if EAGAIN == EWOULDBLOCK
 		case -EAGAIN:
@@ -114,11 +97,52 @@ std::vector<uint8_t> net_socket_t::recv(uint64_t byte_count, uint64_t flags){
 		case -EPERM: // non-blocking socket and no data is received
 			break;
 		default:
-			P_V(recv_bytes, P_SPAM);
+			P_V(error, P_SPAM);
 		}
 	}
 #endif
-	print("received " + std::to_string(retval.size()) + "bytes", P_SPAM);
+}
+
+static void net_socket_append_to_buffer(std::array<uint8_t, NET_SOCKET_OLD_BUFFER_SIZE> *buffer,
+					std::vector<uint8_t> data){
+	if(data.size() >= NET_SOCKET_OLD_BUFFER_SIZE){
+		memcpy(buffer,
+		       &(data[0]),
+		       NET_SOCKET_OLD_BUFFER_SIZE);
+	}else{
+		memcpy(buffer,
+		       buffer+data.size(),
+		       NET_SOCKET_OLD_BUFFER_SIZE-data.size());
+		memcpy(buffer+(NET_SOCKET_OLD_BUFFER_SIZE-data.size()),
+		       &(data[0]),
+		       data.size());
+	}
+}
+
+std::vector<uint8_t> net_socket_t::recv(int64_t byte_count, uint64_t flags){
+	socket_check();
+	const bool hang = !(flags & NET_SOCKET_RECV_NO_HANG);
+	uint8_t tmp_data = 0;
+	int32_t recv_retval = 0;
+	do{
+		while(activity()){
+			recv_retval =
+				SDLNet_TCP_Recv(socket, &tmp_data, 1);
+			if(recv_retval == -1){
+				net_socket_recv_posix_error_checking(recv_retval);
+				continue;
+			}
+			local_buffer.push_back(tmp_data);
+		}
+	}while((local_buffer.size() < byte_count) && hang);
+	std::vector<uint8_t> retval;
+	if(local_buffer.size() >= byte_count){
+		auto start = local_buffer.begin();
+		auto end = local_buffer.begin()+byte_count;
+		retval = std::vector<uint8_t>(start, end);
+		net_socket_append_to_buffer(&old_buffer, retval);
+		local_buffer.erase(start, end);
+	}
 	return retval;
 }
 
@@ -179,6 +203,12 @@ void net_socket_t::enable_socks(std::pair<std::string, uint16_t> socks_info,
 		print("unknown staus byte for SOCKS", P_ERR);
 		break;
 	}
+}
+
+void net_socket_t::disable_socks(){
+	/*
+	  Can probably get away with closing the connection
+	 */
 }
 
 /*

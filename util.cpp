@@ -6,8 +6,6 @@
 #include "net/net.h"
 #include "convert.h"
 
-int print_level = -1;
-
 std::vector<std::string> newline_to_vector(std::string data){
 	std::vector<std::string> retval;
 	unsigned long int old_pos = 0;
@@ -69,19 +67,16 @@ static std::string print_level_text(int level){
 	throw std::runtime_error("invalid print level");
 }
 
-//lock_t print_lock;
+static int print_level = P_SPAM;
 
 void print(std::string data, int level, const char *func){
-	if(unlikely(print_level == -1)){
-		if(search_for_argv("--debug") != -1){
-			print_level = P_DEBUG;
-		}else if(search_for_argv("--spam") != -1){
-			print_level = P_SPAM;
-		}else if(argc != 0){
-			print_level = P_NOTICE; // sane minimum
-		}else{
-			print_level = P_SPAM; // initializers before init
-		}
+	if(print_level == P_SPAM){
+		try{
+			print_level =
+				std::stoi(
+					settings::get_setting(
+						"print_level"));
+		}catch(...){}
 	}
 	if(unlikely(level >= print_level)){
 		std::string func_;
@@ -92,11 +87,8 @@ void print(std::string data, int level, const char *func){
 			  << " " << data << std::endl;
 		if(level == P_CRIT){
 			std::cerr << "CRITICAL ERROR" << std::endl;
-			throw std::runtime_error(data);
-			// should probably do more here, any catch
-			// anywhere nullifies the critical status
 		}
-		if(level == P_ERR){
+		if(level >= P_ERR){
 			throw std::runtime_error(data);
 		}
 	}

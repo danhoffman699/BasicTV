@@ -105,16 +105,28 @@ static void test_socket(){
 	 */
 	net_socket_t *test_socket_ = new net_socket_t;
 	std::string ip;
-	const uint16_t port = std::stoi(settings::get_setting("network_port"));
-	if(search_for_argv("--laptop") != -1){
-		// don't do anything, just accept the connection
-		// as normal and print the data
+	uint16_t port = 0;
+	bool recv = false;
+	try{
+		recv = settings::get_setting(
+			"test_recv") == "1";
+	}catch(...){}
+	if(recv){
+		while(true){
+			net_proto_loop();
+		}
 	}else{
-		print("IP address of laptop to test", P_NOTE);
+		print("IP address to test", P_NOTE);
 		std::cin >> ip;
-		std::pair<std::string, uint16_t> laptop_conn = std::make_pair(ip, port);
+		print("Port to test", P_NOTE);
+		std::cin >> port;
+		std::pair<std::string, uint16_t> laptop_conn =
+			std::make_pair(ip, port);
 		test_socket_->connect(laptop_conn);
 		test_socket_->send({'A', 'A', 'A', 'A'});
+		while(true){
+			sleep_ms(1);
+		}
 	}
 }
 
@@ -127,17 +139,22 @@ int main(int argc_, char **argv_){
 	argc = argc_;
 	argv = argv_;
 	init();
-	test_compressor();
+	//test_compressor();
+	//test_socket();
 	while(running){
 		tv_loop();
 		input_loop();
 		net_proto_loop();
-		if(search_for_argv("--slow-iterate") != -1){
-			sleep_ms(1000);
-		}
-		if(search_for_argv("--prove-iterate") != -1){
-			std::cout << "iterated" << std::endl;
-		}
+		try{
+			if(settings::get_setting("slow_iterate") == "1"){
+				sleep_ms(1000);
+			}
+		}catch(...){}
+		try{
+			if(settings::get_setting("prove_iterate") == "1"){
+				std::cout << "iterated" << std::endl;
+			}
+		}catch(...){}
 	}
 	close();
 	return 0;
