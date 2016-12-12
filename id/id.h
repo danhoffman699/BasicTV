@@ -1,4 +1,4 @@
-#include "../main.h" // STD_ARRAY_LENGTH
+#include "../main.h"
 #ifndef ID_H
 #define ID_H
 #include "cstdint"
@@ -18,7 +18,7 @@
 /*
   ID_PTR_LENGTH is any pointer array size, not just id_ptr
  */
-#define ID_PTR_LENGTH STD_ARRAY_LENGTH
+#define ID_PTR_LENGTH 32
 /*
   don't actually network this information. this is
   for any variable that is derived from other information
@@ -55,7 +55,7 @@
 #define ID_LL_WIDTH 3
 #define ID_LL_HEIGHT 16
 
-#define TYPE_LENGTH 32 // standard length for C++ types7
+#define TYPE_LENGTH 32 // standard length for C++ types
 
 struct data_id_t{
 private:

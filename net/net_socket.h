@@ -45,6 +45,8 @@ struct net_socket_t{
 private:
 	uint64_t status = 0;
 	// buffer of read and old data, in order
+	// only to check to see if data was ever written
+	uint32_t buffer_written_memory = 0;
 	std::array<uint8_t, NET_SOCKET_OLD_BUFFER_SIZE> old_buffer = {{0}};
 	// buffer of unread data, should rename to new_buffer
 	std::vector<uint8_t> local_buffer;

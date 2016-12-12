@@ -130,6 +130,75 @@ static void test_socket(){
 	}
 }
 
+/*
+  BasicTV works best when there are many open TCP connections at one
+  time, because there isn't an overhead for connecting to a new client.
+  However, consumer grade routers are terrible at this, so this is an
+  automatic test to see how much the router can actually handle.
+
+  TODO: check to see if this information makes it to the router, or if
+  it is just stuck locally (which makes sense, but defeats the purpose
+  of the test).
+ */
+
+static void test_socket_array(std::vector<std::pair<uint64_t, uint64_t> > socket_array){
+	for(uint64_t i = 0;i < socket_array.size();i++){
+		net_socket_t *first =
+			PTR_DATA(socket_array[i].first,
+				 net_socket_t);
+		net_socket_t *second =
+			PTR_DATA(socket_array[i].second,
+				 net_socket_t);
+		if(first == nullptr || second == nullptr){
+			P_V(socket_array[i].first, P_SPAM);
+			P_V(socket_array[i].second, P_SPAM);
+			print("SOCKETS STRUCTS ARE NULL", P_ERR);
+		}
+		first->send({'a','a','a','a'});
+		sleep_ms(10);
+		if(second->recv(4, NET_SOCKET_RECV_NO_HANG).size() == 0){
+			print("SOCKET HAS CLOSED", P_ERR);
+		}else{
+			print("received data for socket number " + std::to_string(i), P_NOTE);
+		}
+	}
+}
+
+static void test_max_tcp_sockets(){
+	print("Local IP address:", P_NOTE);
+	std::string ip;
+	std::cin >> ip;
+	std::vector<std::pair<uint64_t, uint64_t> > socket_pair;
+	bool dropped = false;
+	net_socket_t *inbound =
+		new net_socket_t;
+	inbound->connect(
+		std::make_pair("",
+			       50000)); // accepts connections
+	while(!dropped){
+		for(uint64_t i = 0;i < 16;i++){
+			net_socket_t *first =
+				new net_socket_t;
+			first->connect(std::make_pair(ip, 50000));
+			net_socket_t *second =
+				new net_socket_t;
+			sleep_ms(10); // probably isn't needed
+			TCPsocket tmp_socket =
+				SDLNet_TCP_Accept(inbound->get_tcp_socket());
+			if(tmp_socket != nullptr){
+				second->set_tcp_socket(tmp_socket);
+			}else{
+				print("unable to receive connection request", P_ERR);
+			}
+			socket_pair.push_back(
+				std::make_pair(
+					first->id.get_id(),
+					second->id.get_id()));
+		}
+		test_socket_array(socket_pair);
+	}
+}
+
 static void test(){}
 
 // TODO: define some ownership, don't actually use this
@@ -139,6 +208,7 @@ int main(int argc_, char **argv_){
 	argc = argc_;
 	argv = argv_;
 	init();
+	test_max_tcp_sockets();
 	//test_compressor();
 	//test_socket();
 	while(running){

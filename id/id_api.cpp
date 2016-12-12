@@ -27,6 +27,7 @@ static data_id_t *id_find(uint64_t id){
 			return id_list[i];
 		}
 	}
+	print("Couldn't find ID", P_WARN);
 	return nullptr;
 }
 
@@ -76,11 +77,11 @@ void id_api::array::add(uint64_t id, data_id_t *ptr){
 			return;
 		}
 	}
-	print("MAX IDS REACHED", P_CRIT);
 }
 
 void id_api::array::del(uint64_t id){
 	check_and_allocate_list();
+	print("THIS ISNT GOOD AT ALL", P_CRIT);
 	for(uint64_t i = 0;i < ID_ARRAY_SIZE;i++){
 		if(id_list[i] == nullptr){
 			continue;

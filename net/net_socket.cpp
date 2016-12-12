@@ -10,6 +10,7 @@ net_socket_t::net_socket_t() : id(this, __FUNCTION__){
 }
 
 net_socket_t::~net_socket_t(){
+	print("THIS SHOULDN'T BE HAPPENING", P_CRIT);
 }
 
 /*
@@ -106,16 +107,18 @@ static void net_socket_recv_posix_error_checking(int32_t error){
 static void net_socket_append_to_buffer(std::array<uint8_t, NET_SOCKET_OLD_BUFFER_SIZE> *buffer,
 					std::vector<uint8_t> data){
 	if(data.size() >= NET_SOCKET_OLD_BUFFER_SIZE){
-		memcpy(buffer,
-		       &(data[0]),
-		       NET_SOCKET_OLD_BUFFER_SIZE);
+	 	memcpy(buffer,
+	 	       data.data(),
+	 	       NET_SOCKET_OLD_BUFFER_SIZE);
 	}else{
-		memcpy(buffer,
-		       buffer+data.size(),
-		       NET_SOCKET_OLD_BUFFER_SIZE-data.size());
-		memcpy(buffer+(NET_SOCKET_OLD_BUFFER_SIZE-data.size()),
-		       &(data[0]),
-		       data.size());
+		for(uint64_t i = data.size();i < NET_SOCKET_OLD_BUFFER_SIZE;i++){
+			(*buffer)[i-data.size()] = (*buffer)[i];
+		}
+		for(uint64_t i = NET_SOCKET_OLD_BUFFER_SIZE-data.size();i < NET_SOCKET_OLD_BUFFER_SIZE;i++){
+			(*buffer)[i] = data[NET_SOCKET_OLD_BUFFER_SIZE-data.size()-i];
+		}
+		// TODO: implement this in memcpy, networking code is probably
+		// the most important code for efficiency
 	}
 }
 
@@ -136,12 +139,21 @@ std::vector<uint8_t> net_socket_t::recv(int64_t byte_count, uint64_t flags){
 		}
 	}while((local_buffer.size() < byte_count) && hang);
 	std::vector<uint8_t> retval;
-	if(local_buffer.size() >= byte_count){
-		auto start = local_buffer.begin();
-		auto end = local_buffer.begin()+byte_count;
-		retval = std::vector<uint8_t>(start, end);
-		net_socket_append_to_buffer(&old_buffer, retval);
-		local_buffer.erase(start, end);
+	if(byte_count > 0){
+		if(local_buffer.size() >= byte_count){
+			auto start = local_buffer.begin();
+			auto end = local_buffer.begin()+byte_count;
+			retval = std::vector<uint8_t>(start, end);
+			net_socket_append_to_buffer(&old_buffer, retval);
+			local_buffer.erase(start, end);
+		}
+	}else if(byte_count < 0){
+		if(std::abs(byte_count) <= buffer_written_memory){
+			retval =
+				std::vector<uint8_t>(
+					&old_buffer[NET_SOCKET_OLD_BUFFER_SIZE+byte_count-1],
+					&old_buffer[NET_SOCKET_OLD_BUFFER_SIZE-1]);
+		}
 	}
 	return retval;
 }
@@ -239,7 +251,7 @@ void net_socket_t::connect(std::pair<std::string, uint16_t> conn_info){
 	}
 	socket = SDLNet_TCP_Open(&tmp_ip);
 	if(socket == nullptr){
-		print((std::string)"cannot open socket:"+SDL_GetError(),
+		print((std::string)"cannot open socket (" + std::to_string(errno) + "):"+SDL_GetError(),
 		      P_ERR);
 	}else{
 		print("opened socket", P_NOTE);

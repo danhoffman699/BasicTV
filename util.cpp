@@ -231,15 +231,16 @@ void throw_on_null(void* ptr){
 	}
 }
 
-std::default_random_engine generator;
-
 uint64_t true_rand(uint64_t min, uint64_t max){
-	if(min >= max){
-		throw std::runtime_error("min >= max");
+	std::ifstream random_fd;
+	random_fd.open("/dev/urandom");
+	if(random_fd.is_open() == false){
+		print("cannot open /dev/urandom", P_CRIT);
 	}
-	std::uniform_int_distribution<uint64_t>
-		distribution(min, max);
-	return distribution(generator);
+	uint64_t retval = 0;
+	random_fd.get((char*)&retval, 8);
+	random_fd.close();
+	return retval;
 }
 uint64_t flip_bit_section(uint8_t begin, uint8_t end){
 	if(unlikely(end == begin)){

@@ -132,12 +132,21 @@ uint64_t data_id_t::get_data_index_size(){
 	return 0;
 }
 
+// native just means in the std::array format
+static std::array<uint8_t, 32> get_nbo_native_type(std::array<uint8_t, 32> type){
+	for(uint32_t i = 0;i < 16;i++){
+		const uint32_t tmp = type[i];
+		type[i] = NBO_8(type[31-i]);
+		type[32-i] = NBO_8(tmp);
+	}
+	return type;
+}
+
 std::vector<uint8_t> data_id_t::export_data(){
 	std::vector<uint8_t> retval;
 	const uint64_t nbo_id = NBO_64(id);
-	const std::vector<uint8_t> nbo_type =
-		convert::nbo::to(
-			std::vector<uint8_t>(type.begin(), type.end()));
+	const std::array<uint8_t, 32> nbo_type =
+		get_nbo_native_type(type);
 	const uint64_t nbo_pgp_cite_id = NBO_64(pgp_cite_id);
 	retval.insert(retval.end(), ((uint8_t*)&nbo_id), ((uint8_t*)&nbo_id)+8);
 	retval.insert(retval.end(), nbo_type.begin(), nbo_type.end());
@@ -179,7 +188,7 @@ std::vector<uint8_t> data_id_t::export_data(){
 			retval.end(),
 			nbo_data_ptr.begin(),
 			nbo_data_ptr.end());
-			}
+	}
 	return retval;
 }
 

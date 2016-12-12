@@ -130,44 +130,78 @@ static void net_proto_loop_dummy_read(){
 	}
 }
 
+/*
+  This find all data that a socket's internal buffer can reference. This means
+  that, because of the already-read socket buffer, it can consistently
+  reference back to previous bits of data to read them in. If a piece of
+  data has not been fully received yet, then wait until the entire string
+  is received, and the data safely reaches the internal cache (assuming the
+  native type, std::array, can handle it). Either the internal cache needs to be
+  adjusted (not a good idea for multiple Tor sockets), or there needs to be a 
+  defined maximum for a size of an individual struct tx blocks.
+
+  If there is an 8MB cache (not entirely unreasonable), and assuming we stick to
+  a maximum of 16 simultaneous connections to a peer, and we are fetching all
+  of the information from one peer ("live", or pretty close to it), then the
+  memory footprint just for the networking is 128MB. 
+
+  The 8MB is just a theoretical maximum, as there is nothing that requires that
+  memory to be allocated 100% (but that's how it is implemented now).
+
+  Of course, having 16 sockets open to one client is insane unless you are
+  using the Tor network. Assuming that most people don't opt for that option, 
+  then the memory footprint is defined more by the optimal number of nodes.
+
+  Everybody should have as many indexed nodes as possible, and there is no
+  serious overhead from just having the net_peer_t data locally and creating
+  a connection when information is requested. The problems come when you 
+  try to have a TCP socket for all of that data.
+
+  net_socket_t can exist without needing an actual socket. When data needs to
+  be sent, and there is no socket available to do that, then re-create the 
+  socket with the information needed and drop the old_buffer data. This is
+  great, because most home routers can't handle large amounts of concurrent
+  connections.
+
+  The maximum on DD-WRT's Web Interface is 4096, but kernel nitpicking can
+  make this go above 655360 (good luck finding a router for that). I doubt
+  concrete information can be gathered from any official documentation for
+  non-enterprise grade gear. 
+
+  tl;dr: Max number of concurrent TCP connections should be in the settings.cfg file,
+  and only touched by the truly dedicated.
+ */
+
+std::vector<std::vector<uint8_t> > net_proto_get_struct_segments(net_socket_t *socket){
+	return {};
+}
+
 static void net_proto_loop_read_all_valid_data(net_socket_t *socket){
-	if(unlikely(socket == nullptr)){
-		return;
-		// should never happen, already check in the parent
-	}
-	std::vector<uint8_t> all_current_data;
-	std::vector<uint8_t> tmp;
-	while((tmp = socket->recv(1, NET_SOCKET_RECV_NO_HANG)).size() > 0){
-		// better functions need to be made to read the entire
-		// local buffer into an array for bulk processing
-		all_current_data.push_back(tmp[0]);
-	}
-	// Reads the data until it comes across a new (valid) metadata
-	// add a space or carriage return or something to keep this from
-	// returning halfway through a random occurance of DEV_CTRL_1
-	// in the data (other half got chopped off)
-	for(uint64_t i = 0;i < all_current_data.size()-NET_PROTO_META_LENGTH;i++){
-		if(all_current_data[i] == NET_PROTO_DEV_CTRL_1 &&
-		   all_current_data[i+1] != NET_PROTO_DEV_CTRL_1){
-			uint32_t data_size = 0;
-			// don't care about the versions
-			uint8_t compression_macros = 0;
-			uint8_t other_macros = 0;
-			// don't care about the unused
-			net_proto_read_packet_metadata(
-				&all_current_data[i],
-				all_current_data.size()-i,
-				&data_size,
-				nullptr,
-				nullptr,
-				nullptr,
-				&compression_macros,
-				&other_macros,
-				nullptr);
-			i += NET_PROTO_META_LENGTH;
-			
-		}
-	}
+	// if(unlikely(socket == nullptr)){
+	// 	return;
+	// 	// should never happen, already check in the parent
+	// }
+	// std::vector<std::vector<uint8_t> > struct_segments =
+	// 	net_proto_get_struct_segments(socket);
+	// for(uint64_t i = 0;i < struct_segments.size();i++){
+	// 	uint32_t data_size = 0;
+	// 	// don't care about the versions
+	// 	uint8_t compression_macros = 0;
+	// 	uint8_t other_macros = 0;
+	// 	// don't care about the unused
+	// 	net_proto_read_packet_metadata(
+	// 		&all_current_data[i],
+	// 		all_current_data.size()-i,
+	// 		&data_size,
+	// 		nullptr,
+	// 		nullptr,
+	// 		nullptr,
+	// 		&compression_macros,
+	// 		&other_macros,
+	// 		nullptr);
+	// 	i += NET_PROTO_META_LENGTH;
+	// 	// chuck the generated string into the ID API
+	// }
 }
 
 void net_proto_loop_handle_inbound_requests(){
