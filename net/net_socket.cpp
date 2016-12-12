@@ -117,7 +117,7 @@ static void net_socket_append_to_buffer(std::array<uint8_t, NET_SOCKET_OLD_BUFFE
 		for(uint64_t i = NET_SOCKET_OLD_BUFFER_SIZE-data.size();i < NET_SOCKET_OLD_BUFFER_SIZE;i++){
 			(*buffer)[i] = data[NET_SOCKET_OLD_BUFFER_SIZE-data.size()-i];
 		}
-		// TODO: implement this in memcpy, networking code is probably
+		// TODO: implement this in memmove, networking code is probably
 		// the most important code for efficiency
 	}
 }

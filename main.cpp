@@ -155,7 +155,7 @@ static void test_socket_array(std::vector<std::pair<uint64_t, uint64_t> > socket
 			print("SOCKETS STRUCTS ARE NULL", P_ERR);
 		}
 		first->send({'a','a','a','a'});
-		sleep_ms(10);
+		sleep_ms(1);
 		if(second->recv(4, NET_SOCKET_RECV_NO_HANG).size() == 0){
 			print("SOCKET HAS CLOSED", P_ERR);
 		}else{
@@ -163,6 +163,12 @@ static void test_socket_array(std::vector<std::pair<uint64_t, uint64_t> > socket
 		}
 	}
 }
+
+/*
+  This causes SDL2_net to crash when ulimit is changed. You still get a very
+  sane number of ~500 before that happens, so I'm fine with this staying
+  like it is.
+ */
 
 static void test_max_tcp_sockets(){
 	print("Local IP address:", P_NOTE);
@@ -176,13 +182,13 @@ static void test_max_tcp_sockets(){
 		std::make_pair("",
 			       50000)); // accepts connections
 	while(!dropped){
-		for(uint64_t i = 0;i < 16;i++){
+		for(uint64_t i = 0;i < 128;i++){
 			net_socket_t *first =
 				new net_socket_t;
 			first->connect(std::make_pair(ip, 50000));
 			net_socket_t *second =
 				new net_socket_t;
-			sleep_ms(10); // probably isn't needed
+			sleep_ms(1); // probably isn't needed
 			TCPsocket tmp_socket =
 				SDLNet_TCP_Accept(inbound->get_tcp_socket());
 			if(tmp_socket != nullptr){
