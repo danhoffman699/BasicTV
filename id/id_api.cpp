@@ -81,7 +81,6 @@ void id_api::array::add(uint64_t id, data_id_t *ptr){
 
 void id_api::array::del(uint64_t id){
 	check_and_allocate_list();
-	print("THIS ISNT GOOD AT ALL", P_CRIT);
 	for(uint64_t i = 0;i < ID_ARRAY_SIZE;i++){
 		if(id_list[i] == nullptr){
 			continue;

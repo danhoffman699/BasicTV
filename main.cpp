@@ -205,6 +205,27 @@ static void test_max_tcp_sockets(){
 	}
 }
 
+static void test_id_transport(){
+	// not defined behavior at all
+	data_id_t *tmp =
+		new data_id_t(nullptr, "TEST");
+	for(uint64_t i = 0;i < ID_LL_HEIGHT;i++){
+		tmp->set_next_linked_list(i, i);
+	}
+	tmp->set_pgp_cite_id(~0L);
+	const std::vector<uint8_t> exp =
+		tmp->export_data();
+	for(uint64_t i = 0;i < ID_LL_HEIGHT;i++){
+		tmp->set_next_linked_list(i, 0);
+	}
+	tmp->import_data(exp);
+	for(uint64_t i = 0;i < ID_LL_HEIGHT;i++){
+		P_V(i, P_NOTE);
+		P_V(tmp->get_next_linked_list(i), P_NOTE);
+	}
+	running  = false;
+}
+
 static void test(){}
 
 // TODO: define some ownership, don't actually use this
@@ -214,7 +235,8 @@ int main(int argc_, char **argv_){
 	argc = argc_;
 	argv = argv_;
 	init();
-	test_max_tcp_sockets();
+	test_id_transport();
+	//test_max_tcp_sockets();
 	//test_compressor();
 	//test_socket();
 	while(running){

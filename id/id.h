@@ -11,6 +11,7 @@
 #define ADD_DATA_ARRAY(x, y, z) (id.add_data(&(x[0]), y*z))
 #define ADD_DATA_NONET(x) (id.add_data(&x, sizeof(x), ID_DATA_NONET))
 #define ADD_DATA_PTR(x) (id->add_data(&x, sizeof(x)))
+
 /*
   id_t: ID and pointer system for the networking system
  */
@@ -129,6 +130,7 @@ public:
 	std::string get_type();
 	void *get_ptr();
 	//std::array<uint8_t, PGP_PUBKEY_SIZE> get_owner_pubkey();
+	void set_pgp_cite_id(uint64_t id){pgp_cite_id = id;} // probably should fix this soon
 	uint64_t get_pgp_cite_id();
 	uint64_t get_data_index_size();
 	uint64_t get_next_linked_list(uint64_t height);

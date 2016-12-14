@@ -30,7 +30,7 @@
 void data_id_t::init_list_all_data(){
 	add_data(&id, sizeof(id));
 	add_id(&id, 1);
-	add_data(&(linked_list[0]), ID_LL_WIDTH*ID_LL_HEIGHT);
+	add_data(&(linked_list[0]), ID_LL_WIDTH*ID_LL_HEIGHT*sizeof(linked_list[0]));
 }
 
 void data_id_t::init_gen_id(){
@@ -101,6 +101,7 @@ void data_id_t::add_data(void *ptr_, uint32_t size_, uint64_t flags){
 	}
 	for(uint64_t i = 0;i < ID_PTR_LENGTH;i++){
 		if(data_ptr[i] == NULL){
+			// should make this into a tuple
 			data_ptr[i] = ptr_;
 			data_size[i] = size_;
 			data_flags[i] = flags;
@@ -132,72 +133,115 @@ uint64_t data_id_t::get_data_index_size(){
 	return 0;
 }
 
-// native just means in the std::array format
-static std::array<uint8_t, 32> get_nbo_native_type(std::array<uint8_t, 32> type){
-	for(uint32_t i = 0;i < 16;i++){
-		const uint32_t tmp = type[i];
-		type[i] = NBO_8(type[31-i]);
-		type[32-i] = NBO_8(tmp);
-	}
-	return type;
-}
+/*
+  Anything being directly passed to ID_EXPORT_RAW is assumed to be inserted in
+  network byte order. I don't see any exception to this, and whatever niche
+  function it serves can be created with another function macro
+ */
+#define ID_EXPORT_RAW(var, size)					\
+	for(uint64_t qqq = 0;qqq < size;qqq++){				\
+		retval.push_back(NBO_8(((uint8_t*)&var)[size-qqq-1]));	\
+	}								
+
+#define ID_EXPORT(var) ID_EXPORT_RAW(var, sizeof(var))
+
+/*
+  TODO: more well-define this prefix information. std::array of pointers to the
+  data and the corresponding lengths sounds pretty good.
+ */
+
+typedef uint64_t transport_i_t;
+typedef uint64_t transport_size_t;
 
 std::vector<uint8_t> data_id_t::export_data(){
 	std::vector<uint8_t> retval;
-	const uint64_t nbo_id = NBO_64(id);
-	const std::array<uint8_t, 32> nbo_type =
-		get_nbo_native_type(type);
-	const uint64_t nbo_pgp_cite_id = NBO_64(pgp_cite_id);
-	retval.insert(retval.end(), ((uint8_t*)&nbo_id), ((uint8_t*)&nbo_id)+8);
-	retval.insert(retval.end(), nbo_type.begin(), nbo_type.end());
-	retval.insert(retval.end(), ((uint8_t*)nbo_pgp_cite_id), ((uint8_t*)nbo_pgp_cite_id)+8);
-	for(uint16_t i = 0;i != 0xFFFF;i++){
+	ID_EXPORT(id);
+	ID_EXPORT(type);
+	ID_EXPORT(pgp_cite_id);
+	print("retval initial size is " + std::to_string(retval.size()), P_NOTE);
+	for(uint64_t i = 0;i < ID_PTR_LENGTH;i++){
 		if(data_ptr[i] == nullptr){
-			continue;
-			// should I just exit here?
+			continue; // should it just break?
 		}
-		const uint16_t nbo_i = NBO_16(i);
-		retval.insert(retval.end(), ((uint8_t*)&nbo_i), ((uint8_t*)&nbo_i)+2);
-		/*
-		  the entire array is guaranteed to be blanked if any part
-		  of the entry is used, so read from the back to the front
-		  and set the data size to distance from the beginning
-		  to the first non-zero, so long arrays don't have to be 
-		  networked with redundant zeroes without sacrificing any
-		  data loss
-		 */
-		uint8_t *byte_array = (uint8_t*)data_ptr[i];
-		uint32_t data_entry_size = 0;
-		for(;data_entry_size < data_size[i];data_entry_size++){
-			if(byte_array[data_entry_size] != 0){
-				data_entry_size++;
-				break;
-			}
-		}
-		const uint32_t nbo_data_entry_size = NBO_32(data_entry_size);
-		retval.insert(
-			retval.end(),
-			((uint8_t*)&nbo_data_entry_size),
-			((uint8_t*)&nbo_data_entry_size)+4);
-		std::vector<uint8_t> nbo_data_ptr =
-			convert::nbo::to(
-				std::vector<uint8_t>(
-					(uint8_t*)&data_ptr[i],
-					((uint8_t*)&data_ptr[i])+data_entry_size));
-		retval.insert(
-			retval.end(),
-			nbo_data_ptr.begin(),
-			nbo_data_ptr.end());
+		transport_i_t trans_i = (transport_i_t)i;
+		transport_size_t trans_size = (transport_size_t)data_size[i];
+		ID_EXPORT(trans_i);
+		ID_EXPORT(trans_size);
+		ID_EXPORT_RAW(data_ptr[i], trans_size);
+		print("pushing back data entry " + std::to_string(trans_i) + " of size " + std::to_string(trans_size), P_NOTE);
 	}
+	P_V(retval.size(), P_NOTE);
 	return retval;
 }
 
+/*
+  Once the data has been imported, it either works or it doesn't, so it 
+  shouldn't matter if the data has been truncated.
+ */
+
+static void id_import_data(std::vector<uint8_t> *data,
+			   uint8_t *var,
+			   uint64_t length){
+	if(data->size() < length){
+		print("not enough space in data to import into var", P_ERR);
+	}
+	memcpy(var,
+	       data->data(),
+	       length);
+	// P_V(length, P_DEBUG);
+	// P_V(data->size(), P_DEBUG);
+	data->erase(data->begin(), data->begin()+length);
+	for(uint64_t i = 0;i < length/2;i++){
+		var[i] = NBO_8(var[length-i-1]);
+	}
+	if(length&1){
+		var[(length/2)] = NBO_8(var[(length/2)]);
+	}
+}
+
+// read into a local variable
+#define ID_IMPORT(var) id_import_data(&data, (uint8_t*)&var, sizeof(var))
+// read directly into the memory (after sanity checks)
+#define ID_IMPORT_RAW(var, size) id_import_data(&data, var, size)
+
 void data_id_t::import_data(std::vector<uint8_t> data){
-	/*
-	  TODO: Finish and test export for security flaws and the like before I
-	  sink time into maintaining and building two converse functions
-	 */
-	throw std::runtime_error("import_data hasn't been made yet");
+	uint64_t trans_id = 0;
+	std::array<uint8_t, TYPE_LENGTH> trans_type = {{0}};
+	uint64_t trans_pgp_cite_id = 0;
+	ID_IMPORT(trans_id);
+	ID_IMPORT(trans_type);
+	ID_IMPORT(trans_pgp_cite_id);
+	P_V(trans_id, P_NOTE);
+	P_V_S((char*)trans_type.data(), P_NOTE);
+	P_V(trans_pgp_cite_id, P_NOTE);
+	while(data.size() > 0){
+		if(data.size() <= sizeof(transport_i_t) + sizeof(transport_size_t)){
+			P_V(data.size(), P_NOTE);
+			print("cannot import corrupt data, assuming dirty read", P_WARN);
+		}
+		transport_i_t trans_i = 0;
+		transport_size_t trans_size = 0;
+		ID_IMPORT(trans_i);
+		ID_IMPORT(trans_size);
+		P_V(trans_i, P_NOTE);
+		P_V(trans_size, P_NOTE);
+		const bool valid_entry =
+			trans_i < ID_PTR_LENGTH;
+		if(!valid_entry){
+			print("invalid i entry, probably came from a new version", P_WARN);
+			continue;
+		}
+		const bool valid_with_data =
+			trans_size <= data.size();
+		const bool valid_with_var =
+			trans_size <= data_size[trans_i];
+		if(!(valid_with_data && valid_with_var)){
+			P_V(trans_i, P_NOTE);
+			P_V(data_size[trans_i], P_NOTE);
+			print("cannot import data with a size mis-match", P_ERR);
+		}
+		ID_IMPORT_RAW((uint8_t*)data_ptr[trans_i], trans_size);
+	}
 }
 
 void data_id_t::pgp_decrypt_backlog(){
