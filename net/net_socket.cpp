@@ -9,9 +9,7 @@ net_socket_t::net_socket_t() : id(this, __FUNCTION__){
 	// be networked
 }
 
-net_socket_t::~net_socket_t(){
-	print("THIS SHOULDN'T BE HAPPENING", P_CRIT);
-}
+net_socket_t::~net_socket_t(){}
 
 /*
   net_socket_t::socket_check: throws if the socket is null. 

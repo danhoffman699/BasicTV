@@ -231,16 +231,15 @@ void throw_on_null(void* ptr){
 	}
 }
 
+/*
+  Convert this to C++
+ */
+
 uint64_t true_rand(uint64_t min, uint64_t max){
-	std::ifstream random_fd;
-	random_fd.open("/dev/urandom");
-	if(random_fd.is_open() == false){
-		print("cannot open /dev/urandom", P_CRIT);
-	}
-	uint64_t retval = 0;
-	random_fd.get((char*)&retval, 8);
-	random_fd.close();
-	return retval;
+	std::mt19937 rng;
+	rng.seed(std::random_device()());
+	std::uniform_int_distribution<std::mt19937::result_type> dist6(min, max);
+	return dist6(rng);
 }
 uint64_t flip_bit_section(uint8_t begin, uint8_t end){
 	if(unlikely(end == begin)){
@@ -269,4 +268,11 @@ void prefetch_range(void *addr, uint32_t range){
 	for(;addr_ < end_;addr_ += PREFETCH_STRIDE){
 		prefetch(addr_, 0, 0);
 	}
+}
+
+std::string fix_to_length(std::string string, uint64_t size){
+	if(string.size() < size){
+		string += std::string(size-string.size(), ' ');
+	}
+	return string;
 }

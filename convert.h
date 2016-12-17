@@ -62,8 +62,10 @@ namespace convert{
 	namespace nbo{
 		std::vector<uint8_t> to(std::vector<uint8_t>);
 		std::vector<uint8_t> to(std::string);
+		void to(uint8_t *, uint64_t);
 		std::vector<uint8_t> from(std::vector<uint8_t>);
 		std::vector<uint8_t> from(std::string);
+		void from(uint8_t *, uint64_t);
 	}
 	namespace array{
 		namespace type{

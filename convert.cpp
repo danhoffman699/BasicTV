@@ -2,61 +2,72 @@
 #include "util.h"
 #include "id/id.h"
 
-std::vector<uint8_t> convert::nbo::to(std::vector<uint8_t> data){
+// no reason why there can't just be convert::nbo::flip with all
+// of the different data types
+
+/*
+  Instead of always doing things in 8-bit blocks, try and create
+  larger blocks of data (16, 32, or 64), but that isn't a concern
+  now.
+ */
+
+void convert::nbo::to(uint8_t *data, uint64_t size){
 #ifndef __ORDER_BIG_ENDIAN__
-	const bool odd = !!(data.size() & 1);
-	for(uint64_t i = 0;i < data.size()/2;i++){
+	switch(size){
+	case 1:
+		NBO_8(data);
+		return;
+	case 2:
+		NBO_16(data);
+		return;
+	case 4:
+		NBO_32(data);
+		return;
+	case 8:
+		NBO_64(data);
+		return;
+	}
+	const bool odd = !!(size & 1);
+	for(uint64_t i = 0;i < size/2;i++){
 		const uint64_t first = i;
-		const uint64_t second = data.size()-i;
+		const uint64_t second = size-i;
 		const uint8_t first_data = data[first];
 		data[first] = NBO_8(second);
 		data[second] = NBO_8(first_data);
 	}
-	if(odd){
-		data[(data.size()/2)+1] = NBO_8(data[(data.size()/2)+1]);
+	if(unlikely(odd)){
+		data[(size/2)+1] = NBO_8(data[(size/2)+1]);
 	}
 #endif
+}
+
+void convert::nbo::from(uint8_t *data, uint64_t size){
+	to(data, size);
+}
+
+std::vector<uint8_t> convert::nbo::to(std::vector<uint8_t> data){
+	to(data.data(), data.size());
+	return data;
+}
+
+std::vector<uint8_t> convert::nbo::from(std::vector<uint8_t> data){
+	to(data.data(), data.size());
 	return data;
 }
 
 std::vector<uint8_t> convert::nbo::to(std::string data){
-	std::vector<uint8_t> retval;
-	for(uint64_t i = 0;i < data.size();i++){
-		retval.push_back(data[i]);
-	}
-#ifndef __ORDER_BIG_ENDIAN__
-	retval = convert::nbo::to(retval);
-#endif
-	return retval;
-}
-
-std::vector<uint8_t> convert::nbo::from(std::vector<uint8_t> data){
-#ifndef __ORDER_BIG_ENDIAN__
-	const bool odd = !!(data.size() & 1);
-	for(uint64_t i = 0;i < data.size()/2;i++){
-		const uint64_t first = i;
-		const uint64_t second = data.size()-i;
-		const uint8_t first_data = data[first];
-		data[first] = NBO_TO_NATIVE_8(second);
-		data[second] = NBO_TO_NATIVE_8(first_data);
-	}
-	if(odd){
-		data[(data.size()/2)+1] = NBO_TO_NATIVE_8(data[(data.size()/2)+1]);
-	}
-#endif
-	return data;
+	return to(std::vector<uint8_t>(
+			  data.begin(),
+			  data.end()));
 }
 
 std::vector<uint8_t> convert::nbo::from(std::string data){
-	std::vector<uint8_t> retval;
-	for(uint64_t i = 0;i < data.size();i++){
-		retval.push_back(data[i]);
-	}
-#ifndef __ORDER_BIG_ENDIAN__
-	retval = convert::nbo::from(retval);
-#endif
-	return retval;
+	return to(std::vector<uint8_t>(
+			  data.begin(),
+			  data.end()));
 }
+
+// might make more sense to have these functions be the native
 
 std::array<uint8_t, 32> convert::array::type::to(std::string data){
 	std::array<uint8_t, 32> retval = {{0}};
@@ -81,9 +92,12 @@ std::string convert::number::to_binary(uint64_t data){
 	std::string retval;
 	for(uint64_t i = 0;i < 64;i++){
 		if((data & 1) != 0){
-			retval += "1";
+			retval = "1" + retval;
 		}else{
-			retval += "0";
+			retval = "0" + retval;
+		}
+		if((i+1)%8 == 0){
+			retval = " " + retval;;
 		}
 		data >>= 1;
 	}
@@ -91,7 +105,19 @@ std::string convert::number::to_binary(uint64_t data){
 }
 
 std::string convert::number::to_hex(uint64_t data){
-	throw std::runtime_error("implement this later");
+	std::string retval;
+	for(uint64_t i = 0;i < 64;i+=4){
+		const uint64_t character =
+			(data >> i) & 0b1111;
+		if(character == 0){
+			retval = '0' + retval;
+		}else if(character <= 9){
+			retval = (char)(character-1+'1') + retval;
+		}else{
+			retval = (char)(character-10+'A') + retval;
+		}
+	}
+	return "0x" + retval;
 }
 
 // of course, in RGB format (fourth being the BPC, bytes per color)

@@ -19,6 +19,7 @@
 #include "net/net.h" // two seperate units (right now)
 #include "id/id_api.h"
 #include "compress.h"
+#include "convert.h"
 
 /*
   TODO:
@@ -205,18 +206,27 @@ static void test_max_tcp_sockets(){
 	}
 }
 
+static void test_id_transport_print_exp(std::vector<uint8_t> exp){
+	for(uint64_t i = 0;i < exp.size();i++){
+		print(std::to_string(i) + "\t" + std::to_string((int)(exp[i])) + "\t" + std::string(1, exp[i]), P_SPAM);
+	}
+}
+
 static void test_id_transport(){
 	// not defined behavior at all
 	data_id_t *tmp =
 		new data_id_t(nullptr, "TEST");
 	for(uint64_t i = 0;i < ID_LL_HEIGHT;i++){
 		tmp->set_next_linked_list(i, i);
+		tmp->set_prev_linked_list(i, i);
 	}
 	tmp->set_pgp_cite_id(~0L);
 	const std::vector<uint8_t> exp =
 		tmp->export_data();
+	test_id_transport_print_exp(exp);
 	for(uint64_t i = 0;i < ID_LL_HEIGHT;i++){
 		tmp->set_next_linked_list(i, 0);
+		tmp->set_prev_linked_list(i, 0);
 	}
 	tmp->import_data(exp);
 	for(uint64_t i = 0;i < ID_LL_HEIGHT;i++){
@@ -224,6 +234,31 @@ static void test_id_transport(){
 		P_V(tmp->get_next_linked_list(i), P_NOTE);
 	}
 	running  = false;
+}
+
+static void test_nbo_transport(){
+	while(true){
+		uint64_t orig_random =
+			true_rand(0, ~0L);
+		uint64_t random =
+			orig_random;
+		uint64_t mem_to_copy = true_rand(1, 7)%8;
+		P_V(mem_to_copy, P_SPAM);
+		convert::nbo::to(
+			(uint8_t*)&random,
+			mem_to_copy);
+		convert::nbo::from(
+			(uint8_t*)&random,
+			mem_to_copy);
+		if(memcmp(&orig_random, &random, mem_to_copy) == 0){
+			print("IT WORKS", P_NOTE);
+		}else{
+			P_V_B(random, P_NOTE);
+			P_V_B(orig_random, P_NOTE);
+			print("IT DOESN'T WORK", P_ERR);
+		}
+	}
+	running = false;
 }
 
 static void test(){}

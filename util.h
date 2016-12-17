@@ -114,27 +114,41 @@ uint64_t flip_bit_section(uint8_t begin, uint8_t end);
 #define CONTINUE_IF_NULL(x) if(x == nullptr){continue;}
 #define CONTINUE_IF_TRUE(x) if(x){continue;}
 
+std::string fix_to_length(std::string string, uint64_t size);
+
+// debugging and output is exempt from the 80-col rule
+
+#define P_V_LEN 80
+
+//#define P_V_PREFIX 
+
+#define P_V_QUOTE(a) (std::string)("'" + a + "'")
+
 // print var
-#define P_V(a, b) print((std::string)__PRETTY_FUNCTION__ + ":" + (std::string)#a + " == '" + std::to_string(a) + "'", b)
+#define P_V(a, b) print(fix_to_length((std::string)__PRETTY_FUNCTION__ + ":" + (std::string)#a + " == ", P_V_LEN) + "'" + std::to_string(a) + "'", b)
 // print var string
-#define P_V_S(a, b) print((std::string)__PRETTY_FUNCTION__ + ":" + (std::string)#a + " == '" + a + "'", b)
+#define P_V_S(a, b) print(fix_to_length((std::string)__PRETTY_FUNCTION__ + ":" + (std::string)#a + " == ", P_V_LEN) + "'" + (a) + "'", b)
 // print var char
-#define P_V_C(a, b) print((std::string)__PRETTY_FUNCTION__ + ":" + (std::string)#a + " == '" + std::string(1, a) + "'", b)
+#define P_V_C(a, b) print(fix_to_length((std::string)__PRETTY_FUNCTION__ + ":" + (std::string)#a + " == ", P_V_LEN) + "'" + std::string(1, a) + "'", b)
 // cannot use print here
 // print var as binary
-#define P_V_B(a, b) print((std::string)__PRETTY_FUNCTION__ + ":" + (std::string)#a + " == " + convert::number::to_binary(a), b);
+#define P_V_B(a, b) print(fix_to_length((std::string)__PRETTY_FUNCTION__ + ":" + (std::string)#a + " == ", P_V_LEN) + "'" + convert::number::to_binary(a) + "'", b)
+// print var as a hex
+#define P_V_H(a, b) print(fix_to_length((std::string)__PRETTY_FUNCTION__ + ":" + (std::string)#a + " == ", P_V_LEN) + "'" +  convert::number::to_hex(a) + "'", b)
+
+#define P_V_E(a, b) std::cout << std::endl;P_V(a, b);P_V_C(a, b);P_V_B(a, b);P_V_H(a, b);std::cout << std::endl;
 
 #ifdef SPAM_OUTPUT
 #define DEBUG_OUTPUT 1
-#define P_SPAM_(a) print((std::string)a, P_SPAM);
+#define P_SPAM_(a) print((std::string)a, P_SPAM)
 #else
-#define P_SPAM_(a) ;
+#define P_SPAM_(a) 
 #endif
 
 #ifdef DEBUG_OUTPUT
-#define P_DEBUG_(a) print((std::string)a, P_DEBUG);
+#define P_DEBUG_(a) print((std::string)a, P_DEBUG)
 #else
-#define P_DEBUG_(a) ;
+#define P_DEBUG_(a) 
 #endif
 
 #define FIND_FIRST_ZERO(A, B, C) for(uint64_t A = 0; A < C;A++){if(B[A] == 0){break;}
