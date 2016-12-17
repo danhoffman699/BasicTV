@@ -61,22 +61,6 @@ extern std::vector<std::string> newline_to_vector(std::string data);
 extern uint64_t true_rand(uint64_t min, uint64_t max);
 
 #define HANG() while(true){sleep_ms(1000);}
-#define LOCK_RUN(a, b)							\
-	a.lock();							\
-	if(search_for_argv("--spam") != -1){ \
-		std::cout << "[SPAM] " << #a << " lock locked for " #b << std::endl; \
-	}								\
-	try{								\
-		b;							\
-	}catch(std::exception e){					\
-		std::cerr << "Caught " << e.what() << " in LOCK_RUN" << std::endl; \
-		a.unlock();						\
-		throw e;						\
-	}								\
-	a.unlock();							\
-	if(search_for_argv("--spam") != -1){ \
-		std::cout << "[SPAM] " << #a << " lock unlocked" << std::endl; \
-	}
 
 #define PRINT(a, b) print(a, b, __PRETTY_FUNCTION__);
 

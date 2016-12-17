@@ -160,22 +160,17 @@ std::vector<uint8_t> data_id_t::export_data(){
 	ID_EXPORT(id);
 	ID_EXPORT(type);
 	ID_EXPORT(pgp_cite_id);
-	P_V_E(id, P_DEBUG);
-	P_V_S((char*)type.data(), P_DEBUG);
-	P_V_E(pgp_cite_id, P_DEBUG);
-	print("retval initial size is " + std::to_string(retval.size()), P_NOTE);
+	transport_i_t trans_i = 0;
+	transport_size_t trans_size = 0;
 	for(uint64_t i = 0;i < ID_PTR_LENGTH;i++){
 		if(data_ptr[i] == nullptr){
 			continue; // should it just break?
 		}
-		transport_i_t trans_i = (transport_i_t)i;
-		transport_size_t trans_size = (transport_size_t)data_size[i];
+		trans_i = i;
+		trans_size = data_size[i];
 		ID_EXPORT(trans_i);
 		ID_EXPORT(trans_size);
-		P_V_E(trans_i, P_DEBUG);
-		P_V_E(trans_size, P_DEBUG);
 		id_export_raw((uint8_t*)data_ptr[i], trans_size, &retval);
-		print("pushing back data entry " + std::to_string(trans_i) + " of size " + std::to_string(trans_size), P_NOTE);
 	}
 	P_V(retval.size(), P_NOTE);
 	return retval;
@@ -189,7 +184,6 @@ std::vector<uint8_t> data_id_t::export_data(){
 // make this static
 
 static void id_import_raw(uint8_t* var, uint64_t size, std::vector<uint8_t> *vector){
-	P_V(size, P_SPAM);
 	memcpy(var, vector->data(), size);
 	vector->erase(vector->begin(), vector->begin()+size);
 	convert::nbo::from((uint8_t*)var, size);
@@ -204,28 +198,22 @@ void data_id_t::import_data(std::vector<uint8_t> data){
 	ID_IMPORT(trans_id);
 	ID_IMPORT(trans_type);
 	ID_IMPORT(trans_pgp_cite_id);
-	P_V_E(trans_id, P_DEBUG);
-	P_V_S((char*)trans_type.data(), P_DEBUG);
-	P_V_E(trans_pgp_cite_id, P_DEBUG);
+	transport_i_t trans_i = 0;
+	transport_size_t trans_size = 0;
 	while(data.size() > sizeof(transport_i_t) + sizeof(transport_size_t)){
-		transport_i_t trans_i = 0;
-		transport_size_t trans_size = 0;
+		// pretty much guaranteed to work
 		ID_IMPORT(trans_i);
 		ID_IMPORT(trans_size);
-		P_V_E(trans_i, P_DEBUG);
-		P_V_E(trans_size, P_DEBUG);
 		const bool valid_entry =
 			trans_i < ID_PTR_LENGTH;
-		if(!valid_entry){
+		if(unlikely(!valid_entry)){
 			print("invalid i entry, probably came from a new version", P_WARN);
 			continue;
 		}
-		if(trans_size > data.size()){
+		if(unlikely(trans_size > data.size())){
 			print("fetched size is greater than working data", P_ERR);
-		}else if(trans_size > data_size[trans_i]){
+		}else if(unlikely(trans_size > data_size[trans_i])){
 			print("fetched size is greater than the local version", P_ERR);
-		}else{
-			print("data checks out, can import", P_NOTE);
 		}
 		id_import_raw((uint8_t*)data_ptr[trans_i], trans_size, &data);
 	}
