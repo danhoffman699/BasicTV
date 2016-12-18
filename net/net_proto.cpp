@@ -13,48 +13,31 @@
 
 static uint64_t incoming_id = 0;
 
-net_peer_t::net_peer_t() : id(this, __FUNCTION__){
-	id.add_data(&(ip[0]), NET_IP_MAX_SIZE);
-	id.add_data(&(port), sizeof(port));
-	id.add_data(&(bitcoin_wallet[0]), BITCOIN_WALLET_LENGTH);
+#define WRITE_DATA_META(data) retval.insert(retval.end(), &data, &data+sizeof(data))
+
+static std::vector<uint8_t> net_proto_write_packet_metadata(
+	net_proto_standard_size_t data_size,
+	net_proto_standard_ver_t ver_major,
+	net_proto_standard_ver_t ver_minor,
+	net_proto_standard_ver_t ver_patch,
+	net_proto_standard_macros_t compression_macros,
+	net_proto_standard_macros_t other_macros,
+	net_proto_standard_unused_t unused){
+	std::vector<uint8_t> retval;
+	// payload of the entire structure (not counting any metadata)
+	WRITE_DATA_META(data_size);
+	// version data is optional, omitted with 0.0.0 (or anything)
+	WRITE_DATA_META(ver_major);
+	WRITE_DATA_META(ver_minor);
+	WRITE_DATA_META(ver_patch);
+	// no current use for the following
+	WRITE_DATA_META(other_macros);
+	WRITE_DATA_META(unused);
+	return retval;
 }
 
-net_peer_t::~net_peer_t(){
-}
 
-void net_peer_t::set_ip_addr(IPaddress ip_addr_){
-	const char *ip_str = SDLNet_ResolveIP(&ip_addr_);
-	memcpy(&(ip[0]), ip_str, strlen(ip_str));
-	port = ip_addr_.port;
-}
-
-void net_peer_t::add_socket_id(uint64_t socket_){
-	for(uint64_t i = 0;i < NET_PROTO_MAX_SOCKET_PER_PEER;i++){
-		if(socket[i] == 0){
-			socket[i] = socket_;
-			break;
-		}
-	}
-}
-
-uint64_t net_peer_t::get_socket_id(uint32_t entry_){
-	if(likely(entry_ < NET_PROTO_MAX_SOCKET_PER_PEER)){
-		return socket[entry_];
-	}else{
-		return 0;
-	}
-}
-
-void net_peer_t::del_socket_id(uint64_t socket_){
-	for(uint64_t i = 0;i < NET_PROTO_MAX_SOCKET_PER_PEER;i++){
-		if(socket[i] == socket_){
-			socket[i] = 0;
-			// not guaranteed to only be in here once
-		}
-	}
-}
-
-#define READ_DATA_META(ptr) \
+#define READ_DATA_META(ptr)						\
 	if(ptr != nullptr){						\
 		if(offset + sizeof(*ptr) > data_length){		\
 			print("packet metadata too large", P_ERR);	\
@@ -63,30 +46,24 @@ void net_peer_t::del_socket_id(uint64_t socket_){
 		}							\
 	}								\
 	offset += sizeof(*ptr);						\
-	
 
 static void net_proto_read_packet_metadata(uint8_t *data,
 					   uint32_t data_length, // input data
-					   uint32_t *data_size, // payload data
-					   uint8_t *ver_major,
-					   uint8_t *ver_minor,
-					   uint8_t *ver_patch,
-					   uint8_t *compression_macros,
-					   uint8_t *other_macros,
-					   uint32_t *unused){
-	uint8_t offset = 0;
+					   net_proto_standard_size_t *data_size, // payload data
+					   net_proto_standard_ver_t *ver_major,
+					   net_proto_standard_ver_t *ver_minor,
+					   net_proto_standard_ver_t *ver_patch,
+					   net_proto_standard_macros_t *other_macros,
+					   net_proto_standard_unused_t *unused){
+	uint64_t offset = 0;
 	READ_DATA_META(data_size);
 	READ_DATA_META(ver_major);
 	READ_DATA_META(ver_minor);
 	READ_DATA_META(ver_patch);
-	READ_DATA_META(compression_macros);
 	READ_DATA_META(other_macros);
 	READ_DATA_META(unused);
 }
 
-/*
-  Facilitates incoming connections
- */
 
 static void net_proto_loop_accept_conn(net_socket_t *incoming_socket){
 	TCPsocket tmp_tcp_socket = SDLNet_TCP_Accept(incoming_socket->get_tcp_socket());
@@ -99,12 +76,7 @@ static void net_proto_loop_accept_conn(net_socket_t *incoming_socket){
 	}
 }
 
-/*
-  Compiles a list of all net_socket_t's and checks all of them for data. Reads
-  one byte at a time and just outputs it to the screen. Isn't meant to be more
-  than a test for net_socket_t
- */
-
+// reads from all net_socket_t, for testing only
 static void net_proto_loop_dummy_read(){
 	std::vector<uint64_t> all_sockets =
 		id_api::cache::get("net_socket_t");
@@ -123,53 +95,23 @@ static void net_proto_loop_dummy_read(){
 			print("detected activity on a socket", P_SPAM);
 			std::vector<uint8_t> incoming_data;
 			while((incoming_data = socket_->recv(1, NET_SOCKET_RECV_NO_HANG)).size() != 0){
-				print(std::to_string((int)incoming_data[0]), P_NOTE);
-				sleep_ms(1000);
+				P_V_E((uint64_t)incoming_data[0], P_NOTE);
 			}
 		}
 	}
 }
 
 /*
-  This find all data that a socket's internal buffer can reference. This means
-  that, because of the already-read socket buffer, it can consistently
-  reference back to previous bits of data to read them in. If a piece of
-  data has not been fully received yet, then wait until the entire string
-  is received, and the data safely reaches the internal cache (assuming the
-  native type, std::array, can handle it). Either the internal cache needs to be
-  adjusted (not a good idea for multiple Tor sockets), or there needs to be a 
-  defined maximum for a size of an individual struct tx blocks.
+  If the current position is the start of metadata and the entire segment has
+  been read, then read all of the information, append it to the vector, and
+  repeat this process.
 
-  If there is an 8MB cache (not entirely unreasonable), and assuming we stick to
-  a maximum of 16 simultaneous connections to a peer, and we are fetching all
-  of the information from one peer ("live", or pretty close to it), then the
-  memory footprint just for the networking is 128MB. 
+  If the current position is the start of metadata and the entire segment has
+  not been read, then return nothing (hanging is bad behavior).
 
-  The 8MB is just a theoretical maximum, as there is nothing that requires that
-  memory to be allocated 100% (but that's how it is implemented now).
-
-  Of course, having 16 sockets open to one client is insane unless you are
-  using the Tor network. Assuming that most people don't opt for that option, 
-  then the memory footprint is defined more by the optimal number of nodes.
-
-  Everybody should have as many indexed nodes as possible, and there is no
-  serious overhead from just having the net_peer_t data locally and creating
-  a connection when information is requested. The problems come when you 
-  try to have a TCP socket for all of that data.
-
-  net_socket_t can exist without needing an actual socket. When data needs to
-  be sent, and there is no socket available to do that, then re-create the 
-  socket with the information needed and drop the old_buffer data. This is
-  great, because most home routers can't handle large amounts of concurrent
-  connections.
-
-  The maximum on DD-WRT's Web Interface is 4096, but kernel nitpicking can
-  make this go above 655360 (good luck finding a router for that). I doubt
-  concrete information can be gathered from any official documentation for
-  non-enterprise grade gear. 
-
-  tl;dr: Max number of concurrent TCP connections should be in the settings.cfg file,
-  and only touched by the truly dedicated.
+  If the current position is not the start of metadata, then read back until 
+  metadata has been found, and apply the logic of the first or second 
+  paragraph. If no metadata is found, return nothing.
  */
 
 std::vector<std::vector<uint8_t> > net_proto_get_struct_segments(net_socket_t *socket){
@@ -177,31 +119,28 @@ std::vector<std::vector<uint8_t> > net_proto_get_struct_segments(net_socket_t *s
 }
 
 static void net_proto_loop_read_all_valid_data(net_socket_t *socket){
-	// if(unlikely(socket == nullptr)){
-	// 	return;
-	// 	// should never happen, already check in the parent
-	// }
-	// std::vector<std::vector<uint8_t> > struct_segments =
-	// 	net_proto_get_struct_segments(socket);
-	// for(uint64_t i = 0;i < struct_segments.size();i++){
-	// 	uint32_t data_size = 0;
-	// 	// don't care about the versions
-	// 	uint8_t compression_macros = 0;
-	// 	uint8_t other_macros = 0;
-	// 	// don't care about the unused
-	// 	net_proto_read_packet_metadata(
-	// 		&all_current_data[i],
-	// 		all_current_data.size()-i,
-	// 		&data_size,
-	// 		nullptr,
-	// 		nullptr,
-	// 		nullptr,
-	// 		&compression_macros,
-	// 		&other_macros,
-	// 		nullptr);
-	// 	i += NET_PROTO_META_LENGTH;
-	// 	// chuck the generated string into the ID API
-	// }
+	throw std::runtime_error("not finished implementing");
+	if(unlikely(socket == nullptr)){
+		return;
+		// should never happen, already check in the parent
+	}
+	std::vector<std::vector<uint8_t> > struct_segments =
+		net_proto_get_struct_segments(socket);
+	for(uint64_t i = 0;i < struct_segments.size();i++){
+		net_proto_standard_size_t data_size = 0;
+		net_proto_standard_macros_t other_macros = 0;
+		net_proto_read_packet_metadata(
+			struct_segments[i].data(),
+			struct_segments[i].size(),
+			&data_size,
+			nullptr,
+			nullptr,
+			nullptr,
+			&other_macros,
+			nullptr);
+		i += NET_PROTO_META_LENGTH;
+		// chuck the generated string into the ID API
+	}
 }
 
 void net_proto_loop_handle_inbound_requests(){

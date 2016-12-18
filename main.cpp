@@ -137,6 +137,9 @@ static void test_socket(){
   However, consumer grade routers are terrible at this, so this is an
   automatic test to see how much the router can actually handle.
 
+  UPDATE: Linux's internal TCP socket limit was reached, and the following
+  source code doesn't actually test the router's capabilities.
+
   TODO: check to see if this information makes it to the router, or if
   it is just stuck locally (which makes sense, but defeats the purpose
   of the test).
@@ -261,6 +264,22 @@ static void test_nbo_transport(){
 	running = false;
 }
 
+/*
+  Just to see how it reacts
+ */
+
+static void test_break_id_transport(){
+	while(true){
+		std::vector<uint8_t> tmp;
+		for(uint64_t i = 0;i < 1024;i++){
+			tmp.push_back(true_rand(0, 255));
+		}
+		data_id_t tmp_id(nullptr, "TEST");
+		tmp_id.import_data(tmp);
+	}
+	running = false;
+}
+
 static void test(){}
 
 // TODO: define some ownership, don't actually use this
@@ -270,7 +289,8 @@ int main(int argc_, char **argv_){
 	argc = argc_;
 	argv = argv_;
 	init();
-	test_id_transport();
+	test_break_id_transport();
+	//test_id_transport();
 	//test_max_tcp_sockets();
 	//test_compressor();
 	//test_socket();

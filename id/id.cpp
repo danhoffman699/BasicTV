@@ -19,9 +19,8 @@
 #include "../tv/tv_window.h"
 
 /*
-  I'm not too concerned with threading if the entire idea
-  of the program is for it to be runnable on a Raspberry Pi
-  (single core, not the Two or Three or whatever)
+  Because of encryption and compression overheads, making this multithreadable
+  isn't a bad idea. However, implementing locks shouldn't be hard later on.
  */
 
 // when performance starts to be a problem, look into quicksorting or
@@ -71,7 +70,7 @@ void data_id_t::dereference_id(uint64_t id_){
 		}
 	}
 }
-	
+
 void data_id_t::set_id(uint64_t id_){
 	// shouldn't run at all, at least not now
 	exit(0);
@@ -208,12 +207,17 @@ void data_id_t::import_data(std::vector<uint8_t> data){
 			trans_i < ID_PTR_LENGTH;
 		if(unlikely(!valid_entry)){
 			print("invalid i entry, probably came from a new version", P_WARN);
-			continue;
+			return;
+		}else if(unlikely(data_ptr[trans_i] == nullptr)){
+			print("cannot write to nullptr entry", P_WARN);
+			return;
 		}
 		if(unlikely(trans_size > data.size())){
-			print("fetched size is greater than working data", P_ERR);
+			print("fetched size is greater than working data", P_WARN);
+			return;
 		}else if(unlikely(trans_size > data_size[trans_i])){
-			print("fetched size is greater than the local version", P_ERR);
+			print("fetched size is greater than the local version", P_WARN);
+			return;
 		}
 		id_import_raw((uint8_t*)data_ptr[trans_i], trans_size, &data);
 	}

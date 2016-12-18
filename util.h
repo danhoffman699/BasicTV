@@ -64,8 +64,6 @@ extern uint64_t true_rand(uint64_t min, uint64_t max);
 
 #define PRINT(a, b) print(a, b, __PRETTY_FUNCTION__);
 
-// pre-programmed responses, going to enforce 80-col more
-
 namespace pre_pro{
 	void unable(std::string from, std::string to, int level);
 	void exception(std::exception e, std::string for_, int level);
@@ -103,10 +101,6 @@ std::string fix_to_length(std::string string, uint64_t size);
 // debugging and output is exempt from the 80-col rule
 
 #define P_V_LEN 80
-
-//#define P_V_PREFIX 
-
-#define P_V_QUOTE(a) (std::string)("'" + a + "'")
 
 // print var
 #define P_V(a, b) print(fix_to_length((std::string)__PRETTY_FUNCTION__ + ":" + (std::string)#a + " == ", P_V_LEN) + "'" + std::to_string(a) + "'", b)
@@ -147,3 +141,4 @@ uint64_t get_time_microseconds();
 void prefetch_range(void* addr, uint32_t range);
 
 #endif
+#include "convert.h"
