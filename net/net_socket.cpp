@@ -311,3 +311,15 @@ bool net_socket_t::activity(){
 	tmp_set = nullptr;
 	return retval;
 }
+
+uint64_t net_socket_t::get_backwards_buffer_size(){
+	if(buffer_written_memory < NET_SOCKET_OLD_BUFFER_SIZE){
+		return buffer_written_memory;
+	}else{
+		return NET_SOCKET_OLD_BUFFER_SIZE;
+	}
+}
+
+uint64_t net_socket_t::get_forwards_buffer_size(){
+	return local_buffer.size();
+}
