@@ -5,7 +5,7 @@
 #include "../tv/tv_dev_video.h"
 #include "../tv/tv_frame_audio.h"
 #include "../tv/tv_frame_video.h"
-#include "../net/net_proto.h"
+#include "../net/proto/net_proto.h"
 
 static data_id_t **id_list = nullptr;
 static std::vector<std::pair<std::vector<uint64_t>, std::array<uint8_t, TYPE_LENGTH> > > type_cache;

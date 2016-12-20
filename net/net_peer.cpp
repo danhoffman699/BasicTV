@@ -1,4 +1,4 @@
-#include "net_proto.h"
+#include "proto/net_proto.h"
 #include "net_peer.h"
 
 net_peer_t::net_peer_t() : id(this, __FUNCTION__){

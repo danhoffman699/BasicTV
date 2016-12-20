@@ -1,0 +1,30 @@
+* TODO Polish networking protocol
+  - [ ] Use compression on exporting
+  - [ ] Stabilize net_socket_t code
+  - [ ] Add support for vectors (std::vector<uint8_t/uint64_t>) in data_ptr
+* TODO Multithreading
+  - [ ] Include locks on data_id_t
+  - [ ] Create thread pools (probably a dedicated API)
+    - [ ] Use a priority system for threads (networking)
+    - [ ] Have a somewhat reliable interval for funcitons
+  - [ ] Fix print function for multithread usage
+* TODO Audio support
+  - [ ] Implement ALSA support
+  - [ ] Implement Opus support
+  - [ ] Implement MP3 decoding (all planned encoding is Opus)
+* TODO Video support
+  - [ ] Fix V4L2 color
+  - [ ] Implement V4L2 frame interval
+  - [ ] Implement MP4 decoding
+* TODO Input
+  - [ ] Install IR receiver on Raspberry Pi
+  - [ ] Finish IR receiver code
+  - [ ] Formalize API for input
+  - [ ] Include some networked style control (web interface?)
+* TODO Menus
+  - [ ] Support TrueType fonts
+  - [ ] Allow for scrollable lists
+  - [ ] Tie a function or another menu with a menu entry
+  - [ ] Directly tie macro sequences to menu entries
+  - [ ] Make everything changeable from the menu (ties with previous point)
+

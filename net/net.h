@@ -28,4 +28,4 @@ public:
 #endif
 
 #include "net_socket.h"
-#include "net_proto.h"
+#include "proto/net_proto.h"

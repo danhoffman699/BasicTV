@@ -58,6 +58,8 @@
 
 #define TYPE_LENGTH 32 // standard length for C++ types
 
+typedef uint64_t id_t_; // needs a snazzier name
+
 struct data_id_t{
 private:
 	// half UUID, half RSA fingerprint (for verification)
@@ -118,6 +120,10 @@ private:
 	  the linked list system (as specified above).
 	 */
 	std::array<uint64_t, ID_LL_WIDTH*ID_LL_HEIGHT> linked_list = {{0}};
+	/*
+	  Keep all imported data. This preserves the public-private encryption
+	 */
+	std::vector<uint8_t> imported_data;
 	void init_list_all_data();
 	void init_gen_id();
 	void init_type_cache();
@@ -152,5 +158,6 @@ public:
 	// misc.
 	void pgp_decrypt_backlog();
 	void dereference_id(uint64_t id_);
+	bool is_owner();
 };
 #endif

@@ -9,7 +9,7 @@
 // just for all of the data types
 #include "../net/net.h"
 #include "../net/net_socket.h"
-#include "../net/net_proto.h"
+#include "../net/proto/net_proto.h"
 #include "../tv/tv.h"
 #include "../tv/tv_frame_standard.h"
 #include "../tv/tv_frame_video.h"
@@ -156,22 +156,32 @@ typedef uint32_t transport_size_t;
 
 std::vector<uint8_t> data_id_t::export_data(){
 	std::vector<uint8_t> retval;
-	ID_EXPORT(id);
-	ID_EXPORT(type);
-	ID_EXPORT(pgp_cite_id);
-	transport_i_t trans_i = 0;
-	transport_size_t trans_size = 0;
-	for(uint64_t i = 0;i < ID_PTR_LENGTH;i++){
-		if(data_ptr[i] == nullptr){
-			continue; // should it just break?
+	if(is_owner()){
+		ID_EXPORT(id);
+		ID_EXPORT(type);
+		ID_EXPORT(pgp_cite_id);
+		transport_i_t trans_i = 0;
+		transport_size_t trans_size = 0;
+		for(uint64_t i = 0;i < ID_PTR_LENGTH;i++){
+			if(data_ptr[i] == nullptr){
+				continue; // should it just break?
+			}
+			trans_i = i;
+			trans_size = data_size[i];
+			ID_EXPORT(trans_i);
+			ID_EXPORT(trans_size);
+			id_export_raw((uint8_t*)data_ptr[i], trans_size, &retval);
 		}
-		trans_i = i;
-		trans_size = data_size[i];
-		ID_EXPORT(trans_i);
-		ID_EXPORT(trans_size);
-		id_export_raw((uint8_t*)data_ptr[i], trans_size, &retval);
+		P_V(retval.size(), P_NOTE);
+		/*
+		  DATA COMPRESSION SHOULD GO RIGHT HERE
+		 */
+	}else{
+		/*
+		  can't compress already encrypted data
+		 */
+		retval = imported_data;
 	}
-	P_V(retval.size(), P_NOTE);
 	return retval;
 }
 
@@ -221,6 +231,7 @@ void data_id_t::import_data(std::vector<uint8_t> data){
 		}
 		id_import_raw((uint8_t*)data_ptr[trans_i], trans_size, &data);
 	}
+	imported_data = data;
 }
 
 void data_id_t::pgp_decrypt_backlog(){
@@ -247,4 +258,15 @@ void data_id_t::set_prev_linked_list(uint64_t height, uint64_t data){
 
 void data_id_t::set_next_linked_list(uint64_t height, uint64_t data){
 	linked_list.at((height*2)+1) = data;
+}
+
+/*
+  THIS IS OBVIOUSLY NOT CORRECT, however it should work for tests. I need
+  to get a legit public-private key system down before I can declare
+  ownership (I can just list private key structus and compare them, but
+  that itself would need more definition).
+ */
+
+bool data_id_t::is_owner(){
+	return true;
 }

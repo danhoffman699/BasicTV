@@ -15,7 +15,7 @@
 #include "tv/tv_channel.h"
 #include "input/input.h"
 #include "input/input_ir.h"
-#include "net/net_proto.h"
+#include "net/proto/net_proto.h"
 #include "net/net.h" // two seperate units (right now)
 #include "id/id_api.h"
 #include "compress.h"
@@ -60,7 +60,7 @@ static void init(){
 	*/
 	// default port for ID networking
 	settings::set_setting("network_port", "58486");
-	// enable socks
+	// disable socks
 	settings::set_setting("socks_enable", "false");
 	// if SOCKS cannot be set up properly, then terminate
 	settings::set_setting("socks_strict", "true");
@@ -169,10 +169,10 @@ static void test_socket_array(std::vector<std::pair<uint64_t, uint64_t> > socket
 }
 
 /*
-  This causes SDL2_net to crash when ulimit is changed. You still get a very
-  sane number of ~500 before that happens, so I'm fine with this staying
-  like it is.
- */
+  This works up until 537 (stack smashing), and I can't find the problem. If
+  you are stuck at a lower number, make sure you set the file descriptor limit
+  high enough (ulimit -n 65536 works for me).
+*/
 
 static void test_max_tcp_sockets(){
 	print("Local IP address:", P_NOTE);
@@ -289,9 +289,9 @@ int main(int argc_, char **argv_){
 	argc = argc_;
 	argv = argv_;
 	init();
-	test_break_id_transport();
+	//test_break_id_transport();
 	//test_id_transport();
-	//test_max_tcp_sockets();
+	test_max_tcp_sockets();
 	//test_compressor();
 	//test_socket();
 	while(running){
