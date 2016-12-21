@@ -8,7 +8,6 @@ std::vector<uint8_t> net_proto_write_packet_metadata(
 	net_proto_standard_ver_t ver_major,
 	net_proto_standard_ver_t ver_minor,
 	net_proto_standard_ver_t ver_patch,
-	net_proto_standard_macros_t compression_macros,
 	net_proto_standard_macros_t other_macros,
 	net_proto_standard_unused_t unused){
 	std::vector<uint8_t> retval = {NET_PROTO_DEV_CTRL_1};

@@ -1,5 +1,6 @@
 #include "net_proto_outbound.h"
-#include "net_proto_meta.h" // apply function
+#include "net_proto_dev_ctrl.h" // apply dev_ctrl function
+#include "net_proto_meta.h" // apply meta function
 
 void net_proto_loop_handle_outbound_requests(){
 	std::vector<uint64_t> all_requests =
@@ -46,6 +47,20 @@ void net_proto_loop_handle_outbound_requests(){
 			  arbitrarially large chunks of data, it would make
 			  sense to do it that way.
 			 */
+			all_export =
+				net_proto_apply_dev_ctrl(
+					all_export);
+			std::vector<uint8_t> metadata =
+				net_proto_write_packet_metadata(
+					all_export.size(),
+					VERSION_MAJOR,
+					VERSION_MINOR,
+					VERSION_REVISION,
+					0,
+					0); // TODO: make version optional
+			all_export.insert(all_export.begin(),
+					  metadata.begin(),
+					  metadata.end());
 			socket->send(all_export);
 		} // other ones need to be taken care of in net_proto_import
 	}
