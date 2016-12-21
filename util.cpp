@@ -203,7 +203,6 @@ uint64_t array_func::add(void* array,
 			 void *data,
 			 uint64_t data_size){
 	uint8_t *byte_array = (uint8_t*)array;
-	uint64_t byte_array_size = array_size*data_size;
 	// assume the type referenced in data_size is the same type used
 	// in the array
 	for(int64_t i = array_size*data_size;i >= 0;i -= data_size){
@@ -251,7 +250,7 @@ uint64_t flip_bit_section(uint8_t begin, uint8_t end){
 		  falsely report the mask as one
 		 */
 	}
-	return ((((1 << end-begin-1)-1) << 1) | 1) << begin;
+	return ((((1 << ((end-begin-1)-1))) << 1) | 1) << begin;
 }
 
 uint64_t get_time_microseconds(){

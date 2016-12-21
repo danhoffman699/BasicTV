@@ -33,17 +33,6 @@ static bool valid_bpc(uint8_t bpc){
 	return bpc == 8;
 }
 
-static bool valid_masks(uint64_t red,
-			uint64_t green,
-			uint64_t blue,
-			uint64_t alpha){
-	P_V_B(red, P_SPAM);
-	P_V_B(green, P_SPAM);
-	P_V_B(blue, P_SPAM);
-	P_V_B(alpha, P_SPAM);
-	return true;
-}
-
 static void tv_frame_color_sanity_check(std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> color){
 	const uint64_t bpc = std::get<3>(color);
 	if(unlikely(std::get<0>(color) > MASK(bpc) ||

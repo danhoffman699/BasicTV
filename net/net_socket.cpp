@@ -135,10 +135,10 @@ std::vector<uint8_t> net_socket_t::recv(int64_t byte_count, uint64_t flags){
 			}
 			local_buffer.push_back(tmp_data);
 		}
-	}while((local_buffer.size() < byte_count) && hang);
+	}while((local_buffer.size() < (uint64_t)byte_count) && hang);
 	std::vector<uint8_t> retval;
 	if(byte_count > 0){
-		if(local_buffer.size() >= byte_count){
+		if(local_buffer.size() >= (uint64_t)byte_count){
 			auto start = local_buffer.begin();
 			auto end = local_buffer.begin()+byte_count;
 			retval = std::vector<uint8_t>(start, end);

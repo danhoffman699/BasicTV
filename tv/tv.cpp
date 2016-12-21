@@ -68,10 +68,10 @@ static SDL_Surface* tv_render_frame_to_surface_slow_copy(tv_frame_video_t *frame
 	if(unlikely(surface == nullptr)){
 		print((std::string)"surface is a nullptr:" + SDL_GetError(), P_ERR);
 	}
-	for(uint32_t x = 0;x < surface->w;x++){
+	for(int32_t x = 0;x < surface->w;x++){
 		const uint32_t x_offset =
 			x * surface->format->BytesPerPixel;
-		for(uint32_t y = 0;y < surface->h;y++){
+		for(int32_t y = 0;y < surface->h;y++){
 			const uint32_t y_offset = y * surface->pitch;
 			uint8_t *pixel_byte =
 				&((uint8_t*)surface->pixels)[x_offset+y_offset];
@@ -359,11 +359,9 @@ static void tv_init_test_webcam(){
 	const uint64_t refresh_rate = (1000.0*1000.0)/dev->get_frame_interval_micro_s(); // just an estimate
 	P_V(refresh_rate, P_SPAM);
 	const uint64_t time_start = get_time_microseconds();
-	const uint64_t offset = 20;
 	for(uint64_t i = 0;i < 60;i++){
 		tv_frame_video_t *video =
 			PTR_DATA(dev->update(), tv_frame_video_t);
-		uint64_t time_new = get_time_microseconds();
 		video->set_standard(time_start+(i*(1000*1000/refresh_rate))+(1000*1000*20),
 				    (1000000/refresh_rate),
 				    i);

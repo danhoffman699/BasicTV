@@ -65,7 +65,7 @@ void settings::set_settings(std::string settings_file){
 		settings_vector.push_back(
 			std::make_pair(setting, var));
 	}
-	for(uint32_t i = 1;i < argc-1;i++){
+	for(int32_t i = 1;i < argc-1;i++){
 		const uint32_t argv_len =
 			strlen(argv[i]);
 		if(argv_len > 2 && argv[i][0] == '-' && argv[i][1] == '-'){

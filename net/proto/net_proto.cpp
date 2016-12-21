@@ -3,21 +3,16 @@
 #include "../../lock.h"
 #include "../../settings.h"
 #include "../net.h"
-#include "net_proto.h"
 #include "../net_socket.h"
 #include "../../id/id_api.h"
 
+#include "net_proto.h"
 #include "net_proto_dev_ctrl.h"
 #include "net_proto_inbound.h"
 #include "net_proto_outbound.h"
 #include "net_proto_meta.h"
 
 static uint64_t incoming_id = 0;
-
-void net_proto_loop_handle_all_requests(){
-	net_proto_loop_handle_inbound_requests();
-	net_proto_loop_handle_outbound_requests();
-}
 
 void net_proto_loop(){
 	net_socket_t *incoming_socket =
@@ -26,9 +21,8 @@ void net_proto_loop(){
 		print("incoming_socket == nullptr", P_ERR);
 	}
 	net_proto_loop_accept_conn(incoming_socket);
-	net_proto_loop_dummy_read();
-	// net_proto_loop_handle_inbound_requests();
-	// net_proto_loop_handle_outbound_requests();
+	net_proto_loop_handle_inbound_requests();
+	net_proto_loop_handle_outbound_requests();
 }
 
 void net_proto_init(){
@@ -49,7 +43,11 @@ void net_proto_init(){
 				throw std::runtime_error("");
 			}
 			incoming->enable_socks(
-				std::make_pair(socks_proxy_ip, socks_proxy_port), std::make_pair("", tmp_port));
+				std::make_pair(socks_proxy_ip,
+					       socks_proxy_port),
+				std::make_pair("",
+					       tmp_port)
+				);
 		}catch(std::exception e){
 			uint32_t level = P_WARN;
 			if(settings::get_setting("socks_strict") == "true"){

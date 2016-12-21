@@ -7,7 +7,7 @@ tv_dev_t::~tv_dev_t(){
 }
 
 void tv_dev_t::list_virtual_data(data_id_t *id){
-	// no need to include it
+	id->add_data(&last_frame_id, sizeof(last_frame_id));
 }
 
 void tv_dev_t::open_dev(std::string filename_){

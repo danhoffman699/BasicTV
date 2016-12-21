@@ -40,3 +40,22 @@ bool tv_frame_standard_t::valid(uint64_t timestamp_micro_s){
 				    start_time_micro_s+(uint64_t)ttl_micro_s);
 	return retval;
 }
+
+void tv_frame_standard_t::add_dep(id_t_ id_){
+	for(uint64_t i = 0;i < TV_FRAME_DEP_SIZE;i++){
+		if(dep[i] == 0){
+			dep[i] = id_;
+			return;
+		}
+	}
+	print("unable to append data to dependencies list", P_ERR);
+}
+
+void tv_frame_standard_t::del_dep(id_t_ id_){
+	for(uint64_t i = 0;i < TV_FRAME_DEP_SIZE;i++){
+		if(dep[i] == id_){
+			dep[i] = 0;
+			return;
+		}
+	}
+}

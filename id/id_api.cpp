@@ -69,7 +69,7 @@ void *id_api::array::ptr_data(uint64_t id,
 	return ptr_data(id, convert::array::type::from(type));
 }
 
-void id_api::array::add(uint64_t id, data_id_t *ptr){
+void id_api::array::add(data_id_t *ptr){
 	check_and_allocate_list();
 	for(uint64_t i = 0;i < ID_ARRAY_SIZE;i++){
 		if(id_list[i] == nullptr){

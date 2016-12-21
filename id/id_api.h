@@ -23,8 +23,7 @@ namespace id_api{
 				  std::string type);
 		void *ptr_data(uint64_t id,
 				  std::array<uint8_t, TYPE_LENGTH> type);
-		void add(uint64_t id,
-			 data_id_t *ptr);
+		void add(data_id_t *ptr);
 		void del(uint64_t id); // no type
 		void add_data(std::vector<uint8_t> data_);
 		std::vector<uint64_t> sort_by_pgp_pubkey(std::vector<uint64_t> tmp);

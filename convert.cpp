@@ -12,19 +12,19 @@
  */
 
 void convert::nbo::to(uint8_t *data, uint64_t size){
-#ifndef __ORDER_BIG_ENDIAN__
+#ifdef __ORDER_LITTLE_ENDIAN__
 	switch(size){
 	case 1:
-		NBO_8(data);
+		NBO_8(*data);
 		return;
 	case 2:
-		NBO_16(data);
+		NBO_16(*data);
 		return;
 	case 4:
-		NBO_32(data);
+		NBO_32(*data);
 		return;
 	case 8:
-		NBO_64(data);
+		NBO_64(*data);
 		return;
 	}
 	const bool odd = !!(size & 1);
@@ -108,7 +108,7 @@ std::string convert::number::to_hex(uint64_t data){
 	std::string retval;
 	for(uint64_t i = 0;i < 64;i+=4){
 		const uint64_t character =
-			(data >> i) & 0b1111;
+			(data >> i) & 0xF;
 		if(character == 0){
 			retval = '0' + retval;
 		}else if(character <= 9){
@@ -150,7 +150,7 @@ std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> convert::color::bpc(std::tuple
 	}
 	double mul;
 	if(new_bpc > old_bpc && unlikely(new_bpc-old_bpc <= 31)){
-		mul = (uint32_t)((uint32_t)1 << new_bpc-old_bpc);
+		mul = (uint32_t)((uint32_t)1 << (new_bpc-old_bpc));
 	}else{
 		mul = pow(2, new_bpc-old_bpc);
 	}

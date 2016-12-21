@@ -49,7 +49,7 @@ data_id_t::data_id_t(void *ptr_, std::string type_){
 	ptr = ptr_;
 	init_list_all_data();
 	init_gen_id();
-	id_api::array::add(id, this);
+	id_api::array::add(this);
 	id_api::cache::add(id, type);
 }
 

@@ -22,7 +22,7 @@ void net_proto_loop_handle_outbound_requests(){
 		}
 		// if this isn't an outbound request
 		if(request->is_local() == false){
-			std::vector<uint8_t> all_export = {{0}};
+			std::vector<uint8_t> all_export;
 			for(uint64_t i = 0;i < NET_REQUEST_MAX_LENGTH;i++){
 				data_id_t *tmp_id =
 					id_api::array::ptr_id(

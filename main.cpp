@@ -43,11 +43,12 @@ int argc = 0;
 char **argv = nullptr;
 bool running = true;
 
-std::array<uint8_t, 4> version = {
+std::array<uint8_t, 4> version = {{
 	VERSION_MAJOR,
 	VERSION_MINOR,
 	VERSION_REVISION,
-	NETWORK_MAJOR};
+	NETWORK_MAJOR
+}};
 
 /*
   Since this is so early in development, I'm not worried about this
@@ -239,6 +240,12 @@ static void test_id_transport(){
 	running  = false;
 }
 
+/*
+  Tests network byte order conversions. I have no doubt it works fine, but
+  this is also here for benchmarking different approaches to arbitrarially
+  large strings (although isn't being used for that right now)
+ */
+
 static void test_nbo_transport(){
 	while(true){
 		uint64_t orig_random =
@@ -291,7 +298,7 @@ int main(int argc_, char **argv_){
 	init();
 	//test_break_id_transport();
 	//test_id_transport();
-	test_max_tcp_sockets();
+	//test_max_tcp_sockets();
 	//test_compressor();
 	//test_socket();
 	while(running){

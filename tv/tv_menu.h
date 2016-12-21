@@ -14,12 +14,14 @@
 struct tv_menu_entry_t{
 private:
 	std::string text;
-	uint64_t orientation = TV_MENU_ORIENT_LEFT;
+	uint8_t orientation = TV_MENU_ORIENT_LEFT;
 	void (*function)(void) = nullptr;
 public:
 	data_id_t id;
 	tv_menu_entry_t();
 	~tv_menu_entry_t();
+	uint8_t get_orientation();
+	void set_orientation(uint8_t orientation_);
 	void set_text(std::string text_);
 	std::string get_text();
 	void set_function(void (*function_)(void));
