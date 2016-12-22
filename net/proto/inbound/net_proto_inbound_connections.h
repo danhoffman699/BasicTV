@@ -1,0 +1,4 @@
+#ifndef NET_PROTO_INBOUND_CONNECTIONS_H
+#define NET_PROTO_INBOUND_CONNECTIONS_H
+extern void net_proto_loop_accept_all_connections(net_socket_t *incoming_socket);
+#endif

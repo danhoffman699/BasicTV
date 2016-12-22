@@ -17,14 +17,17 @@ net: id
 input: id
 	$(CXX) $(CXXFLAGS) -c input/input_unified.cpp
 
-all: tv net input
-	$(CXX) $(CXXFLAGS) net_unified.o tv_unified.o id_unified.o *.cpp $(LDFLAGS) 
+encrypt: id
+	$(CXX) $(CXXFLAGS) -c encrypt/encrypt_unified.cpp
 
-debug: tv net input
-	$(CXX) $(CXXFLAGS) -DDEBUG -O0 -g tv_unified.o net_unified.o input_unified.o id_unified.o *.cpp $(LDFLAGS) 
+all: tv net input encrypt
+	$(CXX) $(CXXFLAGS) net_unified.o tv_unified.o id_unified.o encrypt_unified.o *.cpp $(LDFLAGS) 
 
-fast: tv net input
-	$(CXX) $(CXXFLAGS) -Ofast -march=native tv_unified.o net_unified.o input_unified.o id_unified.o *.cpp $(LDFLAGS)
+debug: tv net input encrypt
+	$(CXX) $(CXXFLAGS) -DDEBUG -O0 -g tv_unified.o net_unified.o input_unified.o id_unified.o encrypt_unified.o *.cpp $(LDFLAGS) 
+
+fast: tv net input encrypt
+	$(CXX) $(CXXFLAGS) -Ofast -march=native tv_unified.o net_unified.o input_unified.o id_unified.o encrypt_unified.o *.cpp $(LDFLAGS)
 
 clean:
-	rm input_unified.o tv_unified.o net_unified.o id_unified.o a.out id/*~ tv/*~ *~
+	rm input_unified.o tv_unified.o net_unified.o id_unified.o encrypt_unified.o a.out id/*~ tv/*~ net/*~ net/proto/*~ encrypt/*~ *~

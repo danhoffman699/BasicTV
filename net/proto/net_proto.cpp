@@ -8,8 +8,10 @@
 
 #include "net_proto.h"
 #include "net_proto_dev_ctrl.h"
-#include "net_proto_inbound.h"
-#include "net_proto_outbound.h"
+#include "inbound/net_proto_inbound_connections.h"
+#include "inbound/net_proto_inbound_data.h"
+#include "outbound/net_proto_outbound_connections.h"
+#include "outbound/net_proto_outbound_data.h"
 #include "net_proto_meta.h"
 
 static uint64_t incoming_id = 0;
@@ -20,7 +22,9 @@ void net_proto_loop(){
 	if(incoming_socket == nullptr){
 		print("incoming_socket == nullptr", P_ERR);
 	}
-	net_proto_loop_accept_conn(incoming_socket);
+	// handle any inbound connections
+	net_proto_loop_accept_all_connections(
+		incoming_socket); // "accept" == inbound
 	net_proto_loop_handle_inbound_requests();
 	net_proto_loop_handle_outbound_requests();
 }

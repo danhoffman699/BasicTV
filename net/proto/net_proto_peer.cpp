@@ -1,5 +1,5 @@
-#include "proto/net_proto.h"
-#include "net_peer.h"
+#include "net_proto.h"
+#include "net_proto_peer.h"
 
 net_peer_t::net_peer_t() : id(this, __FUNCTION__){
 	id.add_data(&(ip[0]), NET_IP_MAX_SIZE);
@@ -10,10 +10,15 @@ net_peer_t::net_peer_t() : id(this, __FUNCTION__){
 net_peer_t::~net_peer_t(){
 }
 
-void net_peer_t::set_ip_addr(IPaddress ip_addr_){
-	const char *ip_str = SDLNet_ResolveIP(&ip_addr_);
-	memcpy(&(ip[0]), ip_str, strlen(ip_str));
-	port = ip_addr_.port;
+void net_peer_t::set_ip_addr(uint32_t ip_, uint16_t port_){
+	memset(&(ip[0]), 0, NET_IP_RAW_SIZE);
+	memcpy(&(ip[0]), &ip_, 4);
+	port = port_;
+}
+
+void net_peer_t::set_ip_addr(std::array<uint8_t, NET_IP_RAW_SIZE> ip_, uint16_t port_){
+	memcpy(&(ip[0]), &(ip_[0]), NET_IP_RAW_SIZE);
+	port = port_;
 }
 
 void net_peer_t::add_socket_id(uint64_t socket_){

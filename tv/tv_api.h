@@ -1,4 +1,5 @@
-#include "../rsa.h"
+#include "../encrypt/encrypt.h"
+#include "../encrypt/encrypt_rsa.h"
 #ifndef TV_API_H
 #define TV_API_H
 namespace tv{

@@ -67,4 +67,4 @@ public:
 };
 
 #endif
-#include "../net_peer.h"
+#include "net_proto_peer.h"

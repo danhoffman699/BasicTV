@@ -1,6 +1,8 @@
 #include "net_proto_outbound.h"
-#include "net_proto_dev_ctrl.h" // apply dev_ctrl function
-#include "net_proto_meta.h" // apply meta function
+#include "../net_proto_dev_ctrl.h" // apply dev_ctrl function
+#include "../net_proto_meta.h" // apply meta function
+
+// sends all requests out in one network socket call
 
 void net_proto_loop_handle_outbound_requests(){
 	std::vector<uint64_t> all_requests =

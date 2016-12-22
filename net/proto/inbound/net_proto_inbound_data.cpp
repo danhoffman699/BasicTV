@@ -1,6 +1,6 @@
-#include "net_proto_inbound.h"
+#include "net_proto_inbound_data.h"
 // meta has apply and unapply functions for DEV_CTRL_1
-#include "net_proto_meta.h"
+#include "../net_proto_meta.h"
 
 static std::vector<uint8_t> net_proto_read_struct_segment(uint8_t *data,
 							  uint64_t data_size){
@@ -140,22 +140,6 @@ void net_proto_loop_handle_inbound_requests(){
 	}
 }
 
-/*
-  Accepts connections from a given socket. There is no net_socket_t interface
-  for accepting connections (but it wouldn't be a bad idea), so just grab the
-  TCPsocket type from the variable and use that.
- */
-
-void net_proto_loop_accept_conn(net_socket_t *incoming_socket){
-	TCPsocket tmp_tcp_socket = SDLNet_TCP_Accept(incoming_socket->get_tcp_socket());
-	if(tmp_tcp_socket != nullptr){
-		print("added a new socket", P_NOTE);
-		net_socket_t *tmp_socket = new net_socket_t;
-		tmp_socket->set_tcp_socket(tmp_tcp_socket);
-		net_peer_t *peer = new net_peer_t;
-		peer->add_socket_id(tmp_socket->id.get_id());
-	}
-}
 
 // reads from all net_socket_t, for testing only
 void net_proto_loop_dummy_read(){
@@ -182,3 +166,8 @@ void net_proto_loop_dummy_read(){
 	}
 }
 
+// reads what we have, returns proper status depending on it
+
+void net_proto_handle_inbound_requests(){
+	
+}
