@@ -2,7 +2,9 @@
 #include "net_const.h"
 #ifndef NET_SOCKET_H
 #define NET_SOCKET_H
-#include "SDL2/SDL_net.h"
+#include "openssl/bio.h"
+#include "openssl/ssl.h"
+#include "openssl/err.h"
 
 /*
   net_socket_t: Manages network sockets. Socket is stored inside of this file. 
@@ -39,6 +41,16 @@
   that's only because I don't want packets dropping.
  */
 
+/*
+  Since all data sent over net_socket_t (not relating to the networking
+  protocol) is a struct, and they are all interpreted in the same way, then
+  add the manipulating and extracting inside of the net_socket_t, so it is more
+  easily accessible in all parts of the program (bootstrapping, namely)
+ */
+
+#define NET_SOCKET_TCP NET_PEER_TCP
+#define NET_SOCKET_UDP NET_PEER_UDP
+
 #define NET_SOCKET_OLD_BUFFER_SIZE 1024
 
 struct net_socket_t{
@@ -53,11 +65,22 @@ private:
 	// IP and ports of clients
 	std::pair<std::string, uint16_t> client_conn;
 	std::pair<std::string, uint16_t> socks_conn;
-	// raw socket for SDL
-	TCPsocket socket = nullptr;
+	// raw sockets and SSL data
+	BIO *socket = nullptr;
+	SSL_CTX *ctx = nullptr;
+	SSL *ssl = nullptr;
 	// SOCKS user ID
 	std::array<uint8_t, 5> socks_user_id_str = {{0}};
+	// chunks of data sent over the network as they were sent by the
+	// sender, useful for gathering data from one socket specifically
+	std::vector<std::vector<uint8_t> > chunks;
+
 	void socket_check();
+	void process_chunks();
+	void send(std::vector<uint8_t> data);
+	std::vector<uint8_t> recv(int64_t byte_count = 0, uint64_t flags = 0);
+	void enable_socks(std::pair<std::string, uint16_t> socks_info, std::pair<std::string, uint16_t> conn_info);
+	void disable_socks();
 public:
 	data_id_t id;
 	net_socket_t();
@@ -65,22 +88,17 @@ public:
 	// general socket stuff, proxy-agnostic
 	bool is_alive();
 	uint64_t get_status();
-	void connect(std::pair<std::string, uint16_t> conn_info);
+	void connect(std::pair<std::string, uint16_t> conn_info,
+		     std::pair<std::string, uint16_t> socks_info,
+		     uint8_t proto);
 	void disconnect();
-	void send(std::vector<uint8_t> data);
-	std::vector<uint8_t> recv(int64_t byte_count = 0, uint64_t flags = 0);
 	// enable/disable SOCKS proxy, set as a flag in status
 	// throws on error
-	void enable_socks(std::pair<std::string, uint16_t> socks_info, std::pair<std::string, uint16_t> conn_info);
-	void disable_socks();
 	void set_tcp_socket(TCPsocket);
 	TCPsocket get_tcp_socket();
 	std::pair<std::string, uint16_t> get_client_conn();
 	std::pair<std::string, uint16_t> get_socks_conn();
 	bool activity();
-	// fetch buffer sizes
-	uint64_t get_backwards_buffer_size();
-	uint64_t get_forwards_buffer_size();
 };
 
 #endif

@@ -156,109 +156,111 @@ std::vector<uint8_t> net_socket_t::recv(int64_t byte_count, uint64_t flags){
 	return retval;
 }
 
-/*
-  net_socket_t::enable_socks: enables SOCKS proxy (Tor). Isn't responsible
-  for enabling or disabling anything Tor related, or to do anything specific
-  to the Tor network. However, external functions (should) exist that faciliate
-  new circuits, port assignment, and other interfacing requirements
+// /*
+//   net_socket_t::enable_socks: enables SOCKS proxy (Tor). Isn't responsible
+//   for enabling or disabling anything Tor related, or to do anything specific
+//   to the Tor network. However, external functions (should) exist that faciliate
+//   new circuits, port assignment, and other interfacing requirements
 
-  TODO: possibly investigate SOCKS4a for domain name resolution and SOCKS5 for 
-  whatever new thing that does (but it looks pretty complex)
- */
+//   TODO: possibly investigate SOCKS4a for domain name resolution and SOCKS5 for 
+//   whatever new thing that does (but it looks pretty complex)
+//  */
 
-void net_socket_t::enable_socks(std::pair<std::string, uint16_t> socks_info,
-				std::pair<std::string, uint16_t> client_info){
-	client_conn = client_info;
-	socks_conn = socks_info;
-	std::array<uint8_t, 13> socks_request = {{0}};
-	uint32_t socks_user_id = true_rand(0, std::numeric_limits<uint32_t>::max());	
-	IPaddress client_addr, socks_addr;
-	SDLNet_ResolveHost(&client_addr, client_info.first.c_str(),
-			   client_info.second);
-	SDLNet_ResolveHost(&socks_addr, socks_info.first.c_str(),
-			   socks_info.second);
-	socket = SDLNet_TCP_Open(&socks_addr);
-	memcpy(&(socks_user_id_str), &socks_user_id, 4);
-	socks_user_id_str[4] = 0; // has to be null terminated
-	socks_request[0] = 0x04; // SOCKSv4
-	if(client_conn.first != ""){
-		socks_request[1] = 0x01; // establish a TCP/IP stream connection
-		memcpy(&(socks_request[4]), &client_addr.host, 4);
-	}else{
-		socks_request[1] = 0x02; // establish a TCP/IP port binding 
-	}
-	memcpy(&(socks_request[2]), &client_addr.port, 2);
-	memcpy(&(socks_request[8]), &(socks_user_id_str[0]), 4);
-	socks_request[12] = 0;
-	std::vector<uint8_t> request;
-	for(uint64_t i = 0;i < 13;i++){
-		request.push_back(socks_request[i]);
-	}
-	send(request);
-	switch(recv(8).at(1)){
-	case 0x5A:
-		print("request granted for SOCKS", P_NOTE);
-		status |= NET_SOCKET_USE_SOCKS;
-		break;
-	case 0x5B:
-		print("request rejected or failed for SOCKS", P_ERR);
-		break;
-	case 0x5C:
-		print("not running identd for SOCKS", P_ERR);
-		break;
-	case 0x5D:
-		print("identd can't confirm the user ID string", P_ERR);
-		break;
-	default:
-		print("unknown staus byte for SOCKS", P_ERR);
-		break;
-	}
-}
+// void net_socket_t::enable_socks(std::pair<std::string, uint16_t> socks_info,
+// 				std::pair<std::string, uint16_t> client_info){
+// 	client_conn = client_info;
+// 	socks_conn = socks_info;
+// 	std::array<uint8_t, 13> socks_request = {{0}};
+// 	uint32_t socks_user_id = true_rand(0, std::numeric_limits<uint32_t>::max());	
+// 	IPaddress client_addr, socks_addr;
+// 	SDLNet_ResolveHost(&client_addr, client_info.first.c_str(),
+// 			   client_info.second);
+// 	SDLNet_ResolveHost(&socks_addr, socks_info.first.c_str(),
+// 			   socks_info.second);
+// 	socket = SDLNet_TCP_Open(&socks_addr);
+// 	memcpy(&(socks_user_id_str), &socks_user_id, 4);
+// 	socks_user_id_str[4] = 0; // has to be null terminated
+// 	socks_request[0] = 0x04; // SOCKSv4
+// 	if(client_conn.first != ""){
+// 		socks_request[1] = 0x01; // establish a TCP/IP stream connection
+// 		memcpy(&(socks_request[4]), &client_addr.host, 4);
+// 	}else{
+// 		socks_request[1] = 0x02; // establish a TCP/IP port binding 
+// 	}
+// 	memcpy(&(socks_request[2]), &client_addr.port, 2);
+// 	memcpy(&(socks_request[8]), &(socks_user_id_str[0]), 4);
+// 	socks_request[12] = 0;
+// 	std::vector<uint8_t> request;
+// 	for(uint64_t i = 0;i < 13;i++){
+// 		request.push_back(socks_request[i]);
+// 	}
+// 	send(request);
+// 	switch(recv(8).at(1)){
+// 	case 0x5A:
+// 		print("request granted for SOCKS", P_NOTE);
+// 		status |= NET_SOCKET_USE_SOCKS;
+// 		break;
+// 	case 0x5B:
+// 		print("request rejected or failed for SOCKS", P_ERR);
+// 		break;
+// 	case 0x5C:
+// 		print("not running identd for SOCKS", P_ERR);
+// 		break;
+// 	case 0x5D:
+// 		print("identd can't confirm the user ID string", P_ERR);
+// 		break;
+// 	default:
+// 		print("unknown staus byte for SOCKS", P_ERR);
+// 		break;
+// 	}
+// }
 
-void net_socket_t::disable_socks(){
-	/*
-	  Can probably get away with closing the connection
-	 */
-}
+// void net_socket_t::disable_socks(){
+// 	/*
+// 	  Can probably get away with closing the connection
+// 	*/
+// }
 
 /*
   net_socket_t::connect: connect (without SOCKS) to another client
  */
 
-void net_socket_t::connect(std::pair<std::string, uint16_t> conn_info){
-	P_V_S(conn_info.first, P_DEBUG);
-	P_V(conn_info.second, P_DEBUG);
-	client_conn = conn_info;
-	IPaddress tmp_ip;
-	int16_t res_host_retval = 0;
-	// 0.0.0.0 might be a better option instead of a blank string
-	if(client_conn.first == ""){
-		print("opening a listening socket", P_NOTE);
-		res_host_retval = SDLNet_ResolveHost(&tmp_ip,
-						     nullptr,
-						     client_conn.second);
-	}else{
-		print("opening a standard socket", P_NOTE);
-		res_host_retval = SDLNet_ResolveHost(&tmp_ip,
-						     client_conn.first.c_str(),
-						     client_conn.second);
+// as of now, i'm trying to just set up an unsecured connection
+
+// (conn_info.first + ":" + std::to_string(conn_info.second)).c_str()
+
+void net_socket_t::connect(std::pair<std::string, uint16_t> conn_info,
+			   uint8_t proto){
+	if(socket != nullptr){
+		disconnect();
+		print("already conencted, disconnecting so I can connect again", P_ERR);
 	}
-	if(res_host_retval == -1){
-		print((std::string)"cannot resolve host:"+SDL_GetError(),
-		      P_ERR);
+	if(ctx != nullptr){
+		SSL_CTX_free(ctx);
+		ctx = nullptr;
+		print("found stale CTX information, deleted", P_ERR);
 	}
-	socket = SDLNet_TCP_Open(&tmp_ip);
+	ctx = SSL_CTX_new(SSLv23_client_method());
+	socket = BIO_new_ssl_connect(ctx);
 	if(socket == nullptr){
-		print((std::string)"cannot open socket (" + std::to_string(errno) + "):"+SDL_GetError(),
-		      P_ERR);
-	}else{
-		print("opened socket", P_NOTE);
+		print("can't open the socket", P_ERR);
+	}
+	BIO_get_ssl(bio, &ssl);
+	SSL_set_mode(ssl, SSL_MODE_AUTO_RETRY);
+	BIO_set_conn_hostname(bio, (conn_info.first + ":" + std::to_string(conn_info.second)).c_str());
+	if(BIO_do_connect(socket) <= 0){
+		print("connection has failed", P_ERR);
+	}
+	if(SSL_get_verify_result(ssl) != X509_V_OK){
+		print("non-OK connection from SSL, proceeding anyways", P_WARN);
 	}
 }
 
 void net_socket_t::disconnect(){
-	SDLNet_TCP_Close(socket);
-	socket = nullptr;
+	if(socket != nullptr){
+		BIO_free_all(socket);
+		socket = nullptr;
+	}
 }
 
 /*

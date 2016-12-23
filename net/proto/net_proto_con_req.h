@@ -32,8 +32,6 @@
 #define NET_CON_REQ_TCP NET_PEER_TCP
 #define NET_CON_REQ_UDP NET_PEER_UDP
 
-// next six are for the style
-
 /*
   First peer (sender) wants to connect to the second peer (receiver). Second
   peer doesn't have a TCP port open, but the first does. 
@@ -51,7 +49,7 @@
   opened for anything meaningful to happen (to my knowledge, without using
   holepunching), and that case would be covered by just directly talking.
 */
-#define NET_CON_REQ_REVERSE_FORWARD  (1 >> 2)
+#define NET_CON_REQ_REVERSE_FORWARD 0
 
 /*
   First peer (sender) wants to connect to the second peer (receiver). Second
@@ -68,7 +66,7 @@
   forwarded that can handle the nitty gritty technicals with UDP hole punching.
   However, I don't care about UDP that much, so that's on the bacnburner.
  */
-#define NET_CON_REQ_HOLEPUNCH (2 >> 2)
+#define NET_CON_REQ_HOLEPUNCH 1
 
 /*
   This can be referred to net_con_req_t in personal flowcharts and docs, but it
@@ -77,13 +75,26 @@
 
 struct net_proto_con_req_t{
 private:
+	// ideally, flags are internal only
 	uint8_t flags = 0;
 	id_t_ first_peer_id = 0;
 	id_t_ second_peer_id = 0;
 	id_t_ third_peer_id = 0;
 	uint64_t heartbeat_timestamp = 0;
 public:
-	data_id_t data;
+	data_id_t id;
+	void set_ids(id_t_ first_peer_id_
+		     id_t_ second_peer_id_
+		     id_t_ third_peer_id_);
+	void get_ids(id_t_ *first_peer_id_,
+		     id_t_ *second_peer_id_,
+		     id_t_ *third_peer_id_);
+	void set_proto(uint8_t proto);
+	uint8_t get_proto();
+	void set_con_type(uint8_t con_type);
+	uint8_t get_con_type();
+	void set_heartbeat_timestamp(uint64_t heartbeat_timestamp_);
+	uint64_t get_heartbeat_timestamp();
 };
 
 #endif
