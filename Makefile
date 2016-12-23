@@ -6,19 +6,19 @@ CXX:=clang++
 default: debug
 
 id:
-	$(CXX) $(CXXFLAGS) -c id/id_unified.cpp
+	$(CXX) $(CXXFLAGS) -DDEBUG -O0 -g -c id/id_unified.cpp
 
 tv: id
-	$(CXX) $(CXXFLAGS) -c tv/tv_unified.cpp
+	$(CXX) $(CXXFLAGS) -DDEBUG -O0 -g -c tv/tv_unified.cpp
 
 net: id
-	$(CXX) $(CXXFLAGS) -c net/net_unified.cpp
+	$(CXX) $(CXXFLAGS) -DDEBUG -O0 -g -c net/net_unified.cpp
 
 input: id
-	$(CXX) $(CXXFLAGS) -c input/input_unified.cpp
+	$(CXX) $(CXXFLAGS) -DDEBUG -O0 -g -c input/input_unified.cpp
 
 encrypt: id
-	$(CXX) $(CXXFLAGS) -c encrypt/encrypt_unified.cpp
+	$(CXX) $(CXXFLAGS) -DDEBUG -O0 -g -c encrypt/encrypt_unified.cpp
 
 all: tv net input encrypt
 	$(CXX) $(CXXFLAGS) net_unified.o tv_unified.o id_unified.o encrypt_unified.o *.cpp $(LDFLAGS) 

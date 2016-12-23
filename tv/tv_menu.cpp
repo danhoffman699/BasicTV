@@ -468,11 +468,11 @@ void tv_menu_t::update_frame(){
 	for(uint64_t y = 0;y < 64;y++){
 		tv_menu_entry_t *entry_ =
 			PTR_DATA(entry[y], tv_menu_entry_t);
+		CONTINUE_IF_NULL(entry_);
 		if(entry_->get_orientation() != TV_MENU_ORIENT_LEFT){
 			print("only left orientation is supported in menus", P_WARN);
 			// do it anyways
 		}
-		CONTINUE_IF_NULL(entry_);
 		data += entry_->get_text() + '\n';
 	}
 	uint64_t x = 0;
@@ -509,16 +509,11 @@ void tv_menu_t::set_menu_entry(uint16_t entry_pos,
 	if(never(entry_pos >= 64)){
 		print("entry_pos is larger than the max", P_CRIT);
 	}
-	tv_menu_entry_t *entry_ = nullptr;
-	if(entry[entry_pos] == 0){
+	tv_menu_entry_t *entry_ =
+		PTR_DATA(entry[entry_pos], tv_menu_entry_t);
+	if(entry_ == nullptr){
 		entry_ = new tv_menu_entry_t;
 		entry[entry_pos] = entry_->id.get_id();
-	}else{
-		entry_ =
-			PTR_DATA(entry[entry_pos], tv_menu_entry_t);
-	}
-	if(unlikely(entry_ == nullptr)){
-		print("entry is nullptr", P_ERR);
 	}
 	entry_->set_text(string);
 	update_frame();
@@ -538,7 +533,7 @@ std::string tv_menu_t::get_menu_entry(uint16_t entry_pos){
 }
 
 void tv_menu_t::set_highlighed(uint16_t highlighted_){
-	if(never(highlighted >= 64)){
+	if(never(highlighted_ >= 64)){
 		print("highlighed_ is larger than the max", P_CRIT);
 	}
 	highlighed = highlighted_;

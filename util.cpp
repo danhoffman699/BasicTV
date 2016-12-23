@@ -250,7 +250,7 @@ uint64_t flip_bit_section(uint8_t begin, uint8_t end){
 		  falsely report the mask as one
 		 */
 	}
-	return ((((1 << ((end-begin-1)-1))) << 1) | 1) << begin;
+	return ((((1 << end-begin-1)-1) << 1) | 1) << begin;
 }
 
 uint64_t get_time_microseconds(){

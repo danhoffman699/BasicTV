@@ -29,7 +29,7 @@ public:
 };
 struct tv_menu_t{
 private:
-	std::array<uint64_t, 64> entry;
+	std::array<uint64_t, 64> entry = {{0}};
 	uint16_t highlighed = 0;
 	uint64_t frame_id = 0;
 	void update_frame();

@@ -1,4 +1,3 @@
-#include "net_proto_inbound.h"
 #include "net_proto_inbound_connections.h"
 
 /*
