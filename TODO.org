@@ -1,5 +1,6 @@
 * TODO Polish networking protocol
   - [ ] Use compression on exporting
+  - [ ] Incorperate SSL to prevent DoS/DDoS attacks
   - [ ] Stabilize net_socket_t code
   - [ ] Add support for vectors (std::vector<uint8_t/uint64_t>) in data_ptr
 * TODO Multithreading
@@ -27,4 +28,12 @@
   - [ ] Tie a function or another menu with a menu entry
   - [ ] Directly tie macro sequences to menu entries
   - [ ] Make everything changeable from the menu (ties with previous point)
-
+* TODO Nice Things in General
+  - [ ] Implement a notification system
+    - [ ] Customize what information gets notified through settings
+      - [ ] When it is live
+      - [ ] When a program is set to record, and the data is on the network
+      - [ ] Various network statistics
+      - [ ] Bitcoin donations to the node wallet
+    - [ ] Send to an RSS feed
+    - [ ] Send to an email address

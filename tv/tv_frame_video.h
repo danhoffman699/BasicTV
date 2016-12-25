@@ -3,14 +3,38 @@
 #include "tv_frame_standard.h"
 
 /*
+  TODO: forget about video until AT LEAST data_id_t can import 
+  std::vector<uint8_t>, because the size range is large enough to break my
+  computer if it goes willy nilly
+ */
+
+/*
   Masks are stored in two parts, one for the length of the
   masked data (log base 2), the second is the offset from 
   zero
  */
 
-#define TV_FRAME_TYPE_UNDEFINED 0
-#define TV_FRAME_TYPE_UNCOMPRESSED 1
-#define TV_FRAME_TYPE_VP9 2 // should
+#define TV_FRAME_FORMAT_UNDEFINED 0
+#define TV_FRAME_FORMAT_RAW 1 // menus
+#define TV_FRAME_FORMAT_VP9 2 // standard
+
+// fl = flags, fo = format, same as audio
+#define SET_TV_FRAME_FORMAT(fl, fo) (fl &= 0b00000011;fl |= (fo & 0b00000011);)
+#define GET_TV_FRAME_FORMAT(fl) (fl & 0b00000011)
+
+#define TV_FRAME_FORMAT_RAW_FMT_UNDEFINED 0
+#define TV_FRAME_FORMAT_RAW_FMT_RGB888 1
+/*
+  nice for conway's game of life, data visualizations, and whatever people
+  decide to do with it. also for pong and breakout, QR codes, and other stuff
+ */
+#define TV_FRAME_FORMAT_RAW_FMT_1_BIT 2
+/*
+  menus, still in greyscale
+ */
+#define TV_FRAME_FORMAT_RAW_FMT_2_BIT 3
+
+#define SET_TV_FRAME_RAW_FMT(fl, rf) (fl &= 0b00001100; fl |= (fo & 0b00000011) << 2)
 
 #define TV_FRAME_8K_RES (7680*4320)
 
@@ -39,6 +63,9 @@ private:
 	uint16_t green_mask = 0;
 	uint16_t blue_mask = 0;
 	uint16_t alpha_mask = 0;
+	uint8_t flags = 0;
+	uint8_t raw_fmt = 0;
+	// only for uncompressed
 	uint64_t get_raw_pixel_pos(uint16_t x,
 				   uint16_t y);
 public:

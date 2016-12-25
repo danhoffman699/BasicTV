@@ -4,7 +4,6 @@
 #include "tv_frame_video.h"
 #include "tv_frame_audio.h"
 #include "tv_window.h"
-#include "tv_patch.h"
 #include "tv_menu.h"
 /*
   tv::chan: channel functions. Does not directly interface with the channels

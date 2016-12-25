@@ -14,7 +14,6 @@
 #include "../tv/tv_frame_standard.h"
 #include "../tv/tv_frame_video.h"
 #include "../tv/tv_frame_audio.h"
-#include "../tv/tv_patch.h"
 #include "../tv/tv_channel.h"
 #include "../tv/tv_window.h"
 
@@ -27,24 +26,22 @@
 // moving it over to an std::vector
 
 void data_id_t::init_list_all_data(){
-	add_data(&id, sizeof(id));
-	add_id(&id, 1);
-	add_data(&(linked_list[0]), ID_LL_WIDTH*ID_LL_HEIGHT*sizeof(linked_list[0]));
+	add_data(&id,
+		 sizeof(id),
+		 ID_DATA_ID);
+	add_data(&(linked_list[0]),
+		 ID_LL_WIDTH*ID_LL_HEIGHT*sizeof(linked_list[0]),
+		 ID_DATA_ID);
 }
 
 void data_id_t::init_gen_id(){
 	while(id == 0){
-		id = true_rand(0, 0xFFFFFFFFFFFFFFFF);
-	} // prevents "random" returning zero
-	// Testing locally only
+		id = true_rand(1, 0xFFFFFFFFFFFFFFFF);
+	} // doesn't hurt, true_rand might still be retarded
 }
 
 
 data_id_t::data_id_t(void *ptr_, std::string type_){
-	// store all data in contiguous containers, avoid
-	// std::string and std::vector. Use std::array for
-	// raw data, strings, and lists of items. Also forces
-	// a defined maximum to everything
 	type = convert::array::type::to(type_);
 	ptr = ptr_;
 	init_list_all_data();
@@ -56,25 +53,6 @@ data_id_t::data_id_t(void *ptr_, std::string type_){
 data_id_t::~data_id_t(){
 	id_api::array::del(id);
 	id_api::cache::del(id, type);
-}
-
-void data_id_t::dereference_id(uint64_t id_){
-	for(uint64_t i = 0;i < ID_PTR_LENGTH;i++){
-		if(id_ptr[i] != nullptr){
-			for(uint64_t c = 0;c < id_size[i];c++){
-				uint64_t *id_tmp = id_ptr[i]+c;
-				if(*id_tmp == id_){
-					*id_tmp = 0;
-				}
-			}
-		}
-	}
-}
-
-void data_id_t::set_id(uint64_t id_){
-	// shouldn't run at all, at least not now
-	exit(0);
-	id = id_;
 }
 
 uint64_t data_id_t::get_id(){
@@ -90,33 +68,19 @@ void *data_id_t::get_ptr(){
 }
 
 void data_id_t::add_data(void *ptr_, uint32_t size_, uint64_t flags){
-	/*
-	  All data in this array is networked, and until I see a need for
-	  non-network-able variables to be extracted, then ID_DATA_CACHE
-	  will be not registered
-	 */
-	if(flags & ID_DATA_CACHE){
-		return;
-	}
-	for(uint64_t i = 0;i < ID_PTR_LENGTH;i++){
-		if(data_ptr[i] == nullptr){
-			// should make this into a tuple
-			data_ptr[i] = ptr_;
-			data_size[i] = size_;
-			data_flags[i] = flags;
-			return;
-		}
-	}
+	data_vector.push_back(
+		data_id_ptr_t(
+			ptr_,
+			size_,
+			flags));
 }
 
-void data_id_t::add_id(uint64_t *ptr_, uint32_t size_){
-	for(uint64_t i = 0;i < ID_PTR_LENGTH;i++){
-		if(id_ptr[i] == nullptr){
-			id_ptr[i] = ptr_;
-			id_size[i] = size_;
-			return;
-		}
-	}
+void data_id_t::add_data(std::vector<uint8_t> *ptr_, uint32_t size_, uint64_t flags){
+	data_vector.push_back(
+		data_id_ptr_t(
+			ptr_,
+			size_,
+			flags | ID_DATA_BYTE_VECTOR));
 }
 
 uint64_t data_id_t::get_pgp_cite_id(){
@@ -124,12 +88,7 @@ uint64_t data_id_t::get_pgp_cite_id(){
 }
 
 uint64_t data_id_t::get_data_index_size(){
-	for(uint64_t i = 0;i < ID_PTR_LENGTH;i++){
-		if(data_ptr[i] == NULL){
-			return i+1;
-		}
-	}
-	return 0;
+	return data_vector.size();
 }
 
 /*
@@ -146,11 +105,6 @@ static void id_export_raw(uint8_t *var, uint64_t size, std::vector<uint8_t> *vec
 
 #define ID_EXPORT(var) id_export_raw((uint8_t*)&var, sizeof(var), &retval)
 
-/*
-  TODO: more well-define this prefix information. std::array of pointers to the
-  data and the corresponding lengths sounds pretty good.
- */
-
 typedef uint16_t transport_i_t;
 typedef uint32_t transport_size_t;
 
@@ -162,15 +116,17 @@ std::vector<uint8_t> data_id_t::export_data(){
 		ID_EXPORT(pgp_cite_id);
 		transport_i_t trans_i = 0;
 		transport_size_t trans_size = 0;
-		for(uint64_t i = 0;i < ID_PTR_LENGTH;i++){
-			if(data_ptr[i] == nullptr){
-				continue; // should it just break?
-			}
+		for(uint64_t i = 0;i < data_vector.size();i++){
 			trans_i = i;
-			trans_size = data_size[i];
+			trans_size = data_vector[i].get_length();
 			ID_EXPORT(trans_i);
 			ID_EXPORT(trans_size);
-			id_export_raw((uint8_t*)data_ptr[i], trans_size, &retval);
+			void *ptr_to_export = data_vector[i].get_ptr();
+			if(data_vector[i].get_flags() & ID_DATA_BYTE_VECTOR){
+				ptr_to_export =
+					((std::vector<uint8_t>*)ptr_to_export)->data();
+			}
+			id_export_raw((uint8_t*)data_vector[i].get_ptr(), trans_size, &retval);
 		}
 		P_V(retval.size(), P_NOTE);
 		/*
@@ -185,20 +141,29 @@ std::vector<uint8_t> data_id_t::export_data(){
 	return retval;
 }
 
-/*
-  Once the data has been imported, it either works or it doesn't, so it 
-  shouldn't matter if the data has been truncated.
- */
-
-// make this static
-
-static void id_import_raw(uint8_t* var, uint64_t size, std::vector<uint8_t> *vector){
+static void id_import_raw(uint8_t* var, uint8_t flags, uint64_t size, std::vector<uint8_t> *vector){
+	if(flags & ID_DATA_BYTE_VECTOR){
+		std::vector<uint8_t> *vector_tmp =
+			(std::vector<uint8_t>*)var;
+		// not the fastest
+		vector_tmp->erase(vector_tmp->begin(),
+				 vector_tmp->end());
+		vector_tmp->insert(vector_tmp->end(),
+				  size-vector_tmp->size(),
+				  0);
+		var = vector_tmp->data();
+	}
 	memcpy(var, vector->data(), size);
 	vector->erase(vector->begin(), vector->begin()+size);
 	convert::nbo::from((uint8_t*)var, size);
 }
 
-#define ID_IMPORT(var) id_import_raw((uint8_t*)&var, sizeof(var), &data)
+/*
+  a call to just ID_IMPORT means the data is guaranteed to not be std::vector,
+  since it is a part of the protocol (and hopefully std::vector never makes it
+  that far).
+*/
+#define ID_IMPORT(var) id_import_raw((uint8_t*)&var, 0, sizeof(var), &data)
 
 void data_id_t::import_data(std::vector<uint8_t> data){
 	uint64_t trans_id = 0;
@@ -214,22 +179,25 @@ void data_id_t::import_data(std::vector<uint8_t> data){
 		ID_IMPORT(trans_i);
 		ID_IMPORT(trans_size);
 		const bool valid_entry =
-			trans_i < ID_PTR_LENGTH;
+			trans_i < data_vector.size();
 		if(unlikely(!valid_entry)){
 			print("invalid i entry, probably came from a new version", P_WARN);
 			return;
-		}else if(unlikely(data_ptr[trans_i] == nullptr)){
+		}else if(unlikely(data_vector[trans_i].get_ptr() == nullptr)){
 			print("cannot write to nullptr entry", P_WARN);
 			return;
 		}
 		if(unlikely(trans_size > data.size())){
 			print("fetched size is greater than working data", P_WARN);
 			return;
-		}else if(unlikely(trans_size > data_size[trans_i])){
+		}else if(unlikely(trans_size > data_vector[trans_i].get_length())){
 			print("fetched size is greater than the local version", P_WARN);
 			return;
 		}
-		id_import_raw((uint8_t*)data_ptr[trans_i], trans_size, &data);
+		id_import_raw((uint8_t*)data_vector[trans_i].get_ptr(),
+			      data_vector[trans_i].get_flags(),
+			      trans_size,
+			      &data);
 	}
 	imported_data = data;
 }
@@ -269,4 +237,28 @@ void data_id_t::set_next_linked_list(uint64_t height, uint64_t data){
 
 bool data_id_t::is_owner(){
 	return true;
+}
+
+
+data_id_ptr_t::data_id_ptr_t(void *ptr_,
+			     uint32_t length_,
+			     uint8_t flags_){
+	ptr = ptr_;
+	length = length_;
+	flags = flags_;
+}
+
+data_id_ptr_t::~data_id_ptr_t(){
+}
+
+void *data_id_ptr_t::get_ptr(){
+	return ptr;
+}
+
+uint32_t data_id_ptr_t::get_length(){
+	return length;
+}
+
+uint8_t data_id_ptr_t::get_flags(){
+	return flags;
 }

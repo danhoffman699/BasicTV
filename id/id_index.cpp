@@ -3,15 +3,14 @@
 #include "../util.h"
 
 id_index_t::id_index_t() : id(this, __FUNCTION__){
-	id.add_data(&(id_index[0]), ID_ARRAY_SIZE*8);
-	id.add_id(&(id_index[0]), ID_ARRAY_SIZE);
+	// re-add these later
 }
 
 id_index_t::~id_index_t(){
 }
 
 void id_index_t::add(uint64_t id_){
-	for(uint64_t i = 0;i < ID_ARRAY_SIZE;i++){
+	for(uint64_t i = 0;i < id_index.size();i++){
 		if(id_index[i] == 0){
 			id_index[i] = id_;
 			return;

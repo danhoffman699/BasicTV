@@ -1,17 +1,20 @@
 #ifndef TV_FRAME_AUDIO_H
 #define TV_FRAME_AUDIO_H
 #include "tv_frame_standard.h"
+#include "opus/opus.h"
 
 #define TV_FRAME_AUDIO_DEFAULT_SAMPLING_RATE 48000
 #define TV_FRAME_AUDIO_DEFAULT_BIT_DEPTH 24
 
 #define TV_FRAME_AUDIO_DATA_SIZE (TV_FRAME_AUDIO_DEFAULT_SAMPLING_RATE*(TV_FRAME_AUDIO_DEFAULT_BIT_DEPTH/8))
 
+#define TV_FRAME_AUDIO_DEFAULT_FORMAT TV_FRAME_AUDIO_FORMAT_OPUS
+
 // shouldn't ever be the case
 #define TV_FRAME_AUDIO_FORMAT_UNDEFINED 0
 // At least use FLAC if you are looking for quality, this is for testing
 #define TV_FRAME_AUDIO_FORMAT_RAW 1
-// will be default soon. works pretty well, nice licensing
+// default, works pretty well, nice licensing
 #define TV_FRAME_AUDIO_FORMAT_OPUS 2
 // not implemented yet, but not a bad idea either
 #define TV_FRAME_AUDIO_FORMAT_FLAC 3
@@ -48,13 +51,6 @@ private:
 	std::array<uint8_t, TV_FRAME_AUDIO_DATA_SIZE> data = {{0}};
 	uint8_t bit_depth = 0;
 	uint32_t sampling_freq = 0;
-	std::vector<uint8_t> samples;
-	/*
-	  get_sample_pos can only be used on data if the format is RAW, 
-	  otherwise it has to be used on the raw samples vector (samples
-	  vector and data are equal if format is RAW)
-	 */
-	uint64_t get_sample_pos(uint64_t pos);
 public:
 	data_id_t id;
 	tv_frame_audio_t();

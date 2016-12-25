@@ -36,8 +36,7 @@ extern std::array<uint8_t, 4> version;
   standard, which shouldn't happen often).
 
   Types that don't exist yet can be ditched, and the software should
-  continue to function properly in all cases (data cannot be interdependent
-  upon other data beyond the 1.0 release, tv_patch_t is an example).
+  continue to function properly in all cases.
  */
 
 // v0 is used only for testing purposes. v0 should always be the most

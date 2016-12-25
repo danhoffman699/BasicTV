@@ -10,7 +10,7 @@ private:
 	uint64_t frame_entry = 0;
 	// dependencies on other frames, read in order and used for
 	// Opus and VP9 encoding
-	std::array<uint64_t, TV_FRAME_DEP_SIZE> dep = {{0}};
+	std::array<id_t_, TV_FRAME_DEP_SIZE> dep = {{0}};
 public:
 	tv_frame_standard_t();
 	~tv_frame_standard_t();

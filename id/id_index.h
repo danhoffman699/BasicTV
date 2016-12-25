@@ -29,9 +29,9 @@
   
   Grace period sounds like a good idea.
 */
- struct id_index_t{
+struct id_index_t{
 private:
-	std::array<uint64_t, ID_ARRAY_SIZE> id_index = {{0}};
+	std::vector<uint64_t> id_index;
 	uint8_t flags = 0;
 public:
 	data_id_t id;

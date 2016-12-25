@@ -6,12 +6,10 @@
 #include "tv_frame_audio.h"
 #include "tv_window.h"
 #include "tv_channel.h"
-#include "tv_patch.h"
 
 tv_window_t::tv_window_t() : id(this, __FUNCTION__){
 	id.add_data(&pos, sizeof(pos));
-	id.add_data(&channel_id, sizeof(channel_id));
-	id.add_id(&channel_id, sizeof(channel_id));
+	id.add_data(&channel_id, sizeof(channel_id), ID_DATA_ID);
 }
 
 tv_window_t::~tv_window_t(){

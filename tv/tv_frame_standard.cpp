@@ -7,8 +7,14 @@ tv_frame_standard_t::~tv_frame_standard_t(){
 }
 
 void tv_frame_standard_t::list_virtual_data(data_id_t *id){
+	// ADD_DATA(start_time_micro_s);
+	// ADD_DATA(ttl_micro_s);
+	// ADD_DATA(frame_entry);
+	// ADD_DATA_ARRAY(&(dep[0]), TV_FRAME_DEP_SIZE, sizeof(id_t_));
+	id->add_data(&start_time_micro_s, sizeof(start_time_micro_s));
 	id->add_data(&ttl_micro_s, sizeof(ttl_micro_s));
 	id->add_data(&frame_entry, sizeof(frame_entry));
+	id->add_data(&(dep[0]), sizeof(dep[0])*TV_FRAME_DEP_SIZE);
 }
 
 void tv_frame_standard_t::set_standard(uint64_t start_time_micro_s_,

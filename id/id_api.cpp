@@ -7,19 +7,12 @@
 #include "../tv/tv_frame_video.h"
 #include "../net/proto/net_proto.h"
 
-static data_id_t **id_list = nullptr;
+//static data_id_t **id_list = nullptr;
+static std::vector<data_id_t*> id_list;
 static std::vector<std::pair<std::vector<uint64_t>, std::array<uint8_t, TYPE_LENGTH> > > type_cache;
 
-static void check_and_allocate_list(){
-	if(unlikely(id_list == nullptr)){
-		id_list = new data_id_t*[ID_ARRAY_SIZE];
-		memset(id_list, 0, ID_ARRAY_SIZE*sizeof(data_id_t*));
-	}
-}
-
 static data_id_t *id_find(uint64_t id){
-	check_and_allocate_list();
-	for(uint64_t i = 0;i < ID_ARRAY_SIZE;i++){
+	for(uint64_t i = 0;i < id_list.size();i++){
 		if(id_list[i] == nullptr){
 			continue;
 		}
@@ -70,23 +63,16 @@ void *id_api::array::ptr_data(uint64_t id,
 }
 
 void id_api::array::add(data_id_t *ptr){
-	check_and_allocate_list();
-	for(uint64_t i = 0;i < ID_ARRAY_SIZE;i++){
-		if(id_list[i] == nullptr){
-			id_list[i] = ptr;
-			return;
-		}
-	}
+	id_list.push_back(ptr);
 }
 
 void id_api::array::del(uint64_t id){
-	check_and_allocate_list();
-	for(uint64_t i = 0;i < ID_ARRAY_SIZE;i++){
+	for(uint64_t i = 0;i < id_list.size();i++){
 		if(id_list[i] == nullptr){
 			continue;
 		}
 		if(id_list[i]->get_id() == id){
-			id_list[i] = nullptr;
+			id_list.erase(id_list.begin()+i);
 			return;
 		}
 	}
@@ -222,7 +208,7 @@ void id_api::linked_list::link_vector(std::vector<uint64_t> vector,
 
 std::vector<uint64_t> id_api::get_all(){
 	std::vector<uint64_t> retval;
-	for(uint64_t i = 0;i < ID_ARRAY_SIZE;i++){
+	for(uint64_t i = 0;i < id_list.size();i++){
 		if(id_list[i] != nullptr){
 			retval.push_back(id_list[i]->get_id());
 		}
@@ -235,8 +221,7 @@ std::vector<uint64_t> id_api::get_all(){
 // refactor
 
 void id_api::destroy_all_data(){
-	check_and_allocate_list();
-	for(uint64_t i = 0;i < ID_ARRAY_SIZE;i++){
+	for(uint64_t i = 0;i < id_list.size();i++){
 		if(id_list[i] == nullptr){
 			continue;
 		}
@@ -252,5 +237,4 @@ void id_api::destroy_all_data(){
 			print("unknown type:" + ptr->get_type(), P_WARN);
 		}catch(...){}
 	}
-	delete[] id_list;
 }

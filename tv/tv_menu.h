@@ -5,8 +5,8 @@
 #include "array"
 #define TV_MENU_TEXT_LENGTH 64
 // TODO: define this in settings, not as macros
-#define TV_MENU_WIDTH 16
-#define TV_MENU_HEIGHT 16
+#define TV_MENU_WIDTH 4
+#define TV_MENU_HEIGHT 4
 #define TV_MENU_ORIENT_LEFT 0
 #define TV_MENU_ORIENT_MIDDLE 1
 #define TV_MENU_ORIENT_CENTER 1
