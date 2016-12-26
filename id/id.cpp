@@ -27,10 +27,13 @@
 
 void data_id_t::init_list_all_data(){
 	add_data(&id,
-		 sizeof(id),
+		 sizeof(id_t_),
 		 ID_DATA_ID);
-	add_data(&(linked_list[0]),
-		 ID_LL_WIDTH*ID_LL_HEIGHT*sizeof(linked_list[0]),
+	add_data(&linked_list.first,
+		 sizeof(id_t_),
+		 ID_DATA_ID);
+	add_data(&linked_list.second,
+		 sizeof(id_t_),
 		 ID_DATA_ID);
 }
 
@@ -212,20 +215,20 @@ void data_id_t::pgp_decrypt_backlog(){
 	pgp_backlog.clear();
 }
 
-uint64_t data_id_t::get_prev_linked_list(uint64_t height){
-	return linked_list.at((height*2)+0);
+uint64_t data_id_t::get_prev_linked_list(){
+	return linked_list.first;
 }
 
-uint64_t data_id_t::get_next_linked_list(uint64_t height){
-	return linked_list.at((height*2)+1);
+uint64_t data_id_t::get_next_linked_list(){
+	return linked_list.second;
 }
 
-void data_id_t::set_prev_linked_list(uint64_t height, uint64_t data){
-	linked_list.at((height*2)+0) = data;
+void data_id_t::set_prev_linked_list(uint64_t data){
+	linked_list.first = data;
 }
 
-void data_id_t::set_next_linked_list(uint64_t height, uint64_t data){
-	linked_list.at((height*2)+1) = data;
+void data_id_t::set_next_linked_list(uint64_t data){
+	linked_list.second = data;
 }
 
 /*

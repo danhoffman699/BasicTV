@@ -16,12 +16,7 @@
   id_t: ID and pointer system for the networking system
  */
 
-// linked list information
-
-#define ID_LL_WIDTH 3
-#define ID_LL_HEIGHT 16
-
-#define TYPE_LENGTH 32 // standard minimum length for C++ types
+#define TYPE_LENGTH 32 // standard maximum length for C++ types
 
 typedef uint64_t id_t_; // needs a snazzier name
 
@@ -56,7 +51,7 @@ private:
 	id_t_ pgp_cite_id = 0;
 	std::vector<std::vector<uint8_t> > pgp_backlog;
 	std::vector<data_id_ptr_t> data_vector;
-	std::array<uint64_t, ID_LL_WIDTH*ID_LL_HEIGHT> linked_list = {{0}};
+	std::pair<id_t_, id_t_> linked_list = {0,0};
 	std::vector<uint8_t> imported_data; // encrypted data if imported
 	void init_list_all_data();
 	void init_gen_id();
@@ -72,10 +67,10 @@ public:
 	void set_pgp_cite_id(uint64_t id){pgp_cite_id = id;} // probably should fix this soon
 	uint64_t get_pgp_cite_id();
 	uint64_t get_data_index_size();
-	uint64_t get_next_linked_list(uint64_t height);
-	uint64_t get_prev_linked_list(uint64_t height);
-	void set_next_linked_list(uint64_t height, uint64_t data);
-	void set_prev_linked_list(uint64_t height, uint64_t data);
+	uint64_t get_next_linked_list();
+	uint64_t get_prev_linked_list();
+	void set_next_linked_list(uint64_t data);
+	void set_prev_linked_list(uint64_t data);
 	// pointer list modififers
 	/*
 	  size of data is referring to the type size and the array size, whereas

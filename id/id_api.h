@@ -27,7 +27,7 @@ namespace id_api{
 		void del(uint64_t id); // no type
 		void add_data(std::vector<uint8_t> data_);
 		std::vector<uint64_t> sort_by_pgp_pubkey(std::vector<uint64_t> tmp);
-		std::vector<uint64_t> get_forward_linked_list(uint64_t id, uint64_t height);
+		std::vector<uint64_t> get_forward_linked_list(uint64_t id);
 	}
 	namespace cache{
 		// get_type_vector_ptr should never be used outside of id_api.cpp	
@@ -43,8 +43,7 @@ namespace id_api{
 		std::vector<uint64_t> get(std::string type);
 	}
 	namespace linked_list{
-		void link_vector(std::vector<uint64_t> vector,
-				 uint16_t position);
+		void link_vector(std::vector<uint64_t> vector);
 	};
 	std::vector<uint64_t> get_all();
 	void destroy_all_data();

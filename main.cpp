@@ -214,23 +214,17 @@ static void test_id_transport(){
 	// not defined behavior at all
 	data_id_t *tmp =
 		new data_id_t(nullptr, "TEST");
-	for(uint64_t i = 0;i < ID_LL_HEIGHT;i++){
-		tmp->set_next_linked_list(i, i);
-		tmp->set_prev_linked_list(i, i);
-	}
+	tmp->set_next_linked_list(1);
+	tmp->set_prev_linked_list(2);
 	tmp->set_pgp_cite_id(~0L);
 	const std::vector<uint8_t> exp =
 		tmp->export_data();
 	test_id_transport_print_exp(exp);
-	for(uint64_t i = 0;i < ID_LL_HEIGHT;i++){
-		tmp->set_next_linked_list(i, 0);
-		tmp->set_prev_linked_list(i, 0);
-	}
+	tmp->set_next_linked_list(0);
+	tmp->set_prev_linked_list(0);
 	tmp->import_data(exp);
-	for(uint64_t i = 0;i < ID_LL_HEIGHT;i++){
-		P_V(i, P_NOTE);
-		P_V(tmp->get_next_linked_list(i), P_NOTE);
-	}
+	P_V(tmp->get_next_linked_list(), P_NOTE);
+	P_V(tmp->get_prev_linked_list(), P_NOTE);
 	running  = false;
 }
 

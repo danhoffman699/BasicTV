@@ -237,7 +237,7 @@ static SDL_Rect tv_render_gen_window_rect(tv_window_t *window,
 static uint64_t tv_render_id_of_last_valid_frame(uint64_t current,
 						 uint64_t timestamp_micro_s){
 	std::vector<uint64_t> frame_linked_list =
-		id_api::array::get_forward_linked_list(current, 0);
+		id_api::array::get_forward_linked_list(current);
 	for(uint64_t i = 0;i < frame_linked_list.size();i++){
 		tv_frame_video_t *frame =
 			PTR_DATA(frame_linked_list[i], tv_frame_video_t);
@@ -374,7 +374,7 @@ static void tv_init_test_webcam(){
 				    i);
 		vector_array.push_back(video->id.get_id());
 	}
-	id_api::linked_list::link_vector(vector_array, 0);
+	id_api::linked_list::link_vector(vector_array);
 	channel->set_frame_id(0, vector_array[0]);
 	window->set_channel_id(channel->id.get_id());
 }

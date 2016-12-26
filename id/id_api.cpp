@@ -7,16 +7,12 @@
 #include "../tv/tv_frame_video.h"
 #include "../net/proto/net_proto.h"
 
-//static data_id_t **id_list = nullptr;
 static std::vector<data_id_t*> id_list;
 static std::vector<std::pair<std::vector<uint64_t>, std::array<uint8_t, TYPE_LENGTH> > > type_cache;
 
 static data_id_t *id_find(uint64_t id){
 	for(uint64_t i = 0;i < id_list.size();i++){
-		if(id_list[i] == nullptr){
-			continue;
-		}
-		if(id_list[i]->get_id() == id){
+		if(unlikely(id_list[i]->get_id() == id)){
 			return id_list[i];
 		}
 	}
@@ -68,9 +64,6 @@ void id_api::array::add(data_id_t *ptr){
 
 void id_api::array::del(uint64_t id){
 	for(uint64_t i = 0;i < id_list.size();i++){
-		if(id_list[i] == nullptr){
-			continue;
-		}
 		if(id_list[i]->get_id() == id){
 			id_list.erase(id_list.begin()+i);
 			return;
@@ -183,27 +176,25 @@ std::vector<uint64_t> id_api::cache::get(std::string type){
 
 // TODO: make a forwards and backwards function too
 // redefine this in linked_list
-std::vector<uint64_t> id_api::array::get_forward_linked_list(uint64_t id,
-							     uint64_t height){
+std::vector<uint64_t> id_api::array::get_forward_linked_list(uint64_t id){
 	std::vector<uint64_t> retval;
 	while(id != 0){
 		data_id_t *id_ptr = PTR_ID(id, );
 		retval.push_back(id);
-		id = id_ptr->get_next_linked_list(height);
+		id = id_ptr->get_next_linked_list();
 	}
 	return retval;
 }
 
-void id_api::linked_list::link_vector(std::vector<uint64_t> vector,
-				      uint16_t position){
-	PTR_ID(vector[0], )->set_next_linked_list(position, vector[1]);
+void id_api::linked_list::link_vector(std::vector<uint64_t> vector){
+	PTR_ID(vector[0], )->set_next_linked_list(vector[1]);
 	for(uint64_t i = 1;i < vector.size()-1;i++){
 		data_id_t *id = PTR_ID(vector[i], );
-		id->set_next_linked_list(position, vector[i+1]);
-		id->set_prev_linked_list(position, vector[i-1]);
+		id->set_next_linked_list(vector[i+1]);
+		id->set_prev_linked_list(vector[i-1]);
 	}
-	PTR_ID(vector[vector.size()-1], )->set_prev_linked_list(position,
-								vector[vector.size()-2]);
+	PTR_ID(vector[vector.size()-1], )->set_prev_linked_list(
+		vector[vector.size()-2]);
 }
 
 std::vector<uint64_t> id_api::get_all(){
@@ -222,9 +213,6 @@ std::vector<uint64_t> id_api::get_all(){
 
 void id_api::destroy_all_data(){
 	for(uint64_t i = 0;i < id_list.size();i++){
-		if(id_list[i] == nullptr){
-			continue;
-		}
 		try{
 			data_id_t *ptr = id_list[i];
 			DELETE_TYPE(tv_frame_video_t);
