@@ -1,5 +1,7 @@
-#include "tv_channel.cpp"
 #include "tv.cpp"
+#include "tv_video.cpp"
+#include "tv_audio.cpp"
+#include "tv_channel.cpp"
 #include "tv_window.cpp"
 #include "tv_menu.cpp"
 #include "tv_api.cpp"

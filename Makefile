@@ -1,5 +1,5 @@
 CXXFLAGS+=-Wall -Wextra -std=c++11 -Wpedantic -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-padded -Wno-old-style-cast
-LDFLAGS+=-lstdc++ -lcurl -lSDL2_net -lSDL2 -lz -ISDL -ISDL2
+LDFLAGS+=-lstdc++ -lcurl -lSDL2_net -lSDL2_mixer -lSDL2 -lz
 #changed for personal reasons, clang++ is faster at compiling
 CXX:=clang++
 

@@ -230,10 +230,6 @@ void throw_on_null(void* ptr){
 	}
 }
 
-/*
-  Convert this to C++
- */
-
 uint64_t true_rand(uint64_t min, uint64_t max){
 	std::mt19937 rng;
 	rng.seed(std::random_device()());

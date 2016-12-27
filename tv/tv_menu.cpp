@@ -450,12 +450,16 @@ void tv_menu_t::update_frame(){
 	if(never(frame == nullptr)){
 		print("menu frame is a nullptr", P_CRIT);
 	}
-	uint16_t x_res = TV_MENU_WIDTH;
-	uint16_t y_res = TV_MENU_HEIGHT;
+	uint16_t x_res = 0;
+	uint16_t y_res = 0;
 	try{
 		x_res = std::stoi(settings::get_setting("tv_menu_width"));
 		y_res = std::stoi(settings::get_setting("tv_menu_height"));
-	}catch(...){}
+	}catch(...){
+		print("unknown menu resolutions, using default values", P_ERR);
+		x_res = TV_MENU_WIDTH;
+		y_res = TV_MENU_HEIGHT;
+	}
 	frame->set_all(x_res*GLYPH_X,
 		       y_res*GLYPH_Y,
 		       TV_FRAME_DEFAULT_BPC,
