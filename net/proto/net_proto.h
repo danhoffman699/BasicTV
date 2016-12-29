@@ -41,6 +41,10 @@ typedef uint32_t net_proto_standard_unused_t;
 
 #define NET_REQUEST_MAX_LENGTH 512
 
+/*
+  TODO: implement requesting all of a type
+ */
+
 struct net_request_t{
 private:
 	std::array<uint64_t, NET_REQUEST_MAX_LENGTH> ids = {{0}};

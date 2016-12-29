@@ -24,5 +24,8 @@ public:
 	void add_dep(id_t_ id_);
 	void del_dep(id_t_ id_);
 	bool valid(uint64_t timestamp_micro_s);
+	uint64_t get_start_time_micro_s(){return start_time_micro_s;}
+	uint64_t get_ttl_micro_s(){return ttl_micro_s;}
+	uint64_t get_end_time_micro_s(){return get_start_time_micro_s()+get_ttl_micro_s();}
 };
 #endif

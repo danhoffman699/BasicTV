@@ -45,10 +45,16 @@
 #define GET_TV_FRAME_AUDIO_FORMAT(fl) (fl & TV_FRAME_AUDIO_FORMAT_MASK)
 #define SET_TV_FRAME_AUDIO_FORMAT(fl, fo) (fl &= ~TV_FRAME_AUDIO_FORMAT_MASK;fl |= fo & TV_FRAME_AUDIO_FORMAT_MASK)
 
+/*
+  tv_frame_audio_t should always be unsigned with syste byte order. Bit depth is
+  the only variable that can change (16 is where SDL2 taps out)
+*/
+
 class tv_frame_audio_t : public tv_frame_standard_t{
 private:
 	uint8_t flags = 0;
-	std::array<uint8_t, TV_FRAME_AUDIO_DATA_SIZE> data = {{0}};
+	//std::array<uint8_t, TV_FRAME_AUDIO_DATA_SIZE> data = {{0}};
+	std::vector<uint8_t> data;
 	uint8_t bit_depth = 0;
 	uint32_t sampling_freq = 0;
 public:
@@ -61,8 +67,10 @@ public:
 	void set_type(uint64_t sampling_freq_,
 		      uint8_t bit_depth_,
 		      uint8_t flags_);
-	// getting individual samples doesn't make sense
-	std::vector<uint8_t> get_samples();
-	void set_samples(std::vector<uint8_t> samples);
+	uint8_t get_flags(){return flags;}
+	uint8_t get_bit_depth(){return bit_depth;}
+	uint32_t get_sampling_freq(){return sampling_freq;}
+	std::vector<uint8_t> get_data();
+	void set_data(std::vector<uint8_t> data_);
 };
 #endif

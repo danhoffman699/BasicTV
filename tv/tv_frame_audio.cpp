@@ -30,33 +30,20 @@ void tv_frame_audio_t::set_type(uint64_t sampling_freq_,
 	flags = flags_;
 }
 
-std::vector<uint8_t> tv_frame_audio_t::get_samples(){
-	switch(GET_TV_FRAME_AUDIO_FORMAT(flags)){
-	case TV_FRAME_AUDIO_FORMAT_RAW:
-		return std::vector<uint8_t>(data.begin(), data.end());
-		break;
-	case TV_FRAME_AUDIO_FORMAT_UNDEFINED:
-	case TV_FRAME_AUDIO_FORMAT_OPUS:
-	case TV_FRAME_AUDIO_FORMAT_FLAC:
-	default:
-		print("unsupported format, cannot decode", P_ERR);
-		break;
-	}
-	return {};
+std::vector<uint8_t> tv_frame_audio_t::get_data(){
+	return data;
 }
-		
-void tv_frame_audio_t::set_samples(std::vector<uint8_t> samples){
+
+void tv_frame_audio_t::set_data(std::vector<uint8_t> data_){
+	data = data_;
 }
 
 tv_frame_audio_t::tv_frame_audio_t() : id(this, __FUNCTION__){
 	list_virtual_data(&id);
-	ADD_DATA_ARRAY(data,
-		       TV_FRAME_AUDIO_DATA_SIZE,
-		       1);
+	// add data
 	ADD_DATA(bit_depth);
 	ADD_DATA(sampling_freq);
 	ADD_DATA(flags);
-	// sampes is cache now
 }
 
 tv_frame_audio_t::~tv_frame_audio_t(){
