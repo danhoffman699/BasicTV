@@ -151,13 +151,17 @@ void tv_audio_channel_t::update_gen_chunks(){
 			continue;
 		}
 		Mix_Chunk *chunk_tmp = nullptr;
+		SDL_RWops *rw = nullptr;
 		switch(GET_TV_FRAME_AUDIO_FORMAT(frame->get_flags())){
 		case TV_FRAME_AUDIO_FORMAT_RAW:
+			// add more error checking
+			rw = SDL_RWFromMem(
+				&(frame->get_data()[0]),
+				frame->get_data().size());
 			chunk_tmp =
-				Mix_LoadWAV_RW(
-					SDL_RWFromMem(
-						&(frame->get_data()[0]),
-						frame->get_data().size()));
+				Mix_LoadWAV_RW(rw, 1);
+			SDL_RWclose(rw);
+			rw = nullptr;
 			break;
 		case TV_FRAME_AUDIO_FORMAT_UNDEFINED:
 		case TV_FRAME_AUDIO_FORMAT_OPUS:
