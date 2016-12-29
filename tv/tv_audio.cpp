@@ -139,22 +139,6 @@ void tv_audio_channel_t::update_del_old(){
 	}
 }
 
-/*
-  tv_frame_audio_t uses unsigned integers with system byte order (system byte
-  order because it works the easiest
-*/
-
-static std::vector<uint8_t> tv_audio_convert_raw_bitrate(tv_frame_audio_t *tmp,
-							 uint8_t bit_depth,
-							 uint32_t sampling_freq){
-	if(bit_depth == tmp->get_bit_depth() ||
-	   sampling_freq == tmp->get_sampling_freq()){
-		return tmp->get_data();
-	}else{
-		print("no conversion exists yet for this combination", P_ERR);
-	}
-}
-
 void tv_audio_channel_t::update_gen_chunks(){
 	for(uint64_t i = 0;i < chunk_vector.size();i++){
 		if(chunk_vector[i].second != nullptr){
@@ -166,22 +150,14 @@ void tv_audio_channel_t::update_gen_chunks(){
 		if(frame == nullptr){
 			continue;
 		}
-		std::vector<uint8_t> raw =
-			frame->get_data();
-		std::vector<uint8_t> final;
-		Mix_Chunk *chunk_tmp = new Mix_Chunk;
-		memset(chunk_tmp, 0, sizeof(Mix_Chunk));
+		Mix_Chunk *chunk_tmp = nullptr;
 		switch(GET_TV_FRAME_AUDIO_FORMAT(frame->get_flags())){
 		case TV_FRAME_AUDIO_FORMAT_RAW:
-			chunk_tmp->allocated = 1;
-			chunk_tmp->alen = raw.size();
-			chunk_tmp->abuf =
-				new uint8_t[chunk_tmp->alen];
-			chunk_tmp->volume = MIX_MAX_VOLUME;
-			final = tv_audio_convert_raw_bitrate(
-				frame,
-				24,
-				44100);
+			chunk_tmp =
+				Mix_LoadWAV_RW(
+					SDL_RWFromMem(
+						&(frame->get_data()[0]),
+						frame->get_data().size()));
 			break;
 		case TV_FRAME_AUDIO_FORMAT_UNDEFINED:
 		case TV_FRAME_AUDIO_FORMAT_OPUS:
@@ -189,8 +165,12 @@ void tv_audio_channel_t::update_gen_chunks(){
 			print("can't decode unsupported formats", P_ERR);
 			break;
 		}
-		chunk_vector[i].second =
-			chunk_tmp;
+		if(chunk_tmp == nullptr){
+			print("cannot load Mix_Chunk", P_ERR);
+		}else{
+			chunk_vector[i].second =
+				chunk_tmp;
+		}
 	}
 }
 
