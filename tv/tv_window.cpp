@@ -35,12 +35,12 @@ void tv_window_t::set_timestamp_offset(int64_t timestamp_offset_){
 	timestamp_offset = timestamp_offset_;
 }
 
-void tv_window_t::add_active_stream(id_t_ id_){
-	del_active_stream(id_);
+void tv_window_t::add_active_stream_id(id_t_ id_){
+	del_active_stream_id(id_);
 	active_streams.push_back(id_);
 }
 
-void tv_window_t::del_active_stream(id_t_ id_){
+void tv_window_t::del_active_stream_id(id_t_ id_){
 	for(uint64_t i = 0;i < active_streams.size();i++){
 		if(active_streams[i] == id_){
 			active_streams.erase(

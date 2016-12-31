@@ -60,8 +60,8 @@ public:
 	void set_timestamp_offset(int64_t timestamp_offset_);
 	int64_t get_timestamp_offset(){return timestamp_offset;}
 	// generated from the position
-	void add_active_stream(id_t_ id_);
-	void del_active_stream(id_t_ id_);
+	void add_active_stream_id(id_t_ id_);
+	void del_active_stream_id(id_t_ id_);
 	std::vector<id_t_> get_active_streams(){return active_streams;}
 	uint64_t get_x_res();
 	uint64_t get_y_res();

@@ -12,51 +12,47 @@ static uint32_t output_chunk_size = 0;
 
 // tv_audio_channel_t is simple enough to stay in this file
 
-static void tv_audio_wave_big_endian(std::vector<uint8_t> *retval, const char *data){
-	// strings don't appear to have any fancy work
+static void tv_audio_wave(std::vector<uint8_t> *retval, const char *data){
 	retval->insert(retval->end(), data, data+strlen(data));
 }
 
-static void tv_audio_wave_big_endian(std::vector<uint8_t> *retval, uint32_t data){
+static void tv_audio_wave(std::vector<uint8_t> *retval, uint32_t data){
 	// reverse byte order, but little endian bits
 	std::vector<uint8_t> data_tmp(&data, &data+sizeof(data));
-	std::reverse(data_tmp.begin(), data_tmp.end());
 	retval->insert(retval->end(), data_tmp.begin(), data_tmp.end());
 }
 
-static void tv_audio_wave_big_endian(std::vector<uint8_t> *retval, uint16_t data){
+static void tv_audio_wave(std::vector<uint8_t> *retval, uint16_t data){
 	std::vector<uint8_t> data_tmp(&data, &data+sizeof(data));
-	std::reverse(data_tmp.begin(), data_tmp.end());
 	retval->insert(retval->end(), data_tmp.begin(), data_tmp.end());
 }
+
+/*
+  TODO: fix this function
+*/
 
 static std::vector<uint8_t> tv_audio_get_wav_data(tv_frame_audio_t *frame){
 	std::vector<uint8_t> retval;
-	tv_audio_wave_big_endian(&retval, "RIFF");
-	tv_audio_wave_big_endian(&retval, (uint32_t)frame->get_data().size());
-	tv_audio_wave_big_endian(&retval, "WAVE");
-	tv_audio_wave_big_endian(&retval, "fmt ");
-	retval.push_back(16);
-	retval.push_back(0);
-	retval.push_back(0);
-	retval.push_back(0);
-	retval.push_back(1); // uncompressed PCM
-	retval.push_back(0);
-	retval.push_back(1); // channel count
-	retval.push_back(0);
-	tv_audio_wave_big_endian(&retval, (uint32_t)frame->get_sampling_freq());
-	tv_audio_wave_big_endian(&retval, (uint32_t)frame->get_sampling_freq()*1*frame->get_bit_depth()/8);
-	retval.push_back((1*frame->get_bit_depth()/8)); // block align
-	retval.push_back(0);
-	retval.push_back(frame->get_bit_depth()); // bits per sample
-	retval.push_back(0);
-	tv_audio_wave_big_endian(&retval, "data");
-	tv_audio_wave_big_endian(&retval, (uint32_t)frame->get_data().size());
-	// insert the data here
+	tv_audio_wave(&retval, "RIFF");
+	tv_audio_wave(&retval, (uint32_t)frame->get_data().size());
+	tv_audio_wave(&retval, "WAVE");
+	tv_audio_wave(&retval, "fmt ");
+	tv_audio_wave(&retval, (uint32_t)16); // length of data section
+	tv_audio_wave(&retval, (uint16_t)1); // uncompressed PCM
+	tv_audio_wave(&retval, (uint16_t)1); // channel count
+	tv_audio_wave(&retval, (uint32_t)frame->get_sampling_freq());
+	tv_audio_wave(&retval, (uint32_t)frame->get_sampling_freq()*1*frame->get_bit_depth()/8);
+	tv_audio_wave(&retval, (uint16_t)(1*frame->get_bit_depth()/8)); // block aligh
+	tv_audio_wave(&retval, (uint16_t)frame->get_bit_depth());
+	tv_audio_wave(&retval, "data");
+	std::vector<uint8_t> frame_data =
+		frame->get_data();
+	P_V(frame_data.size(), P_SPAM);
+	tv_audio_wave(&retval, (uint32_t)frame_data.size());
 	retval.insert(
 		retval.end(),
-		frame->get_data().begin(),
-		frame->get_data().end());
+		frame_data.begin(),
+		frame_data.end());
 	return retval;
 }
 
@@ -98,8 +94,10 @@ static void tv_audio_test_load_sine_wave(){
 		get_time_microseconds()+(5*1000*1000);
 	const uint64_t frame_duration_micro_s =
 		1000*1000;
+	P_V(output_sampling_rate, P_SPAM);
+	P_V(output_bit_depth, P_SPAM);
 	const uint64_t sample_length_per_frame =
-		((output_sampling_rate*output_bit_depth)/8)*frame_duration_micro_s;
+		((output_sampling_rate*output_bit_depth)/8.0)*(frame_duration_micro_s/(1000.0*1000.0));
 	uint64_t current_start = 0;
 	std::vector<id_t_> audio_frame_vector;
 	while(current_start < chunk->alen){
@@ -108,9 +106,11 @@ static void tv_audio_test_load_sine_wave(){
 		uint64_t length = 0;
 		uint64_t elapsed_time = 0;
 		if(current_start + sample_length_per_frame < chunk->alen){
+			print("adding full vlaue of sample_length_per_frame", P_NOTE);
 			length = sample_length_per_frame;
 			elapsed_time = frame_duration_micro_s;
 		}else{
+			print("can't add full frame, ran out of room", P_NOTE);
 			length = chunk->alen-current_start;
 			const long double numerator =
 				chunk->alen-current_start;
@@ -125,22 +125,24 @@ static void tv_audio_test_load_sine_wave(){
 				&(chunk->abuf[current_start+length])
 				)
 			);
-		audio->set_standard(start_time_micro_s+(audio_frame_vector.size()),
+		audio->set_standard(start_time_micro_s+(frame_duration_micro_s*audio_frame_vector.size()),
 				    frame_duration_micro_s,
 				    audio_frame_vector.size());
+		P_V(current_start, P_SPAM);
+		P_V(length, P_SPAM);
 		current_start += length;
-		/*
-		  Technically, audio length can be derived from the sampling
-		  freq, bit depth, and vector size. However, that extra 8 bytes
-		  of networked space isn't really worth it.
-		 */
+		audio_frame_vector.push_back(
+			audio->id.get_id());
 	}
 	id_api::linked_list::link_vector(audio_frame_vector);
 	tv_window_t *window =
 		new tv_window_t;
 	tv_channel_t *channel =
 		new tv_channel_t;
-	
+	window->set_channel_id(
+		channel->id.get_id());
+	channel->add_stream_id(audio_frame_vector[0]);
+	window->add_active_stream_id(audio_frame_vector[0]);
 	Mix_FreeChunk(chunk);
 	chunk = nullptr;
 }
@@ -195,6 +197,7 @@ static void tv_audio_clean_audio_data(){
 		const uint64_t end_time_micro_s =
 			std::get<1>(audio_data[i]);
 		if(end_time_micro_s < cur_time_micro_s){
+			print("destroying old audio data", P_NOTE);
 			Mix_Chunk **ptr =
 				&std::get<2>(audio_data[i]);
 			if(*ptr == nullptr){
@@ -221,12 +224,11 @@ static void tv_audio_add_frame_audios(std::vector<id_t_> frame_audios){
 			audio->get_ttl_micro_s();
 		std::vector<uint8_t> wav_data =
 			tv_audio_get_wav_data(audio);
+		P_V(wav_data.size(), P_SPAM);
 		Mix_Chunk *chunk =
-			Mix_LoadWAV_RW(
-				SDL_RWFromMem(
-					&(wav_data[0]),
-					wav_data.size()),
-				1);
+			Mix_QuickLoad_RAW(
+				wav_data.data(),
+				wav_data.size());
 		if(chunk == nullptr){
 			print("can't load Mix_Chunk:"+(std::string)Mix_GetError(), P_ERR);
 		}
@@ -237,7 +239,10 @@ static void tv_audio_add_frame_audios(std::vector<id_t_> frame_audios){
 				frame_audios[i],
 				cur_timestamp_microseconds+ttl_micro_s,
 				chunk);
+		print("appending tv_frame_audio_t tuple to audio_data", P_NOTE);
 		audio_data.push_back(new_data);
+		print("playing audio", P_NOTE);
+		Mix_PlayChannel(-1, chunk, 0);
 	}
 }
 
@@ -253,6 +258,7 @@ static std::vector<id_t_> tv_audio_get_current_frame_audios(){
 			PTR_DATA(windows[i],
 				 tv_window_t);
 		if(window == nullptr){
+			print("window is a nullptr", P_SPAM);
 			continue;
 		}
 		const std::vector<id_t_> active_streams =
@@ -273,6 +279,7 @@ static std::vector<id_t_> tv_audio_get_current_frame_audios(){
 }
 
 void tv_audio_loop(){
+	Mix_Volume(-1, MIX_MAX_VOLUME); // -1 sets all channels
 	tv_audio_clean_audio_data();
 	tv_audio_add_frame_audios(
 		tv_audio_get_current_frame_audios());

@@ -53,7 +53,7 @@
 
 struct tv_channel_t{
 private:
-	std::array<uint64_t, TV_CHAN_FRAME_LIST_SIZE> stream_list = {{0}};
+	std::vector<id_t_> stream_list;
 	uint64_t status = 0;
 	uint64_t broadcast_delay_micro_s = 0;
 	uint64_t pivot_time_micro_s = 0;
@@ -62,9 +62,9 @@ public:
 	data_id_t id;
 	tv_channel_t();
 	~tv_channel_t();
-	uint64_t get_frame_id(uint64_t entry);
-	void set_frame_id(uint64_t entry,
-			  uint64_t stream_id);
+	std::vector<id_t_> get_stream_list();
+	void add_stream_id(id_t_ id_);
+	void del_stream_id(id_t_ id_);
 	uint64_t get_broadcast_delay_micro_s();
 	void set_broadcast_delay_micro_s(uint64_t broadcast_delay_micro_s_);
 	bool is_streaming();

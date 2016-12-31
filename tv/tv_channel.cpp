@@ -27,19 +27,25 @@ bool tv_channel_t::is_video(){
 	return status & TV_CHAN_VIDEO;
 }
 
-uint64_t tv_channel_t::get_frame_id(uint64_t entry){
-	if(unlikely(entry >= TV_CHAN_FRAME_LIST_SIZE)){
-		print("requested entry falls outside of bounds", P_WARN);
-		return 0;
-	}
-	return stream_list[entry];
+std::vector<id_t_> tv_channel_t::get_stream_list(){
+	return std::vector<id_t_>(
+		stream_list.begin(),
+		stream_list.end());
 }
 
-void tv_channel_t::set_frame_id(uint64_t entry, uint64_t value){
-	if(unlikely(entry >= TV_CHAN_FRAME_LIST_SIZE)){
-		print("requested entry falls outside of bounds", P_ERR);
+void tv_channel_t::add_stream_id(id_t_ id_){
+	del_stream_id(id_);
+	stream_list.push_back(id_);
+}
+
+void tv_channel_t::del_stream_id(id_t_ id_){
+	for(uint64_t i = 0;i < stream_list.size();i++){
+		if(stream_list[i] == id_){
+			stream_list.erase(
+				stream_list.begin()+i);
+			// don't break until I know everything works fine
+		}
 	}
-	stream_list[entry] = value;
 }
 
 uint64_t tv_channel_t::get_broadcast_delay_micro_s(){

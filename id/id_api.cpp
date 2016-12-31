@@ -134,6 +134,7 @@ static std::vector<uint64_t> *get_type_cache_ptr(std::array<uint8_t, TYPE_LENGTH
 		}
 	}
 	type_cache.push_back(std::make_pair(std::vector<uint64_t>({}), tmp));
+	print("type cache of " + (std::string)(char*)(&tmp[0]) + " is " + std::to_string(type_cache.size()), P_SPAM);
 	return &type_cache[type_cache.size()-1].first;
 }
 
@@ -167,6 +168,7 @@ void id_api::cache::del(uint64_t id, std::string type){
 }
 
 std::vector<uint64_t> id_api::cache::get(std::array<uint8_t, TYPE_LENGTH> type){
+	
 	return *get_type_cache_ptr(type);
 }
 
@@ -187,7 +189,22 @@ std::vector<uint64_t> id_api::array::get_forward_linked_list(uint64_t id){
 }
 
 void id_api::linked_list::link_vector(std::vector<uint64_t> vector){
-	PTR_ID(vector[0], )->set_next_linked_list(vector[1]);
+	switch(vector.size()){
+	case 0:
+		print("vector is empty", P_NOTE);
+		return;
+	case 1:
+		print("vector has one entry, can't link to anything" , P_NOTE);
+		return;
+	case 2:
+		PTR_ID(vector[0], )->set_next_linked_list(vector[1]);
+		PTR_ID(vector[1], )->set_next_linked_list(vector[0]);
+		return;
+	}
+	data_id_t *first = PTR_ID(vector[0], );
+	if(first != nullptr){
+		first->set_next_linked_list(vector[1]);
+	}
 	for(uint64_t i = 1;i < vector.size()-1;i++){
 		data_id_t *id = PTR_ID(vector[i], );
 		id->set_next_linked_list(vector[i+1]);

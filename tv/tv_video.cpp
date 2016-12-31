@@ -269,14 +269,16 @@ static void tv_render_frame_to_screen_surface(tv_frame_video_t *frame,
 
 static uint64_t tv_render_get_preferable_frame_list(tv_channel_t *channel){
 	uint64_t retval = 0;
-	for(uint64_t i = 0;i < TV_CHAN_FRAME_LIST_SIZE;i++){
-		const uint64_t tmp_id =
-			channel->get_frame_id(i);
-		const data_id_t *tmp =
-			id_api::array::ptr_id(tmp_id, "tv_frame_video_t");
+	std::vector<id_t_> stream_list =
+		channel->get_stream_list();
+	for(uint64_t i = 0;i < stream_list.size();i++){
+		data_id_t *tmp =
+			id_api::array::ptr_id(
+				stream_list[i],
+				"tv_frame_video_t");
 		// TODO: actually do some work here
 		if(tmp != nullptr){
-			retval = tmp_id;
+			retval = tmp->get_id();
 		}
 	}
 	return retval;
@@ -339,7 +341,7 @@ static void tv_init_test_menu(){
 	menu->set_menu_entry(3, "to");
 	menu->set_menu_entry(4, "be");
 	menu->set_menu_entry(5, "great");
-	channel->set_frame_id(0, menu->get_frame_id());
+	channel->add_stream_id(menu->get_frame_id());
 	window->set_channel_id(channel->id.get_id());
 }
 
@@ -372,7 +374,7 @@ static void tv_init_test_webcam(){
 		vector_array.push_back(video->id.get_id());
 	}
 	id_api::linked_list::link_vector(vector_array);
-	channel->set_frame_id(0, vector_array[0]);
+	channel->add_stream_id(vector_array[0]);
 	window->set_channel_id(channel->id.get_id());
 }
 
