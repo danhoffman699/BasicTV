@@ -1,3 +1,4 @@
+#include "../id/id_api.h"
 #ifndef TV_FRAME_STANDARD_H
 #define TV_FRAME_STANDARD_H
 #define TV_FRAME_DEFAULT_FREQ 60
@@ -28,4 +29,40 @@ public:
 	uint64_t get_ttl_micro_s(){return ttl_micro_s;}
 	uint64_t get_end_time_micro_s(){return get_start_time_micro_s()+get_ttl_micro_s();}
 };
+template<typename T>
+id_t_ tv_frame_scroll_to_time(T data, uint64_t play_time){
+	while(data != nullptr){
+		const uint64_t start_time_micro_s =
+			data->get_start_time_micro_s();
+		const uint64_t end_time_micro_s =
+			data->get_end_time_micro_s();
+		const uint64_t ttl_micro_s =
+			data->get_ttl_micro_s();
+		const bool stay =
+			BETWEEN(start_time_micro_s,
+				play_time,
+				end_time_micro_s);
+		id_t_ new_id = 0;
+		if(stay){
+			return data->id.get_id();
+		}else{
+			const bool go_forward =
+				(play_time < end_time_micro_s);
+			if(go_forward){
+				new_id = data->id.get_next_linked_list();
+			}else{
+				new_id = data->id.get_prev_linked_list();
+			}
+		}
+		data_id_t *new_id_ptr =
+			id_api::array::ptr_id(new_id, "");
+		if(new_id_ptr != nullptr){
+			data = (T)new_id_ptr->get_ptr();
+		}else{
+			data = nullptr;
+		}
+	}
+	// only out that isn't valid is data = PTR_ID...
+	return 0;
+}
 #endif

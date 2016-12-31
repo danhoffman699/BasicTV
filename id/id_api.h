@@ -43,6 +43,7 @@ namespace id_api{
 		std::vector<uint64_t> get(std::string type);
 	}
 	namespace linked_list{
+		// next and previous are in the id itself, no interdependency
 		void link_vector(std::vector<uint64_t> vector);
 	};
 	std::vector<uint64_t> get_all();
