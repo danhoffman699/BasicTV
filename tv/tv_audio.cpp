@@ -13,18 +13,25 @@ static uint32_t output_chunk_size = 0;
 // tv_audio_channel_t is simple enough to stay in this file
 
 static void tv_audio_wave(std::vector<uint8_t> *retval, const char *data){
-	retval->insert(retval->end(), data, data+strlen(data));
+	P_V_S(data, P_SPAM);
+	retval->push_back(((uint8_t*)data)[0]);
+	retval->push_back(((uint8_t*)data)[1]);
+	retval->push_back(((uint8_t*)data)[2]);
+	retval->push_back(((uint8_t*)data)[3]);
 }
 
 static void tv_audio_wave(std::vector<uint8_t> *retval, uint32_t data){
-	// reverse byte order, but little endian bits
-	std::vector<uint8_t> data_tmp(&data, &data+sizeof(data));
-	retval->insert(retval->end(), data_tmp.begin(), data_tmp.end());
+	P_V(data, P_SPAM);
+	retval->push_back(((uint8_t*)&data)[0]);
+	retval->push_back(((uint8_t*)&data)[1]);
+	retval->push_back(((uint8_t*)&data)[2]);
+	retval->push_back(((uint8_t*)&data)[3]);
 }
 
 static void tv_audio_wave(std::vector<uint8_t> *retval, uint16_t data){
-	std::vector<uint8_t> data_tmp(&data, &data+sizeof(data));
-	retval->insert(retval->end(), data_tmp.begin(), data_tmp.end());
+	P_V(data, P_SPAM);
+	retval->push_back(((uint8_t*)&data)[0]);
+	retval->push_back(((uint8_t*)&data)[1]);
 }
 
 /*
@@ -32,23 +39,32 @@ static void tv_audio_wave(std::vector<uint8_t> *retval, uint16_t data){
 */
 
 static std::vector<uint8_t> tv_audio_get_wav_data(tv_frame_audio_t *frame){
+	P_V(frame->get_sampling_freq(), P_SPAM);
+	P_V(frame->get_bit_depth(), P_SPAM);
+	uint32_t sampling_freq = frame->get_sampling_freq();
+	uint8_t bit_depth = frame->get_bit_depth();
+	std::vector<uint8_t> frame_data =
+		frame->get_data();
+	if(frame_data.size() % (bit_depth/8)){
+		print("frame_data isn't the proper size", P_ERR);
+	}
+	P_V(frame_data.size(), P_SPAM);
 	std::vector<uint8_t> retval;
 	tv_audio_wave(&retval, "RIFF");
-	tv_audio_wave(&retval, (uint32_t)frame->get_data().size());
+	tv_audio_wave(&retval, (uint32_t)(frame_data.size()+36));
 	tv_audio_wave(&retval, "WAVE");
 	tv_audio_wave(&retval, "fmt ");
 	tv_audio_wave(&retval, (uint32_t)16); // length of data section
 	tv_audio_wave(&retval, (uint16_t)1); // uncompressed PCM
 	tv_audio_wave(&retval, (uint16_t)1); // channel count
-	tv_audio_wave(&retval, (uint32_t)frame->get_sampling_freq());
-	tv_audio_wave(&retval, (uint32_t)frame->get_sampling_freq()*1*frame->get_bit_depth()/8);
-	tv_audio_wave(&retval, (uint16_t)(1*frame->get_bit_depth()/8)); // block aligh
-	tv_audio_wave(&retval, (uint16_t)frame->get_bit_depth());
+	tv_audio_wave(&retval, (uint32_t)sampling_freq);
+	tv_audio_wave(&retval, (uint32_t)(sampling_freq*1*bit_depth/8));
+	tv_audio_wave(&retval, (uint16_t)(1*bit_depth/8)); // block align
+	tv_audio_wave(&retval, (uint16_t)bit_depth);
 	tv_audio_wave(&retval, "data");
-	std::vector<uint8_t> frame_data =
-		frame->get_data();
-	P_V(frame_data.size(), P_SPAM);
 	tv_audio_wave(&retval, (uint32_t)frame_data.size());
+	// WAV forces this data to be in signed 16-bit form, which this isn't
+	P_V(retval.size(), P_SPAM);
 	retval.insert(
 		retval.end(),
 		frame_data.begin(),
@@ -80,9 +96,9 @@ static uint32_t tv_audio_sdl_format_from_depth(uint8_t bit_depth){
 
 static void tv_audio_test_load_sine_wave(){
 	Mix_Chunk *chunk =
-		Mix_LoadWAV("sine_wave.wav");
+		Mix_LoadWAV("test.wav");
 	if(chunk == nullptr){
-		print("cannot load sine_wave.wav:" + (std::string)Mix_GetError(), P_ERR);
+		print("cannot load test.wav:" + (std::string)Mix_GetError(), P_ERR);
 	}
 	/*
 	  LoadWAV converts the data into the settings set in Mix_OpenAudio,
@@ -106,7 +122,7 @@ static void tv_audio_test_load_sine_wave(){
 		uint64_t length = 0;
 		uint64_t elapsed_time = 0;
 		if(current_start + sample_length_per_frame < chunk->alen){
-			print("adding full vlaue of sample_length_per_frame", P_NOTE);
+			print("adding full value of sample_length_per_frame", P_NOTE);
 			length = sample_length_per_frame;
 			elapsed_time = frame_duration_micro_s;
 		}else{
@@ -125,6 +141,14 @@ static void tv_audio_test_load_sine_wave(){
 				&(chunk->abuf[current_start+length])
 				)
 			);
+		uint8_t audio_flags = 0;
+		SET_TV_FRAME_AUDIO_FORMAT(
+			audio_flags,
+			TV_FRAME_AUDIO_FORMAT_RAW);
+		audio->set_type(
+			output_sampling_rate,
+			output_bit_depth,
+			audio_flags);
 		audio->set_standard(start_time_micro_s+(frame_duration_micro_s*audio_frame_vector.size()),
 				    frame_duration_micro_s,
 				    audio_frame_vector.size());
@@ -196,6 +220,7 @@ static void tv_audio_clean_audio_data(){
 		// id_t_ is useless for now, but maybe not always
 		const uint64_t end_time_micro_s =
 			std::get<1>(audio_data[i]);
+		// Make sure that SDL is done with it (should do something better)
 		if(end_time_micro_s < cur_time_micro_s){
 			print("destroying old audio data", P_NOTE);
 			Mix_Chunk **ptr =
@@ -209,6 +234,10 @@ static void tv_audio_clean_audio_data(){
 		}
 	}
 }
+
+/*
+  All frame_audios entries need to be started NOW, so don't offset anything
+ */
 
 static void tv_audio_add_frame_audios(std::vector<id_t_> frame_audios){
 	const uint64_t cur_timestamp_microseconds =
@@ -225,10 +254,15 @@ static void tv_audio_add_frame_audios(std::vector<id_t_> frame_audios){
 		std::vector<uint8_t> wav_data =
 			tv_audio_get_wav_data(audio);
 		P_V(wav_data.size(), P_SPAM);
-		Mix_Chunk *chunk =
-			Mix_QuickLoad_RAW(
+		SDL_RWops *rw =
+			SDL_RWFromMem(
 				wav_data.data(),
 				wav_data.size());
+		if(rw == nullptr){
+			print("can't allocate SDL_RWops:"+(std::string)SDL_GetError(), P_ERR);
+		}
+		Mix_Chunk *chunk =
+			Mix_LoadWAV_RW(rw, 1);
 		if(chunk == nullptr){
 			print("can't load Mix_Chunk:"+(std::string)Mix_GetError(), P_ERR);
 		}
@@ -274,6 +308,11 @@ static std::vector<id_t_> tv_audio_get_current_frame_audios(){
 					audio_frame_tmp,
 					play_time));
 		}
+	}
+	P_V(frame_audios.size(), P_SPAM);
+	for(uint64_t i = 0;i < frame_audios.size();i++){
+		P_V(i, P_SPAM);
+		P_V(frame_audios[i], P_SPAM);
 	}
 	return frame_audios;
 }

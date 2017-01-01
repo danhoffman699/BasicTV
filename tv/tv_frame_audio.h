@@ -43,7 +43,7 @@
 
 // no shift, other macros need shift operators
 #define GET_TV_FRAME_AUDIO_FORMAT(fl) (fl & TV_FRAME_AUDIO_FORMAT_MASK)
-#define SET_TV_FRAME_AUDIO_FORMAT(fl, fo) (fl &= ~TV_FRAME_AUDIO_FORMAT_MASK;fl |= fo & TV_FRAME_AUDIO_FORMAT_MASK)
+#define SET_TV_FRAME_AUDIO_FORMAT(fl, fo) fl &= ~TV_FRAME_AUDIO_FORMAT_MASK;fl |= fo & TV_FRAME_AUDIO_FORMAT_MASK;
 
 /*
   tv_frame_audio_t should always be unsigned with syste byte order. Bit depth is

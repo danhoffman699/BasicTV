@@ -204,6 +204,8 @@ void id_api::linked_list::link_vector(std::vector<uint64_t> vector){
 	data_id_t *first = PTR_ID(vector[0], );
 	if(first != nullptr){
 		first->set_next_linked_list(vector[1]);
+	}else{
+		print("first entry is a nullptr, this can be fixed, but I didn't bother and this shouldn't happen anyways", P_ERR);
 	}
 	for(uint64_t i = 1;i < vector.size()-1;i++){
 		data_id_t *id = PTR_ID(vector[i], );

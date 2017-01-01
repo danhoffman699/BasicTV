@@ -47,7 +47,7 @@ id_t_ tv_frame_scroll_to_time(T data, uint64_t play_time){
 			return data->id.get_id();
 		}else{
 			const bool go_forward =
-				(play_time < end_time_micro_s);
+				(play_time > end_time_micro_s);
 			if(go_forward){
 				new_id = data->id.get_next_linked_list();
 			}else{

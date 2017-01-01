@@ -1,5 +1,6 @@
 #ifndef MAIN_H
 #define MAIN_H
+#include "csignal"
 #include "iostream"
 #include "vector"
 #include "SDL2/SDL.h"
