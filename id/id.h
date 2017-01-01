@@ -56,6 +56,8 @@ private:
 	void init_list_all_data();
 	void init_gen_id();
 	void init_type_cache();
+	// set at get_ptr(), used for selective exporting
+	uint64_t last_access_timestamp_micro_s = 0;
 public:
 	data_id_t(void *ptr_, std::string type_);
 	~data_id_t();
@@ -92,5 +94,6 @@ public:
 	// misc.
 	void pgp_decrypt_backlog();
 	bool is_owner();
+	uint64_t get_last_access_timestamp_micro_s(){return last_access_timestamp_micro_s;}
 };
 #endif

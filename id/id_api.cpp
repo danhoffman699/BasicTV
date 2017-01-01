@@ -5,7 +5,22 @@
 #include "../tv/tv_dev_video.h"
 #include "../tv/tv_frame_audio.h"
 #include "../tv/tv_frame_video.h"
+#include "../tv/tv_frame_caption.h"
+#include "../tv/tv_channel.h"
+#include "../tv/tv_window.h"
+#include "../tv/tv_menu.h"
+#include "../net/proto/inbound/net_proto_inbound_data.h"
+#include "../net/proto/outbound/net_proto_outbound_data.h"
+#include "../net/proto/net_proto_con_req.h"
+#include "../net/proto/net_proto_peer.h"
+#include "../net/proto/net_proto_con_req.h"
 #include "../net/proto/net_proto.h"
+
+#include "../input/input.h"
+#include "../input/input_ir.h"
+
+#include "../settings.h"
+
 
 static std::vector<data_id_t*> id_list;
 static std::vector<std::pair<std::vector<uint64_t>, std::array<uint8_t, TYPE_LENGTH> > > type_cache;
@@ -226,9 +241,44 @@ std::vector<uint64_t> id_api::get_all(){
 	return retval;
 }
 
+// make this less stupid
+
+#define DELETE_TYPE_2(a) if(ptr->get_type() == #a){delete (a*)ptr->get_ptr();return;}
 #define DELETE_TYPE(a) if(ptr->get_type() == #a){delete (a*)ptr->get_ptr();continue;}
 
 // refactor
+
+/*
+  Periodically update with rgrep
+ */
+
+void id_api::destroy(id_t_ id){
+	data_id_t *ptr = PTR_ID(id, );
+	// TV subsystem
+	DELETE_TYPE_2(tv_frame_video_t);
+	DELETE_TYPE_2(tv_frame_audio_t);
+	DELETE_TYPE_2(tv_frame_caption_t);
+	DELETE_TYPE_2(tv_window_t);
+	DELETE_TYPE_2(tv_channel_t);
+	DELETE_TYPE_2(tv_menu_entry_t);
+	DELETE_TYPE_2(tv_menu_t);
+
+	// net (proto and standard)
+	DELETE_TYPE_2(net_socket_t);
+	DELETE_TYPE_2(net_peer_t);	
+	DELETE_TYPE_2(net_request_t);
+	DELETE_TYPE_2(net_proto_con_req_t);
+	DELETE_TYPE_2(net_cache_t); // ?
+
+	// IR
+	DELETE_TYPE_2(ir_remote_t);
+
+	// input
+	DELETE_TYPE_2(input_dev_standard_t);
+
+	// cryptography
+	DELETE_TYPE_2(rsa_pair_t);
+}
 
 void id_api::destroy_all_data(){
 	for(uint64_t i = 0;i < id_list.size();i++){
@@ -243,5 +293,59 @@ void id_api::destroy_all_data(){
 			DELETE_TYPE(net_socket_t);
 			print("unknown type:" + ptr->get_type(), P_WARN);
 		}catch(...){}
+	}
+}
+
+/*
+  Goes through all of the IDs, and exports a select few to the disk.
+  IDs with the lowest last_access_timestamp_micro_s are exported. Keep
+  looping this over until enough memory has been freed. 
+ */
+
+static uint64_t get_mem_usage_kb(){
+#ifdef __linux
+	std::ifstream mem_buf("/proc/self/statm");
+	uint32_t t_size = 0, resident = 0, share = 0;
+	mem_buf >> t_size >> resident >> share;
+	mem_buf.close();
+	uint64_t page_size_kb = sysconf(_SC_PAGE_SIZE)/1024;
+	return resident*sysconf(_SC_PAGE_SIZE)/1024; // RSS
+#else
+#error No memory function currently exists for non-Linux systems
+#endif
+}
+
+void id_api::free_mem(){
+	uint64_t max_mem_usage = 0;
+	try{
+		max_mem_usage =
+			std::stoi(
+				settings::get_setting(
+					"max_mem_usage"));
+	}catch(...){
+		print("using max mem usage default of 1GB", P_NOTE);
+		max_mem_usage = 1024*1024; // 1 GB, but should be lower 
+	}
+	while(get_mem_usage_kb() > max_mem_usage){
+		id_t_ lowest_timestamp_id =
+			0;
+		for(uint64_t i = 0;i < id_list.size();i++){
+			data_id_t *lowest =
+				PTR_ID(lowest_timestamp_id, );
+			data_id_t *current =
+				id_list[i];
+			if(lowest == nullptr){
+				// probably first entry
+				lowest_timestamp_id = id_list[i]->get_id();
+				lowest = current;
+			}else{
+				if(lowest->get_last_access_timestamp_micro_s() >
+				   current->get_last_access_timestamp_micro_s()){
+					lowest_timestamp_id =
+						current->get_id();
+				}
+			}
+		}
+		
 	}
 }

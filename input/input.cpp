@@ -81,6 +81,9 @@ input_dev_standard_t::input_dev_standard_t() : id(this, __FUNCTION__){
 	ADD_DATA_ARRAY(queue, sizeof(queue[0]), INPUT_DEV_QUEUE_LENGTH);
 }
 
+input_dev_standard_t::~input_dev_standard_t(){
+}
+
 uint8_t input_dev_standard_t::get_latest_entry(){
 	uint8_t retval = queue[0];
 	for(uint16_t i = 0;i < INPUT_DEV_QUEUE_LENGTH;i++){

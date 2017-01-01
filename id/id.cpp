@@ -66,7 +66,14 @@ std::string data_id_t::get_type(){
 	return convert::array::type::from(type);
 }
 
+/*
+  Even though function can pass information to each other through IDs,
+  get_id is used in too many searches to be a healthy benchmark
+ */
+
 void *data_id_t::get_ptr(){
+	last_access_timestamp_micro_s =
+		get_time_microseconds();
 	return ptr;
 }
 

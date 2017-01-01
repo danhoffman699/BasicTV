@@ -1,6 +1,6 @@
 #ifndef NET_PROTO_CON_REQ_H
 #define NET_PROTO_CON_REQ_H
-#include "../net_peer.h"
+#include "net_proto_peer.h"
 /*
   net_con_req_t: connection request
 

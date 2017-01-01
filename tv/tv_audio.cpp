@@ -13,7 +13,6 @@ static uint32_t output_chunk_size = 0;
 // tv_audio_channel_t is simple enough to stay in this file
 
 static void tv_audio_wave(std::vector<uint8_t> *retval, const char *data){
-	P_V_S(data, P_SPAM);
 	retval->push_back(((uint8_t*)data)[0]);
 	retval->push_back(((uint8_t*)data)[1]);
 	retval->push_back(((uint8_t*)data)[2]);
@@ -21,7 +20,6 @@ static void tv_audio_wave(std::vector<uint8_t> *retval, const char *data){
 }
 
 static void tv_audio_wave(std::vector<uint8_t> *retval, uint32_t data){
-	P_V(data, P_SPAM);
 	retval->push_back(((uint8_t*)&data)[0]);
 	retval->push_back(((uint8_t*)&data)[1]);
 	retval->push_back(((uint8_t*)&data)[2]);
@@ -29,7 +27,6 @@ static void tv_audio_wave(std::vector<uint8_t> *retval, uint32_t data){
 }
 
 static void tv_audio_wave(std::vector<uint8_t> *retval, uint16_t data){
-	P_V(data, P_SPAM);
 	retval->push_back(((uint8_t*)&data)[0]);
 	retval->push_back(((uint8_t*)&data)[1]);
 }
@@ -39,8 +36,6 @@ static void tv_audio_wave(std::vector<uint8_t> *retval, uint16_t data){
 */
 
 static std::vector<uint8_t> tv_audio_get_wav_data(tv_frame_audio_t *frame){
-	P_V(frame->get_sampling_freq(), P_SPAM);
-	P_V(frame->get_bit_depth(), P_SPAM);
 	uint32_t sampling_freq = frame->get_sampling_freq();
 	uint8_t bit_depth = frame->get_bit_depth();
 	std::vector<uint8_t> frame_data =
@@ -48,7 +43,6 @@ static std::vector<uint8_t> tv_audio_get_wav_data(tv_frame_audio_t *frame){
 	if(frame_data.size() % (bit_depth/8)){
 		print("frame_data isn't the proper size", P_ERR);
 	}
-	P_V(frame_data.size(), P_SPAM);
 	std::vector<uint8_t> retval;
 	tv_audio_wave(&retval, "RIFF");
 	tv_audio_wave(&retval, (uint32_t)(frame_data.size()+36));
@@ -64,7 +58,6 @@ static std::vector<uint8_t> tv_audio_get_wav_data(tv_frame_audio_t *frame){
 	tv_audio_wave(&retval, "data");
 	tv_audio_wave(&retval, (uint32_t)frame_data.size());
 	// WAV forces this data to be in signed 16-bit form, which this isn't
-	P_V(retval.size(), P_SPAM);
 	retval.insert(
 		retval.end(),
 		frame_data.begin(),
@@ -222,10 +215,11 @@ static void tv_audio_clean_audio_data(){
 			std::get<1>(audio_data[i]);
 		// Make sure that SDL is done with it (should do something better)
 		if(end_time_micro_s < cur_time_micro_s){
-			print("destroying old audio data", P_NOTE);
+			print("destroying old audio data", P_SPAM);
 			Mix_Chunk **ptr =
 				&std::get<2>(audio_data[i]);
-			if(*ptr == nullptr){
+			// should always not be null
+			if(*ptr != nullptr){
 				Mix_FreeChunk(*ptr);
 				*ptr = nullptr;
 				ptr = nullptr;
@@ -233,6 +227,7 @@ static void tv_audio_clean_audio_data(){
 			audio_data.erase(audio_data.begin()+i);
 		}
 	}
+	print("active audio data size:"+std::to_string(audio_data.size()), P_SPAM);
 }
 
 /*
@@ -242,6 +237,17 @@ static void tv_audio_clean_audio_data(){
 static void tv_audio_add_frame_audios(std::vector<id_t_> frame_audios){
 	const uint64_t cur_timestamp_microseconds =
 		get_time_microseconds();
+	// search and erase duplicates
+	for(uint64_t i = 0;i < frame_audios.size();i++){
+		for(uint64_t c = 0;c < audio_data.size();c++){
+			if(frame_audios[i] == std::get<0>(audio_data[c])){
+				frame_audios.erase(
+					frame_audios.begin()+i);
+				i--;
+				c = 0;
+			}
+		}
+	}
 	for(uint64_t i = 0;i < frame_audios.size();i++){
 		tv_frame_audio_t *audio =
 			PTR_DATA(frame_audios[i],
@@ -273,9 +279,9 @@ static void tv_audio_add_frame_audios(std::vector<id_t_> frame_audios){
 				frame_audios[i],
 				cur_timestamp_microseconds+ttl_micro_s,
 				chunk);
-		print("appending tv_frame_audio_t tuple to audio_data", P_NOTE);
+		print("appending tv_frame_audio_t tuple to audio_data", P_SPAM);
 		audio_data.push_back(new_data);
-		print("playing audio", P_NOTE);
+		print("playing audio", P_SPAM);
 		Mix_PlayChannel(-1, chunk, 0);
 	}
 }
@@ -292,7 +298,7 @@ static std::vector<id_t_> tv_audio_get_current_frame_audios(){
 			PTR_DATA(windows[i],
 				 tv_window_t);
 		if(window == nullptr){
-			print("window is a nullptr", P_SPAM);
+			print("window is a nullptr", P_WARN);
 			continue;
 		}
 		const std::vector<id_t_> active_streams =

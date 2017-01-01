@@ -34,3 +34,9 @@ rsa_pub_key_t::rsa_pub_key_t() : id(this, __FUNCTION__){
 }
 
 rsa_pub_key_t::~rsa_pub_key_t(){}
+
+rsa_pair_t::rsa_pair_t() : id(this, __FUNCTION__){
+}
+
+rsa_pair_t::~rsa_pair_t(){
+}

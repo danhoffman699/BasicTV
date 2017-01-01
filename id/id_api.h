@@ -3,6 +3,9 @@
 #ifndef ID_API_H
 #define ID_API_H
 #include "tuple"
+#include "unistd.h"
+#include "sys/resource.h"
+#include "cstdio"
 
 /*
   Redefined and more unified ID API. 
@@ -47,6 +50,8 @@ namespace id_api{
 		void link_vector(std::vector<uint64_t> vector);
 	};
 	std::vector<uint64_t> get_all();
+	void free_mem();
+	void destroy(id_t_ id);
 	void destroy_all_data();
 };
 #endif
