@@ -9,19 +9,19 @@
   SYN packets for TCP holepunching at the same time (coordinated with the UNIX
   timestamp). Since most OSes get their time from an NTP server, the variation
   between clocks is on par with the variation with ping times, so it should work
-  fine.
+  fine (assuming enough trials are done)
 
   Since establishing connections is supposed to be rather low latency, this data
-  type in particular has a high priority.
+  type in particular has a high request rate among all nodes.
 
   net_con_req_t is also for instructing a node to connect to a node with an open
   TCP port, since the node wanting the data can't inititate the connection.
 
   Since this is such a common data type, and is used extensively for basic
   connections, nodes delete them when one of the two occurs:
-  1. The heartbeat timestamp for the connection initiating is over the limit
+  1. The timestamp for the connection initiating is over the limit
   set in the settings (probably around 5 minutes)
-  2. The heartbeat timestamp has already happened
+  2. The timestamp has already happened
 
   net_con_req_t also works with UDP, but UDP support in general isn't a high on
   the priorities list.
@@ -51,7 +51,7 @@
   opened for anything meaningful to happen (to my knowledge, without using
   holepunching), and that case would be covered by just directly talking.
 */
-#define NET_CON_REQ_REVERSE_FORWARD  (1 >> 2)
+#define NET_CON_REQ_REVERSE_FORWARD  (1 << 2)
 
 /*
   First peer (sender) wants to connect to the second peer (receiver). Second
@@ -68,7 +68,7 @@
   forwarded that can handle the nitty gritty technicals with UDP hole punching.
   However, I don't care about UDP that much, so that's on the bacnburner.
  */
-#define NET_CON_REQ_HOLEPUNCH (2 >> 2)
+#define NET_CON_REQ_HOLEPUNCH (2 << 2)
 
 /*
   This can be referred to net_con_req_t in personal flowcharts and docs, but it
