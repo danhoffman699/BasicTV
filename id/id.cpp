@@ -86,6 +86,8 @@ void data_id_t::add_data(void *ptr_, uint32_t size_, uint64_t flags){
 			flags));
 }
 
+// std::vector<uint8_t> is the only vector that is networkable
+
 void data_id_t::add_data(std::vector<uint8_t> *ptr_, uint32_t size_, uint64_t flags){
 	data_vector.push_back(
 		data_id_ptr_t(

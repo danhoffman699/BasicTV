@@ -24,7 +24,7 @@ typedef uint64_t id_t_; // needs a snazzier name
 #define ID_DATA_NOEXPORT (1 << 0)
 #define ID_DATA_NONET (1 << 1)
 #define ID_DATA_ID (1 << 2)
-#define ID_DATA_BYTE_VECTOR (1 << 2)
+#define ID_DATA_BYTE_VECTOR (1 << 3)
 
 #define ID_DATA_CACHE ID_DATA_NOEXPORT
 
@@ -92,8 +92,6 @@ public:
 	// export and import data
 	std::vector<uint8_t> export_data();
 	void import_data(std::vector<uint8_t> data);
-	void import_data(std::string data);
-	// misc.
 	void rsa_decrypt_backlog();
 	bool is_owner();
 	std::vector<uint8_t> get_ptr_flags();
