@@ -216,7 +216,6 @@ static void test_id_transport(){
 		new data_id_t(nullptr, "TEST");
 	tmp->set_next_linked_list(1);
 	tmp->set_prev_linked_list(2);
-	tmp->set_pgp_cite_id(~0L);
 	const std::vector<uint8_t> exp =
 		tmp->export_data();
 	test_id_transport_print_exp(exp);

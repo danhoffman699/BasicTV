@@ -115,11 +115,11 @@ static void tv_audio_test_load_sine_wave(){
 		uint64_t length = 0;
 		uint64_t elapsed_time = 0;
 		if(current_start + sample_length_per_frame < chunk->alen){
-			print("adding full value of sample_length_per_frame", P_NOTE);
+			print("adding full value of sample_length_per_frame", P_SPAM);
 			length = sample_length_per_frame;
 			elapsed_time = frame_duration_micro_s;
 		}else{
-			print("can't add full frame, ran out of room", P_NOTE);
+			print("can't add full frame, ran out of room", P_SPAM);
 			length = chunk->alen-current_start;
 			const long double numerator =
 				chunk->alen-current_start;
@@ -191,6 +191,9 @@ void tv_audio_init(){
 				 output_bit_depth),
 			 1,
 			 output_chunk_size) < 0){
+		P_V(output_sampling_rate, P_WARN);
+		P_V(output_bit_depth, P_WARN);
+		P_V(output_chunk_size, P_WARN);
 		print("cannot open audio:" + (std::string)(Mix_GetError()), P_ERR);
 	}
 	tv_audio_test_load_sine_wave();
@@ -202,6 +205,12 @@ void tv_audio_init(){
   computed from the end_time_micro_s() function in the tv_frame_audio_t type
   with the timestamp_offset of tv_window_t
   Third is the Mix_Chunk that SDL_mixer uses
+
+  To prevent blips on older machines, I should either move towards SDL_Audio and
+  feeding PCM information directly, or just add a start time with the end time,
+  so there isn't a need for OTF conversions between sampling frequencies. I'm
+  not worried about the little blips for now, and I haven't seen any problems
+  as long as I don't use Valgrind
  */
 
 std::vector<std::tuple<id_t_, uint64_t, Mix_Chunk*> > audio_data;
@@ -210,10 +219,9 @@ static void tv_audio_clean_audio_data(){
 	const uint64_t cur_time_micro_s =
 		get_time_microseconds();
 	for(uint64_t i = 0;i < audio_data.size();i++){
-		// id_t_ is useless for now, but maybe not always
 		const uint64_t end_time_micro_s =
 			std::get<1>(audio_data[i]);
-		// Make sure that SDL is done with it (should do something better)
+		// Make sure that SDL is done with it (should use locks)
 		if(end_time_micro_s < cur_time_micro_s){
 			print("destroying old audio data", P_SPAM);
 			Mix_Chunk **ptr =
@@ -227,17 +235,13 @@ static void tv_audio_clean_audio_data(){
 			audio_data.erase(audio_data.begin()+i);
 		}
 	}
-	print("active audio data size:"+std::to_string(audio_data.size()), P_SPAM);
 }
 
 /*
   All frame_audios entries need to be started NOW, so don't offset anything
  */
 
-static void tv_audio_add_frame_audios(std::vector<id_t_> frame_audios){
-	const uint64_t cur_timestamp_microseconds =
-		get_time_microseconds();
-	// search and erase duplicates
+static std::vector<id_t_> tv_audio_remove_redundant_ids(std::vector<id_t_> frame_audios){
 	for(uint64_t i = 0;i < frame_audios.size();i++){
 		for(uint64_t c = 0;c < audio_data.size();c++){
 			if(frame_audios[i] == std::get<0>(audio_data[c])){
@@ -248,6 +252,12 @@ static void tv_audio_add_frame_audios(std::vector<id_t_> frame_audios){
 			}
 		}
 	}
+	return frame_audios;
+}
+
+static void tv_audio_add_frame_audios(std::vector<id_t_> frame_audios){
+	const uint64_t cur_timestamp_microseconds =
+		get_time_microseconds();
 	for(uint64_t i = 0;i < frame_audios.size();i++){
 		tv_frame_audio_t *audio =
 			PTR_DATA(frame_audios[i],
@@ -315,11 +325,6 @@ static std::vector<id_t_> tv_audio_get_current_frame_audios(){
 					play_time));
 		}
 	}
-	P_V(frame_audios.size(), P_SPAM);
-	for(uint64_t i = 0;i < frame_audios.size();i++){
-		P_V(i, P_SPAM);
-		P_V(frame_audios[i], P_SPAM);
-	}
 	return frame_audios;
 }
 
@@ -327,7 +332,8 @@ void tv_audio_loop(){
 	Mix_Volume(-1, MIX_MAX_VOLUME); // -1 sets all channels
 	tv_audio_clean_audio_data();
 	tv_audio_add_frame_audios(
-		tv_audio_get_current_frame_audios());
+		tv_audio_remove_redundant_ids(
+			tv_audio_get_current_frame_audios()));
 }
 
 void tv_audio_close(){

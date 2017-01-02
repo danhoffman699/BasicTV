@@ -35,6 +35,7 @@ void data_id_t::init_list_all_data(){
 	add_data(&linked_list.second,
 		 sizeof(id_t_),
 		 ID_DATA_ID);
+	
 }
 
 void data_id_t::init_gen_id(){
@@ -93,12 +94,26 @@ void data_id_t::add_data(std::vector<uint8_t> *ptr_, uint32_t size_, uint64_t fl
 			flags | ID_DATA_BYTE_VECTOR));
 }
 
-uint64_t data_id_t::get_pgp_cite_id(){
-	return pgp_cite_id;
+uint64_t data_id_t::get_rsa_cite_id(){
+	return rsa_cite_id;
 }
 
 uint64_t data_id_t::get_data_index_size(){
 	return data_vector.size();
+}
+
+/*
+  Only currently used for exporting rules, so there is no need for any fine
+  grain getters
+ */
+
+std::vector<uint8_t> data_id_t::get_ptr_flags(){
+	std::vector<uint8_t> retval;
+	for(uint64_t i = 0;i < data_vector.size();i++){
+		retval.push_back(
+			data_vector[i].get_flags());
+	}
+	return retval;
 }
 
 /*
@@ -120,10 +135,20 @@ typedef uint32_t transport_size_t;
 
 std::vector<uint8_t> data_id_t::export_data(){
 	std::vector<uint8_t> retval;
+	bool valid = false;
+	for(uint64_t i = 3;i < data_vector.size();i++){
+		if(!(data_vector[i].get_flags() & ID_DATA_NOEXPORT)){
+			valid = true;
+			break;
+		}
+	}
+	if(valid == false){
+		return {};
+	}
 	if(is_owner()){
 		ID_EXPORT(id);
 		ID_EXPORT(type);
-		ID_EXPORT(pgp_cite_id);
+		ID_EXPORT(rsa_cite_id);
 		transport_i_t trans_i = 0;
 		transport_size_t trans_size = 0;
 		for(uint64_t i = 0;i < data_vector.size();i++){
@@ -141,11 +166,11 @@ std::vector<uint8_t> data_id_t::export_data(){
 		P_V(retval.size(), P_NOTE);
 		/*
 		  DATA COMPRESSION SHOULD GO RIGHT HERE
-		 */
+		*/
 	}else{
 		/*
 		  can't compress already encrypted data
-		 */
+		*/
 		retval = imported_data;
 	}
 	return retval;
@@ -178,10 +203,10 @@ static void id_import_raw(uint8_t* var, uint8_t flags, uint64_t size, std::vecto
 void data_id_t::import_data(std::vector<uint8_t> data){
 	uint64_t trans_id = 0;
 	std::array<uint8_t, TYPE_LENGTH> trans_type = {{0}};
-	uint64_t trans_pgp_cite_id = 0;
+	uint64_t trans_rsa_cite_id = 0;
 	ID_IMPORT(trans_id);
 	ID_IMPORT(trans_type);
-	ID_IMPORT(trans_pgp_cite_id);
+	ID_IMPORT(trans_rsa_cite_id);
 	transport_i_t trans_i = 0;
 	transport_size_t trans_size = 0;
 	while(data.size() > sizeof(transport_i_t) + sizeof(transport_size_t)){
@@ -212,14 +237,14 @@ void data_id_t::import_data(std::vector<uint8_t> data){
 	imported_data = data;
 }
 
-void data_id_t::pgp_decrypt_backlog(){
+void data_id_t::rsa_decrypt_backlog(){
 	// The whole strucute isn't guaranteed to come over, and TCP
 	// gives us lossless connections, so apply them from oldest to
 	// newest
-	for(uint64_t i = 0;i < pgp_backlog.size();i++){
-		import_data(pgp_backlog[i]);
+	for(uint64_t i = 0;i < rsa_backlog.size();i++){
+		import_data(rsa_backlog[i]);
 	}
-	pgp_backlog.clear();
+	rsa_backlog.clear();
 }
 
 uint64_t data_id_t::get_prev_linked_list(){
@@ -249,6 +274,19 @@ bool data_id_t::is_owner(){
 	return true;
 }
 
+void data_id_t::noexport_all_data(){
+	for(uint64_t i = 0;i < data_vector.size();i++){
+		data_vector[i].set_flags(
+			data_vector[i].get_flags() | ID_DATA_NOEXPORT);
+	}
+}
+
+void data_id_t::nonet_all_data(){
+	for(uint64_t i = 0;i < data_vector.size();i++){
+		data_vector[i].set_flags(
+			data_vector[i].get_flags() | ID_DATA_NONET);
+	}
+}
 
 data_id_ptr_t::data_id_ptr_t(void *ptr_,
 			     uint32_t length_,

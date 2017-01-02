@@ -44,7 +44,7 @@ data_id_t *id_api::array::ptr_id(uint64_t id,
 	if(retval == nullptr){
 		return nullptr;
 	}
-	// blank type is a wildcard, currently onlu used for PGP sorting
+	// blank type is a wildcard, currently onlu used for RSA sorting
 	// "" is used for direct calls
 	if(retval->get_type() != type && type != ""){
 		P_V_S(retval->get_type(), P_ERR);
@@ -115,7 +115,7 @@ void id_api::array::add_data(std::vector<uint8_t> data_){
 
 #undef CHECK_TYPE
 
-std::vector<uint64_t> id_api::array::sort_by_pgp_pubkey(std::vector<uint64_t> tmp){
+std::vector<uint64_t> id_api::array::sort_by_rsa_pubkey(std::vector<uint64_t> tmp){
 	bool changed = true;
 	while(changed){
 		changed = false;
@@ -123,11 +123,11 @@ std::vector<uint64_t> id_api::array::sort_by_pgp_pubkey(std::vector<uint64_t> tm
 			data_id_t *tmp_array[2] = {nullptr};
 			tmp_array[0] = PTR_ID(tmp[i-1], "");
 			tmp_array[1] = PTR_ID(tmp[i], "");
-			//const bool pgp_greater_than =
+			//const bool rsa_greater_than =
 			//	pgp::cmp::greater_than(tmp_array[i-1]->get_pgp_cite_id(),
 			//			       tmp_array[i]->get_pgp_cite_id());
-			const bool pgp_greater_than = false;
-			if(pgp_greater_than){
+			const bool rsa_greater_than = false;
+			if(rsa_greater_than){
 				uint64_t tmp_ = tmp[i-1];
 				tmp[i-1] = tmp[i];
 				tmp[i] = tmp_;
@@ -252,8 +252,31 @@ std::vector<uint64_t> id_api::get_all(){
   Periodically update with rgrep
  */
 
-void id_api::destroy(id_t_ id){
+void id_api::destroy(id_t_ id){	
 	data_id_t *ptr = PTR_ID(id, );
+	std::vector<uint8_t> exportable_data =
+		ptr->export_data();
+	// doesn't work if no struct types are exportable
+	if((exportable_data.size() != 0) && (settings::get_setting("export_data") == "true")){
+		// make this work on Windows
+		const std::string path =
+			"data_folder/"+
+			std::to_string(id);
+		system(("touch " + path).c_str());
+		system(("rm " + path).c_str());
+		std::ofstream out(path, std::ios::out | std::ios::binary);
+		if(out.is_open() == false){
+			print("cannot open file for exporting", P_ERR);
+		}
+		std::vector<uint8_t> exported_data =
+			ptr->export_data();
+		for(uint64_t i = 0;i < exported_data.size();i++){
+			out << exported_data[i];
+		}
+		out.close();
+	}else{
+		print("not exporting ID " + std::to_string(id),  P_ERR);
+	}
 	// TV subsystem
 	DELETE_TYPE_2(tv_frame_video_t);
 	DELETE_TYPE_2(tv_frame_audio_t);
@@ -308,7 +331,7 @@ static uint64_t get_mem_usage_kb(){
 	uint32_t t_size = 0, resident = 0, share = 0;
 	mem_buf >> t_size >> resident >> share;
 	mem_buf.close();
-	uint64_t page_size_kb = sysconf(_SC_PAGE_SIZE)/1024;
+	P_V(resident*sysconf(_SC_PAGE_SIZE)/1024, P_SPAM);
 	return resident*sysconf(_SC_PAGE_SIZE)/1024; // RSS
 #else
 #error No memory function currently exists for non-Linux systems
@@ -346,6 +369,11 @@ void id_api::free_mem(){
 				}
 			}
 		}
-		
+		id_api::destroy(
+			lowest_timestamp_id);
+		/*
+		  id_api::destroy takes care of exporting to disk (if that makes
+		  sense and is allowed per settings.cfg)
+		 */
 	}
 }

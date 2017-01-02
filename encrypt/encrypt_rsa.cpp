@@ -22,8 +22,8 @@ void rsa_key_t::set_key(std::array<uint8_t, RSA_MAX_KEY_LENGTH/8> key_,
 }
 
 rsa_priv_key_t::rsa_priv_key_t() : id(this, __FUNCTION__){
-	// add NONET/CACHE
 	list_virtual_data(&id);
+	id.nonet_all_data();
 }
 
 rsa_priv_key_t::~rsa_priv_key_t(){}

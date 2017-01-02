@@ -10,7 +10,7 @@ namespace tv{
 		 */
 		uint64_t count(uint64_t flags = 0);
 		// there shouldn't be a case where the ID isn't available, but
-		// the PGP is and this information is needed
+		// the RSA is and this information is needed
 		uint64_t next(uint64_t id, uint64_t flags = 0);
 		uint64_t prev(uint64_t id, uint64_t flags = 0);
 		uint64_t rand(uint64_t flags = 0);

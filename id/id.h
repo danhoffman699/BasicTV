@@ -6,6 +6,7 @@
 #include "array"
 #include "vector"
 #include "random"
+#include "cstdlib"
 
 #define ADD_DATA(x) (id.add_data(&x, sizeof(x)))
 #define ADD_DATA_ARRAY(x, y, z) (id.add_data(&(x[0]), y*z))
@@ -20,11 +21,12 @@
 
 typedef uint64_t id_t_; // needs a snazzier name
 
-#define ID_DATA_CACHE (1 << 0)
-#define ID_DATA_NONET ID_DATA_CACHE
-#define ID_DATA_ID (1 << 1)
-// special
+#define ID_DATA_NOEXPORT (1 << 0)
+#define ID_DATA_NONET (1 << 1)
+#define ID_DATA_ID (1 << 2)
 #define ID_DATA_BYTE_VECTOR (1 << 2)
+
+#define ID_DATA_CACHE ID_DATA_NOEXPORT
 
 // pointer added through add_data
 struct data_id_ptr_t{
@@ -40,6 +42,7 @@ public:
 	void *get_ptr();
 	uint32_t get_length();
 	uint8_t get_flags();
+	void set_flags(uint8_t flags_){flags = flags_;}
 };
 
 struct data_id_t{
@@ -48,8 +51,8 @@ private:
 	id_t_ id = 0;
        	std::array<uint8_t, TYPE_LENGTH> type = {{0}};
 	void *ptr = nullptr;
-	id_t_ pgp_cite_id = 0;
-	std::vector<std::vector<uint8_t> > pgp_backlog;
+	id_t_ rsa_cite_id = 0;
+	std::vector<std::vector<uint8_t> > rsa_backlog;
 	std::vector<data_id_ptr_t> data_vector;
 	std::pair<id_t_, id_t_> linked_list = {0,0};
 	std::vector<uint8_t> imported_data; // encrypted data if imported
@@ -65,9 +68,8 @@ public:
 	uint64_t get_id();
 	std::string get_type();
 	void *get_ptr();
-	//std::array<uint8_t, PGP_PUBKEY_SIZE> get_owner_pubkey();
-	void set_pgp_cite_id(uint64_t id){pgp_cite_id = id;} // probably should fix this soon
-	uint64_t get_pgp_cite_id();
+	void set_rsa_cite_id(uint64_t id){rsa_cite_id = id;} // probably should fix this soon
+	uint64_t get_rsa_cite_id();
 	uint64_t get_data_index_size();
 	uint64_t get_next_linked_list();
 	uint64_t get_prev_linked_list();
@@ -92,8 +94,11 @@ public:
 	void import_data(std::vector<uint8_t> data);
 	void import_data(std::string data);
 	// misc.
-	void pgp_decrypt_backlog();
+	void rsa_decrypt_backlog();
 	bool is_owner();
+	std::vector<uint8_t> get_ptr_flags();
+	void noexport_all_data();
+	void nonet_all_data();
 	uint64_t get_last_access_timestamp_micro_s(){return last_access_timestamp_micro_s;}
 };
 #endif
