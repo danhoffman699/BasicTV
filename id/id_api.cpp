@@ -300,7 +300,9 @@ void id_api::destroy(id_t_ id){
 	DELETE_TYPE_2(input_dev_standard_t);
 
 	// cryptography
-	DELETE_TYPE_2(rsa_pair_t);
+	DELETE_TYPE_2(encrypt_key_pair_t);
+	DELETE_TYPE_2(encrypt_priv_key_t);
+	DELETE_TYPE_2(encrypt_pub_key_t);
 }
 
 void id_api::destroy_all_data(){

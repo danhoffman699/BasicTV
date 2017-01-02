@@ -19,6 +19,20 @@
 
 #define TYPE_LENGTH 32 // standard maximum length for C++ types
 
+/*
+  (currently unused) ID system
+  First 128-bits are a random number acting as a UUID
+  The next 512 bits (rest of it) is the SHA-512 hash of the public key used to
+  decrypt this. This is manually searched for, which will reveal the encryption
+  scheme used and citing information.
+
+  In order for the requested ID to match the received ID, the public key
+  fingerprints have to equal.
+  
+  Legitimate proof of net_peer_t is taken care of in a TLS style manner (see
+  net/proto/net_proto_peer.h for more documentation)
+ */
+//typedef std::array<uint8_t, 96> id_t_;
 typedef uint64_t id_t_; // needs a snazzier name
 
 #define ID_DATA_NOEXPORT (1 << 0)

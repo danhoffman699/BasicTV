@@ -30,7 +30,21 @@
   The net_peer_t also contains information about the connection configuration.
   The primary use is publicizing open TCP ports (manually or UPnP), open UDP 
   ports, and other useful information about initating a connection (through
-  the not-yet-created net_con_req_t type).
+  the net_con_req_t type).
+*/
+
+/*
+  All communication between nodes on this network is encrypted with the public
+  key of the net_peer_t data type in a TLS style manner. If there is no reply to
+  requests, then delete the local version (either offline or invalid).
+
+  This is done for three reasons:
+  1. Making net_peer_t requests less taxing on the network by not forwarding
+  useless information (one of the most common bulk requests)
+  2. Making data requests less taxing on the network by not making useless
+  requests for data
+  3. Mitigating a DoS attack by spamming invalid net_peer_ts on the network
+  3. Making a more accurate estimate of the activity on the network
 */
 
 #define NET_IP_RAW_SIZE 16
@@ -66,13 +80,6 @@ private:
 	uint16_t port = 0;
 	uint8_t flags = 0;
 	std::array<uint64_t, NET_PROTO_MAX_SOCKET_PER_PEER> socket = {{0}};
-	/*
-	  The "proof" for this Bitcoin address would just be the RSA public key
-	  ID, and whatever proofs it has associated with it. This should be fine
-	  with small amounts of money, but any large organization should have a
-	  reference to their BasicTV ID on a legit platform and use that as a
-	  verifiable reference inside of their RSA public key.
-	 */
 	std::array<uint8_t, BITCOIN_WALLET_LENGTH> bitcoin_wallet = {{0}};
 public:
 	data_id_t id;
