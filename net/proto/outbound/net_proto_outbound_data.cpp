@@ -52,14 +52,15 @@ void net_proto_loop_handle_outbound_requests(){
 			all_export =
 				net_proto_apply_dev_ctrl(
 					all_export);
+			net_proto_standard_data_t std_data;
+			std_data.size = all_export.size();
+			std_data.ver_major = VERSION_MAJOR;
+			std_data.ver_minor = VERSION_MINOR;
+			std_data.ver_patch = VERSION_REVISION;
+			std_data.macros = 0;
+			std_data.unused = 0;
 			std::vector<uint8_t> metadata =
-				net_proto_write_packet_metadata(
-					all_export.size(),
-					VERSION_MAJOR,
-					VERSION_MINOR,
-					VERSION_REVISION,
-					0,
-					0); // TODO: make version optional
+				net_proto_write_packet_metadata(std_data);
 			all_export.insert(all_export.begin(),
 					  metadata.begin(),
 					  metadata.end());

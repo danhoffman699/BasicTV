@@ -1,6 +1,6 @@
 /*
   net_proto.h: The networking protocol
- */
+*/
 #include "../net_const.h"
 #ifndef NET_PROTO_H
 #define NET_PROTO_H
@@ -31,15 +31,16 @@ extern void net_proto_init();
 extern void net_proto_loop();
 extern void net_proto_close();
 
+/*
+  Since this is a vector, this should be a soft limit. I should increase this a bit.
+ */
 
-typedef uint32_t net_proto_standard_size_t;
-typedef uint8_t net_proto_standard_ver_t;
-typedef uint8_t net_proto_standard_macros_t;
-//once net_proto_standard_unused_t actually suits a purpose, then remove
-// this as a type and replace it with whatever
-typedef uint32_t net_proto_standard_unused_t;
+#define NET_REQUEST_MAX_LENGTH 65536
 
-#define NET_REQUEST_MAX_LENGTH 512
+// this is the only use I can think of for the flags in net_request_
+
+#define NET_REQUEST_BLACKLIST (1 << 0)
+#define NET_REQUEST_WHITELIST (0 << 0)
 
 /*
   TODO: implement requesting all of a type
@@ -47,16 +48,13 @@ typedef uint32_t net_proto_standard_unused_t;
 
 struct net_request_t{
 private:
-	std::array<uint64_t, NET_REQUEST_MAX_LENGTH> ids = {{0}};
-	/*
-	  socket_id is a cache value set by the inbound code. This can't be
-	  global, since sockets IDs aren't shared between nodes
-	 */
+	// list of ids
+	std::vector<id_t_> ids = {{0}};
+	// only currently used for the blacklist/whitelist settings
+	uint8_t flags = 0;
+	// socket that received request, obviously a cached value
 	uint64_t socket_id = 0;
-	/*
-	  Tells the difference between incoming and outgoing requests,
-	  although rather crude
-	 */
+	// is this outbound or inbound?
 	bool local = false;
 public:
 	data_id_t id;
@@ -64,6 +62,8 @@ public:
 	~net_request_t();
 	void set_socket_id(uint64_t socket_id_);
 	uint64_t get_socket_id();
+	void set_flags(uint8_t flags);
+	uint8_t get_flags();
 	void add_id(uint64_t id_);
 	void del_id(uint64_t id_);
 	uint64_t get_id(uint64_t entry);

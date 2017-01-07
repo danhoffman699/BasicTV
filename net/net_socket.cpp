@@ -1,7 +1,7 @@
 #include "../main.h"
 #include "../util.h"
-#include "net_socket.h"
 #include "net.h"
+#include "net_socket.h"
 
 net_socket_t::net_socket_t() : id(this, __FUNCTION__){
 	id.add_data(&status, 8);
@@ -32,7 +32,7 @@ void net_socket_t::socket_check(){
   flags that can be passed are preceded with NET_SOCKET
  */
 
-uint64_t net_socket_t::get_status(){
+uint8_t net_socket_t::get_status(){
 	socket_check(); // should this be here?
 	return status;
 }
@@ -102,58 +102,25 @@ static void net_socket_recv_posix_error_checking(int32_t error){
 #endif
 }
 
-static void net_socket_append_to_buffer(std::array<uint8_t, NET_SOCKET_OLD_BUFFER_SIZE> *buffer,
-					std::vector<uint8_t> data){
-	if(data.size() >= NET_SOCKET_OLD_BUFFER_SIZE){
-	 	memcpy(buffer,
-	 	       data.data(),
-	 	       NET_SOCKET_OLD_BUFFER_SIZE);
-	}else{
-		for(uint64_t i = data.size();i < NET_SOCKET_OLD_BUFFER_SIZE;i++){
-			(*buffer)[i-data.size()] = (*buffer)[i];
-		}
-		for(uint64_t i = NET_SOCKET_OLD_BUFFER_SIZE-data.size();i < NET_SOCKET_OLD_BUFFER_SIZE;i++){
-			(*buffer)[i] = data[NET_SOCKET_OLD_BUFFER_SIZE-data.size()-i];
-		}
-		// TODO: implement this in memmove, networking code is probably
-		// the most important code for efficiency
-	}
-}
-
-std::vector<uint8_t> net_socket_t::recv(int64_t byte_count, uint64_t flags){
-	socket_check();
-	const bool hang = !(flags & NET_SOCKET_RECV_NO_HANG);
+std::vector<uint8_t> net_socket_t::recv(uint64_t byte_count, uint64_t flags){
 	uint8_t tmp_data = 0;
-	int32_t recv_retval = 0;
+	// TODO: test to see if the activity() code works
 	do{
 		while(activity()){
-			recv_retval =
-				SDLNet_TCP_Recv(socket, &tmp_data, 1);
-			if(recv_retval == -1){
-				net_socket_recv_posix_error_checking(recv_retval);
-				continue;
+			if(SDLNet_TCP_Recv(socket, &tmp_data, 1) > 0){
+				local_buffer.push_back(tmp_data);
 			}
-			local_buffer.push_back(tmp_data);
 		}
-	}while((local_buffer.size() < (uint64_t)byte_count) && hang);
-	std::vector<uint8_t> retval;
-	if(byte_count > 0){
-		if(local_buffer.size() >= (uint64_t)byte_count){
+		if(local_buffer.size() >= byte_count){
 			auto start = local_buffer.begin();
 			auto end = local_buffer.begin()+byte_count;
-			retval = std::vector<uint8_t>(start, end);
-			net_socket_append_to_buffer(&old_buffer, retval);
+			std::vector<uint8_t> retval =
+				std::vector<uint8_t>(start, end);
 			local_buffer.erase(start, end);
+			return retval;
 		}
-	}else if(byte_count < 0){
-		if(std::abs(byte_count) <= buffer_written_memory){
-			retval =
-				std::vector<uint8_t>(
-					&old_buffer[NET_SOCKET_OLD_BUFFER_SIZE+byte_count-1],
-					&old_buffer[NET_SOCKET_OLD_BUFFER_SIZE-1]);
-		}
-	}
-	return retval;
+	}while(!(flags & NET_SOCKET_RECV_NO_HANG));
+	return {};
 }
 
 /*
@@ -312,14 +279,6 @@ bool net_socket_t::activity(){
 	return retval;
 }
 
-uint64_t net_socket_t::get_backwards_buffer_size(){
-	if(buffer_written_memory < NET_SOCKET_OLD_BUFFER_SIZE){
-		return buffer_written_memory;
-	}else{
-		return NET_SOCKET_OLD_BUFFER_SIZE;
-	}
-}
-
-uint64_t net_socket_t::get_forwards_buffer_size(){
+uint64_t net_socket_t::get_buffer_size(){
 	return local_buffer.size();
 }

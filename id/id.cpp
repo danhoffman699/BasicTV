@@ -96,6 +96,14 @@ void data_id_t::add_data(std::vector<uint8_t> *ptr_, uint32_t size_, uint64_t fl
 			flags | ID_DATA_BYTE_VECTOR));
 }
 
+void data_id_t::add_data(std::vector<id_t_> *ptr_, uint32_t size_, uint64_t flags){
+	data_vector.push_back(
+		data_id_ptr_t(
+			ptr_,
+			size_,
+			flags | ID_DATA_ID_VECTOR));
+}
+
 uint64_t data_id_t::get_rsa_cite_id(){
 	return rsa_cite_id;
 }

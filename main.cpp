@@ -37,13 +37,6 @@ int argc = 0;
 char **argv = nullptr;
 bool running = true;
 
-std::array<uint8_t, 4> version = {{
-	VERSION_MAJOR,
-	VERSION_MINOR,
-	VERSION_REVISION,
-	NETWORK_MAJOR
-}};
-
 /*
   Since this is so early in development, I'm not worried about this
  */

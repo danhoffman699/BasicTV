@@ -1,5 +1,6 @@
 #include "net.cpp"
 #include "net_socket.cpp"
+#include "proto/net_proto_socket.cpp"
 #include "proto/net_proto.cpp"
 #include "proto/net_proto_meta.cpp"
 #include "proto/net_proto_dev_ctrl.cpp"

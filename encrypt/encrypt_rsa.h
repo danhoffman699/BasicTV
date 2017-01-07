@@ -3,7 +3,7 @@
 #include "../main.h"
 #ifndef ENCRYPT_RSA_H
 #define ENCRYPT_RSA_H
-
+#include "vector"
 /*
   RSA is the standard encryption system for BasicTV. This hasn't been
   implemented yet, and would probably be just a wrapper for OpenSSL or

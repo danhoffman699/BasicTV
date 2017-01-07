@@ -39,6 +39,7 @@ typedef uint64_t id_t_; // needs a snazzier name
 #define ID_DATA_NONET (1 << 1)
 #define ID_DATA_ID (1 << 2)
 #define ID_DATA_BYTE_VECTOR (1 << 3)
+#define ID_DATA_ID_VECTOR (1 << 4)
 
 #define ID_DATA_CACHE ID_DATA_NOEXPORT
 
@@ -103,6 +104,10 @@ public:
 		std::vector<uint8_t> *ptr_,
 		uint32_t size_,
 		uint64_t flags_ = 0);
+	void add_data(
+		std::vector<id_t_> *ptr_,
+		uint32_t size_,
+		uint64_t flags = 0);
 	// export and import data
 	std::vector<uint8_t> export_data();
 	void import_data(std::vector<uint8_t> data);

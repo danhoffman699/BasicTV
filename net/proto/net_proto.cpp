@@ -71,11 +71,21 @@ void net_proto_close(){
 }
 
 net_request_t::net_request_t(): id(this, __FUNCTION__){
-	id.add_data(&(ids[0]), sizeof(ids[0])*NET_REQUEST_MAX_LENGTH);
-	// don't bother with cached values yet
+	// list of ids
+	id.add_data(&(ids), NET_REQUEST_MAX_LENGTH);
+	// only used for blacklist or whitelist
+	id.add_data(&flags, 1);
 }
 
 net_request_t::~net_request_t(){
+}
+
+void net_request_t::set_flags(uint8_t flags_){
+	flags = flags_;
+}
+
+uint8_t net_request_t::get_flags(){
+	return flags;
 }
 
 void net_request_t::add_id(uint64_t id_){

@@ -25,30 +25,11 @@
   std::pair entries
  */
 
-/*
-  net_socket_t has an internal cache of received data. This is currently
-  only used for verifying the validity of DEV_CTRL_1s for packet
-  headers (could get chopped off half-way through). However, assuming it is
-  sufficiently large enough, it can be very useful for other tasks (saving data
-  that seemed to have started halfway through).
-
-  In order to access this information, you will need to pass a negative 
-  value to byte_count, and the information starting from that point to the 
-  end of the old_buffer will be returned. This function might try and
-  receive any data from sockets and push it to the end of local_buffer, but
-  that's only because I don't want packets dropping.
- */
-
-#define NET_SOCKET_OLD_BUFFER_SIZE 1024
+#define NET_SOCKET_USE_SOCKS (1 << 0)
 
 struct net_socket_t{
 private:
-	uint64_t status = 0;
-	// buffer of read and old data, in order
-	// only to check to see if data was ever written
-	uint32_t buffer_written_memory = 0;
-	std::array<uint8_t, NET_SOCKET_OLD_BUFFER_SIZE> old_buffer = {{0}};
-	// buffer of unread data, should rename to new_buffer
+	uint8_t status = 0;
 	std::vector<uint8_t> local_buffer;
 	// IP and ports of clients
 	std::pair<std::string, uint16_t> client_conn;
@@ -64,11 +45,11 @@ public:
 	~net_socket_t();
 	// general socket stuff, proxy-agnostic
 	bool is_alive();
-	uint64_t get_status();
+	uint8_t get_status();
 	void connect(std::pair<std::string, uint16_t> conn_info);
 	void disconnect();
 	void send(std::vector<uint8_t> data);
-	std::vector<uint8_t> recv(int64_t byte_count = 0, uint64_t flags = 0);
+	std::vector<uint8_t> recv(uint64_t byte_count = 0, uint64_t flags = 0);
 	// enable/disable SOCKS proxy, set as a flag in status
 	// throws on error
 	void enable_socks(std::pair<std::string, uint16_t> socks_info, std::pair<std::string, uint16_t> conn_info);
@@ -79,8 +60,6 @@ public:
 	std::pair<std::string, uint16_t> get_socks_conn();
 	bool activity();
 	// fetch buffer sizes
-	uint64_t get_backwards_buffer_size();
-	uint64_t get_forwards_buffer_size();
+	uint64_t get_buffer_size();
 };
-
 #endif

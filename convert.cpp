@@ -9,7 +9,7 @@
   Instead of always doing things in 8-bit blocks, try and create
   larger blocks of data (16, 32, or 64), but that isn't a concern
   now.
- */
+*/
 
 void convert::nbo::to(uint8_t *data, uint64_t size){
 #ifdef __ORDER_LITTLE_ENDIAN__
