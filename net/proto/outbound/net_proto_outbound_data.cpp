@@ -23,7 +23,7 @@ void net_proto_loop_handle_outbound_requests(){
 			continue;
 		}
 		// if this isn't an outbound request
-		if(request->is_local() == false){
+		if(request->get_socket_id() == 0){
 			std::vector<uint8_t> all_export;
 			for(uint64_t i = 0;i < NET_REQUEST_MAX_LENGTH;i++){
 				data_id_t *tmp_id =
@@ -36,7 +36,7 @@ void net_proto_loop_handle_outbound_requests(){
 					continue;
 				}
 				std::vector<uint8_t> data =
-					tmp_id->export_data(); // compresses
+					tmp_id->export_data(0); // compresses
 				all_export.insert(
 					all_export.end(),
 					data.begin(),

@@ -255,7 +255,7 @@ std::vector<uint64_t> id_api::get_all(){
 void id_api::destroy(id_t_ id){	
 	data_id_t *ptr = PTR_ID(id, );
 	std::vector<uint8_t> exportable_data =
-		ptr->export_data();
+		ptr->export_data(0);
 	// doesn't work if no struct types are exportable
 	if((exportable_data.size() != 0) && (settings::get_setting("export_data") == "true")){
 		// make this work on Windows
@@ -268,10 +268,8 @@ void id_api::destroy(id_t_ id){
 		if(out.is_open() == false){
 			print("cannot open file for exporting", P_ERR);
 		}
-		std::vector<uint8_t> exported_data =
-			ptr->export_data();
-		for(uint64_t i = 0;i < exported_data.size();i++){
-			out << exported_data[i];
+		for(uint64_t i = 0;i < exportable_data.size();i++){
+			out << exportable_data[i];
 		}
 		out.close();
 	}else{

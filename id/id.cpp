@@ -143,7 +143,8 @@ static void id_export_raw(uint8_t *var, uint64_t size, std::vector<uint8_t> *vec
 typedef uint16_t transport_i_t;
 typedef uint32_t transport_size_t;
 
-std::vector<uint8_t> data_id_t::export_data(){
+std::vector<uint8_t> data_id_t::export_data(uint8_t flags_){
+	// TODO: enforce flags
 	std::vector<uint8_t> retval;
 	bool valid = false;
 	for(uint64_t i = 3;i < data_vector.size();i++){
@@ -162,6 +163,12 @@ std::vector<uint8_t> data_id_t::export_data(){
 		transport_i_t trans_i = 0;
 		transport_size_t trans_size = 0;
 		for(uint64_t i = 0;i < data_vector.size();i++){
+			const uint8_t data_vector_flags =
+				(data_vector[i].get_flags() & ID_DATA_NOEXP) |
+				(data_vector[i].get_flags() & ID_DATA_NONET);
+			if(data_vector_flags != flags_){
+				print("skipping unexportable data_vector entry", P_NOTE);
+			}
 			trans_i = i;
 			trans_size = data_vector[i].get_length();
 			ID_EXPORT(trans_i);

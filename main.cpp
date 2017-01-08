@@ -11,6 +11,9 @@
 #include "tv/tv_window.h"
 #include "tv/tv_dev_video.h"
 #include "tv/tv_dev_audio.h"
+#include "tv/tv_frame_video.h"
+#include "tv/tv_frame_audio.h"
+#include "tv/tv_frame_caption.h"
 #include "tv/tv_dev.h"
 #include "tv/tv_channel.h"
 #include "input/input.h"
@@ -37,11 +40,38 @@ int argc = 0;
 char **argv = nullptr;
 bool running = true;
 
-/*
-  Since this is so early in development, I'm not worried about this
- */
+#define APPEND_TYPE_TO_VECTOR(old, type)				\
+	if(true){							\
+		auto new_vector = id_api::cache::get(#type);		\
+		old.insert(old.end(), new_vector.begin(), new_vector.end()); \
+	}								\
+
+void no_mem(){
+	std::vector<id_t_> frame_ids;
+	APPEND_TYPE_TO_VECTOR(frame_ids, tv_frame_video_t);
+	APPEND_TYPE_TO_VECTOR(frame_ids, tv_frame_audio_t);
+	APPEND_TYPE_TO_VECTOR(frame_ids, tv_frame_caption_t);
+	/*
+	  destroy() exports to disk if possible, so we can destroy IDs like
+	  crazy if we wanted to and just reread them. Types that have been
+	  exported the longest without being re-read are destroyed when we
+	  run out of memory
+	 */
+	// TODO: try and adhere to the gen_ded_mem setting somehow
+	for(uint64_t i = 0;i < frame_ids.size();i++){
+		id_api::destroy(frame_ids[i]);
+	}
+	/*
+	  tv_frame_*_t structs use up most of the space in a majority of the 
+	  cases, but in edge cases, it might make sense to use a dedicated
+	  no_mem function for stress and unit tests
+	 */
+}
+
+#undef APPEND_TO_VECTOR
 
 static void init(){
+	std::set_new_handler(no_mem);	
 	/*
 	  settings_init() only reads from the file, it doesn't do anything
 	  critical to setting default values
@@ -210,7 +240,7 @@ static void test_id_transport(){
 	tmp->set_next_linked_list(1);
 	tmp->set_prev_linked_list(2);
 	const std::vector<uint8_t> exp =
-		tmp->export_data();
+		tmp->export_data(0);
 	test_id_transport_print_exp(exp);
 	tmp->set_next_linked_list(0);
 	tmp->set_prev_linked_list(0);

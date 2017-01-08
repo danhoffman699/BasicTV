@@ -89,7 +89,6 @@ uint8_t net_request_t::get_flags(){
 }
 
 void net_request_t::add_id(uint64_t id_){
-	local = true;
 	for(uint64_t i = 0;i < NET_REQUEST_MAX_LENGTH;i++){
 		if(ids[i] == 0){
 			ids[i] = id_;
@@ -100,7 +99,6 @@ void net_request_t::add_id(uint64_t id_){
 }
 
 void net_request_t::del_id(uint64_t id_){
-	local = true;
 	for(uint64_t i = 0;i < NET_REQUEST_MAX_LENGTH;i++){
 		if(ids[i] == id_){
 			ids[i] = 0;
@@ -123,8 +121,4 @@ void net_request_t::set_socket_id(uint64_t socket_id_){
 
 uint64_t net_request_t::get_socket_id(){
 	return socket_id;
-}
-
-bool net_request_t::is_local(){
-	return local;
 }

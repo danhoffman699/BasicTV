@@ -107,8 +107,12 @@ std::vector<uint8_t> net_socket_t::recv(uint64_t byte_count, uint64_t flags){
 	// TODO: test to see if the activity() code works
 	do{
 		while(activity()){
-			if(SDLNet_TCP_Recv(socket, &tmp_data, 1) > 0){
+
+			int32_t recv_retval = 0;
+			if((recv_retval = SDLNet_TCP_Recv(socket, &tmp_data, 1)) > 0){
 				local_buffer.push_back(tmp_data);
+			}else{
+				net_socket_recv_posix_error_checking(recv_retval);
 			}
 		}
 		if(local_buffer.size() >= byte_count){

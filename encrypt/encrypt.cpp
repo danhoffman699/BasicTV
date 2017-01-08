@@ -105,6 +105,7 @@ std::vector<uint8_t> encrypt_api::encrypt(std::vector<uint8_t> data,
 	switch(encryption_scheme){
 	case ENCRYPT_RSA:
 		retval = rsa::encrypt(data, key);
+		break;
 	case ENCRYPT_UNDEFINED:
 		print("no encryption scheme is set", P_ERR);
 		break;
@@ -122,5 +123,27 @@ std::vector<uint8_t> encrypt_api::encrypt(std::vector<uint8_t> data,
 
 std::vector<uint8_t> encrypt_api::decrypt(std::vector<uint8_t> data,
 					  id_t_ key_id){
-	
+	std::vector<uint8_t> retval;
+	uint8_t encryption_scheme = ENCRYPT_UNDEFINED;
+	std::vector<uint8_t> key;
+	encrypt_pull_key_info(key_id,
+			      &key,
+			      &encryption_scheme);
+	switch(encryption_scheme){
+	case ENCRYPT_RSA:
+		retval = rsa::decrypt(data, key);
+		break;
+	case ENCRYPT_UNDEFINED:
+		print("no encryption scheme is set", P_ERR);
+		break;
+	default:
+		print("unknown encryption scheme is set", P_ERR);
+		break;
+	}
+	// encryption scheme is ALWAYS the first byte
+	retval.insert(
+		retval.begin(),
+		&encryption_scheme,
+		&encryption_scheme+1);
+	return retval;
 }

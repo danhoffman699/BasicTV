@@ -2,7 +2,10 @@
 #include "util.h"
 #include "compress.h"
 
-#define COMPRESS_TMP_SANE_SIZE (1024*1024)
+/*
+  TODO: get rid of COMPRESS_TMP_SANE_SIZE and actually use something that makes
+  more sense.
+ */
 
 static void compressor_zlib_error_checker(int32_t retval){
 	switch(retval){
@@ -42,8 +45,8 @@ std::vector<uint8_t> compressor::to_xz(std::vector<uint8_t> input,
 }
 
 std::vector<uint8_t> compressor::from_xz(std::vector<uint8_t> input){
-	uint64_t retval_size = COMPRESS_TMP_SANE_SIZE;
-	uint8_t *retval_char = new uint8_t[COMPRESS_TMP_SANE_SIZE];
+	uint64_t retval_size = input.size()*3;
+	uint8_t *retval_char = new uint8_t[retval_size];
 	compressor_zlib_error_checker(
 		uncompress(
 			retval_char,

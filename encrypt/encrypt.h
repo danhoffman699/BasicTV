@@ -22,7 +22,7 @@
 /*
   Important info about encryption system:
   All fingerprints on public key encryption are the SHA-512 hash of the public
-  key (512 bits long, so 64 bit)
+  key (512 bits long, so 64 byte)
 
   This system guarantees ownership of content by public keys. Proof of owning
   public keys should come from external references: posting links to webpages
@@ -32,8 +32,17 @@
   looks when the user sees it
 */
 
+// encryption schemes
+// undefined encryption scheme
 #define ENCRYPT_UNDEFINED (0)
+
+// RSA encryption scheme, works similarly to SSL
 #define ENCRYPT_RSA (1)
+
+// symmetric key system (documented in personal notes)
+/*
+ */
+#define ENCRYPT_SKS (2)
 
 struct encrypt_key_pair_t{
 private:
@@ -48,6 +57,11 @@ public:
 	id_t_ get_pub_key_id();
 	void set_pub_key_id(id_t_ pub_key_);
 };
+
+/*
+  The inevitable symmetric key system that is going to be used will be using
+  this with a new encryption_scheme
+ */
 
 struct encrypt_key_t{
 protected:
