@@ -97,4 +97,5 @@ public:
 	void del_socket_id(uint64_t socket_);
 };
 
+typedef net_peer_t net_proto_peer_t;
 #endif

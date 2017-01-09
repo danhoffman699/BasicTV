@@ -50,6 +50,7 @@ public:
 	void disconnect();
 	void send(std::vector<uint8_t> data);
 	std::vector<uint8_t> recv(uint64_t byte_count = 0, uint64_t flags = 0);
+	std::vector<uint8_t> recv_all_buffer();
 	// enable/disable SOCKS proxy, set as a flag in status
 	// throws on error
 	void enable_socks(std::pair<std::string, uint16_t> socks_info, std::pair<std::string, uint16_t> conn_info);

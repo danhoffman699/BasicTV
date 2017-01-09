@@ -29,16 +29,18 @@ std::vector<std::vector<uint8_t> > net_proto_socket_t::get_buffer(){
 // isn't used outside of this file (should be in meta though).
 
 static std::pair<net_proto_standard_data_t, std::vector<uint8_t> >
-net_proto_socket_read_struct_segment(uint8_t *data,
-				     uint64_t data_size){
+net_proto_socket_read_struct_segment(std::vector<uint8_t> working_buffer){
 	// size is the rest of data, not the size of the read data
 	std::pair<net_proto_standard_data_t, std::vector<uint8_t> > retval;
-	net_proto_read_packet_metadata(data,
-				       data_size,
+	net_proto_read_packet_metadata(working_buffer.data(),
+				       working_buffer.size(),
 				       &retval.first);
-	if(data_size >= retval.first.size){
-		uint8_t *start = data+NET_PROTO_STANDARD_DATA_LENGTH;
-		uint8_t *end = data+NET_PROTO_STANDARD_DATA_LENGTH+data_size;
+	/*
+	  I don't see a need to have a sanity check with this
+	 */
+	if(working_buffer.size() >= retval.first.size){
+		uint8_t *start = working_buffer.data()+NET_PROTO_STANDARD_DATA_LENGTH;
+		uint8_t *end = working_buffer.data()+NET_PROTO_STANDARD_DATA_LENGTH+retval.first.size;
 		retval.second =
 			std::vector<uint8_t>(start, end);
 	}
@@ -52,13 +54,12 @@ void net_proto_socket_t::update(){
 	if(socket_ptr == nullptr){
 		print("socket_ptr is a nullptr", P_ERR);
 	}
-	std::vector<uint8_t> net_byte;
-	while((net_byte = socket_ptr->recv(1, NET_SOCKET_RECV_NO_HANG)).size() > 0){
-		working_buffer.insert(
-			working_buffer.end(),
-			net_byte.begin(),
-			net_byte.end()); // should always add one byte
-	}
+	std::vector<uint8_t> net_data =
+		socket_ptr->recv_all_buffer();
+	working_buffer.insert(
+		working_buffer.end(),
+		net_data.begin(),
+		net_data.end()); // should always add one byte
 	std::pair<net_proto_standard_data_t, std::vector<uint8_t> > net_final;
 	try{
 		/*
@@ -75,8 +76,7 @@ void net_proto_socket_t::update(){
 		 */
 		net_final =
 			net_proto_socket_read_struct_segment(
-				working_buffer.data(),
-				working_buffer.size());
+				working_buffer);
 	}catch(...){
 		print("unrecognized metadata for packet", P_WARN);
 		return;
@@ -92,5 +92,20 @@ void net_proto_socket_t::update(){
 		working_buffer.erase(
 			working_buffer.begin(),
 			working_buffer.begin()+actual_size);
+		// fixes the double DEV_CTRL_1
+		for(uint64_t i = 0;i < net_final.second.size()-1;i++){
+			if(net_final.second[i] == NET_PROTO_DEV_CTRL_1){
+				if(net_final.second[i+1] == NET_PROTO_DEV_CTRL_1){
+					net_final.second.erase(net_final.second.begin()+i);
+					for(;i < net_final.second.size();i++){
+						if(net_final.second[i] != NET_PROTO_DEV_CTRL_1){
+							break;
+						}
+					}
+				}else{
+					print("it seems like the size and the next packet metadata overlap, this shouldn't happen", P_ERR);
+				}
+			}
+		}
 	} // doesn't trip when the data isn't finished receiving
 }

@@ -77,7 +77,7 @@ void id_api::array::add(data_id_t *ptr){
 	id_list.push_back(ptr);
 }
 
-void id_api::array::del(uint64_t id){
+void id_api::array::del(id_t_ id){
 	for(uint64_t i = 0;i < id_list.size();i++){
 		if(id_list[i]->get_id() == id){
 			id_list.erase(id_list.begin()+i);
@@ -87,11 +87,15 @@ void id_api::array::del(uint64_t id){
 	print("cannot find ID in list", P_ERR);
 }
 
-#define CHECK_TYPE(a) if(convert::array::type::from(type) == #a){(new a)->id.import_data(data_);return;}
+#define CHECK_TYPE(a) if(convert::array::type::from(type) == #a){a *tmp = new a;tmp->id.import_data(data_);return tmp->id.get_id();}
 
-// interprets network data and populates it
+/*
+  General purpose reader, returns the ID of the new information.
+  The only current use of the return value is for associating sockets with
+  data requests.
+ */
 
-void id_api::array::add_data(std::vector<uint8_t> data_){
+id_t_ id_api::array::add_data(std::vector<uint8_t> data_){
 	uint64_t id = 0;
 	std::array<uint8_t, TYPE_LENGTH> type;
 	type.fill(0);
@@ -103,14 +107,18 @@ void id_api::array::add_data(std::vector<uint8_t> data_){
 	for(uint64_t i = 0;i < tmp_type_cache.size();i++){
 		if(tmp_type_cache[i] == id){
 			ptr_id(tmp_type_cache[i], "")->import_data(data_);
-			return;
+			return tmp_type_cache[i];
 		}
 	}
 	CHECK_TYPE(tv_channel_t);
 	CHECK_TYPE(tv_frame_audio_t);
 	CHECK_TYPE(tv_frame_video_t);
-	CHECK_TYPE(net_peer_t);
-	print("type isn't valid", P_ERR);
+	CHECK_TYPE(net_proto_peer_t);
+	CHECK_TYPE(net_proto_request_t);
+	CHECK_TYPE(net_proto_con_req_t);
+	CHECK_TYPE(encrypt_pub_key_t);
+	print("type isn't valid", P_WARN);
+	return 0;
 }
 
 #undef CHECK_TYPE

@@ -83,7 +83,9 @@ private:
 	id_t_ third_peer_id = 0;
 	uint64_t heartbeat_timestamp = 0;
 public:
-	data_id_t data;
+	data_id_t id;
+	net_proto_con_req_t();
+	~net_proto_con_req_t();
 };
 
 #endif

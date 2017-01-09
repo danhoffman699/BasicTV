@@ -27,8 +27,8 @@ namespace id_api{
 		void *ptr_data(uint64_t id,
 				  std::array<uint8_t, TYPE_LENGTH> type);
 		void add(data_id_t *ptr);
-		void del(uint64_t id); // no type
-		void add_data(std::vector<uint8_t> data_);
+		void del(id_t_ id); // no type
+		id_t_ add_data(std::vector<uint8_t> data_);
 		std::vector<uint64_t> sort_by_rsa_pubkey(std::vector<uint64_t> tmp);
 		std::vector<uint64_t> get_forward_linked_list(uint64_t id);
 	}

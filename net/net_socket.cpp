@@ -127,6 +127,13 @@ std::vector<uint8_t> net_socket_t::recv(uint64_t byte_count, uint64_t flags){
 	return {};
 }
 
+std::vector<uint8_t> net_socket_t::recv_all_buffer(){
+	std::vector<uint8_t> retval;
+	retval = local_buffer;
+	local_buffer.clear();
+	return retval;
+}
+
 /*
   net_socket_t::enable_socks: enables SOCKS proxy (Tor). Isn't responsible
   for enabling or disabling anything Tor related, or to do anything specific

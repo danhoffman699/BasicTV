@@ -108,5 +108,7 @@ public:
 	bool is_local();
 };
 
+typedef net_request_t net_proto_request_t;
+
 #endif
 #include "net_proto_peer.h"

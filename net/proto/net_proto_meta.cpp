@@ -27,10 +27,9 @@ std::vector<uint8_t> net_proto_write_packet_metadata(
 	}								\
 	offset += sizeof(*ptr);						\
 
-void net_proto_read_packet_metadata(
-	uint8_t *data,
-	uint32_t data_length,
-	net_proto_standard_data_t *standard_data){
+void net_proto_read_packet_metadata(uint8_t *data,
+				    uint32_t data_length,
+				    net_proto_standard_data_t *standard_data){
 	uint64_t offset = 1; // NET_PROTO_DEV_CTRL_1
 	READ_DATA_META(&(standard_data->size));
 	READ_DATA_META(&(standard_data->ver_major));

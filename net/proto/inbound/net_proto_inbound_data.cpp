@@ -181,8 +181,40 @@
   net_proto_socket_t (hopefuly simplify the decoding).
  */
 
-void net_proto_loop_dummy_read(){}
+void net_proto_loop_dummy_read(){
+}
 
-void net_proto_loop_handle_inbound_data(){}
+void net_proto_process_buffer_vector(id_t_ socket_id, std::vector<std::vector<uint8_t> > buffer_vector){
+	for(uint64_t i = 0;i < buffer_vector.size();i++){
+		id_t_ imported_data_id =
+			id_api::array::add_data(buffer_vector[i]);
+		data_id_t *imported_data_ptr =
+			PTR_ID(imported_data_id,
+			       net_request_t);
+		if(imported_data_ptr != nullptr){
+			net_request_t *request =
+				(net_request_t*)imported_data_ptr->get_ptr();
+			request->set_socket_id(socket_id);
+		}
+	}
+}
 
-void net_proto_loop_handle_inbound_requests(){}
+void net_proto_loop_handle_inbound_data(){
+	std::vector<id_t_> proto_sockets =
+		id_api::cache::get("net_proto_socket_t");
+	for(uint64_t i = 0;i < proto_sockets.size();i++){
+		net_proto_socket_t *proto_socket =
+			PTR_DATA(proto_sockets[i],
+				 net_proto_socket_t);
+		if(proto_socket == nullptr){
+			print("proto_socket is a nullptr", P_ERR);
+		}
+		proto_socket->update();
+		net_proto_process_buffer_vector(
+			proto_sockets[i],
+			proto_socket->get_buffer());
+	}
+}
+
+void net_proto_loop_handle_inbound_requests(){
+}
