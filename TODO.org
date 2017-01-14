@@ -1,8 +1,8 @@
 * TODO Polish networking protocol
   - [ ] Use compression on exporting
-  - [ ] Incorperate SSL to prevent DoS/DDoS attacks
   - [ ] Stabilize net_socket_t code
   - [ ] Add support for vectors (std::vector<uint8_t/uint64_t>) in data_ptr
+  - [ ] Finalize net_con_req_t
 * TODO Multithreading
   - [ ] Include locks on data_id_t
   - [ ] Create thread pools (probably a dedicated API)

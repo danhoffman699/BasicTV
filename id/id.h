@@ -84,8 +84,10 @@ public:
 	uint64_t get_id();
 	std::string get_type();
 	void *get_ptr();
-	void set_rsa_cite_id(uint64_t id){rsa_cite_id = id;} // probably should fix this soon
+	void set_rsa_cite_id(uint64_t id_){rsa_cite_id = id_;} // probably should fix this soon
+	void set_encrypt_cite_id(uint64_t id_){rsa_cite_id = id_;}
 	uint64_t get_rsa_cite_id();
+	uint64_t get_encrypt_cite_id(){return get_rsa_cite_id();}
 	uint64_t get_data_index_size();
 	uint64_t get_next_linked_list();
 	uint64_t get_prev_linked_list();

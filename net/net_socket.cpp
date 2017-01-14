@@ -293,3 +293,27 @@ bool net_socket_t::activity(){
 uint64_t net_socket_t::get_buffer_size(){
 	return local_buffer.size();
 }
+
+uint64_t net_socket_t::get_outbound_traffic_stats(uint64_t start_micro_s_, uint64_t end_micro_s_){
+	uint64_t retval = 0;
+	for(uint64_t i = 0;i < outbound_stats.size();i++){
+		if(BETWEEN(start_micro_s_,
+			   outbound_stats[i].first,
+			   end_micro_s_)){
+			retval += outbound_stats[i].second;
+		}
+	}
+	return retval;
+}
+
+uint64_t net_socket_t::get_inbound_traffic_stats(uint64_t start_micro_s_, uint64_t end_micro_s_){
+	uint64_t retval = 0;
+	for(uint64_t i = 0;i < inbound_stats.size();i++){
+		if(BETWEEN(start_micro_s_,
+			   inbound_stats[i].first,
+			   end_micro_s_)){
+			retval += inbound_stats[i].second;
+		}
+	}
+	return retval;
+}

@@ -39,6 +39,8 @@ private:
 	// SOCKS user ID
 	std::array<uint8_t, 5> socks_user_id_str = {{0}};
 	void socket_check();
+	std::vector<std::pair<uint64_t, uint32_t> > inbound_stats;
+	std::vector<std::pair<uint64_t, uint32_t> > outbound_stats;
 public:
 	data_id_t id;
 	net_socket_t();
@@ -62,5 +64,8 @@ public:
 	bool activity();
 	// fetch buffer sizes
 	uint64_t get_buffer_size();
+	// inbound and outbound stats
+	uint64_t get_outbound_traffic_stats(uint64_t start_micro_s_, uint64_t end_micro_s_);
+	uint64_t get_inbound_traffic_stats(uint64_t start_micro_s_, uint64_t end_micro_s_);
 };
 #endif

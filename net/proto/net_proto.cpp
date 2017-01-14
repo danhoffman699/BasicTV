@@ -22,11 +22,14 @@ void net_proto_loop(){
 	if(incoming_socket == nullptr){
 		print("incoming_socket == nullptr", P_ERR);
 	}
-	// handle any inbound connections
-	net_proto_loop_accept_all_connections(
-		incoming_socket); // "accept" == inbound
-	net_proto_loop_handle_inbound_requests();
-	net_proto_loop_handle_outbound_requests();
+	// all things inbound
+	// net_proto_loop_handle_inbound_requests();
+	// net_proto_loop_accept_all_connections();
+	// all things outbound
+	// net_proto_loop_handle_outbound_requests();
+	// net_proto_loop_initiate_all_connections();
+
+	
 }
 
 void net_proto_init(){

@@ -19,7 +19,7 @@ BasicTV is "a simple, decentralized Internet television system". You can flip th
 * Donate to channels to help support them
 * Donate to nodes to incentivize network growth and help prioritize your connection
 * Multithreading Tor circuits for fast anonymous downloads
-* Have multiple channels visible at the same time with an Emacs/tmux layout
+* Have multiple channels visible at the same time with an tmux layout
 
 If you have any questions, feel free to join #basictv on freenode
 
