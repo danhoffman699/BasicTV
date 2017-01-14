@@ -21,7 +21,7 @@ BasicTV is "a simple, decentralized Internet television system". You can flip th
 * Multithreading Tor circuits for fast anonymous downloads
 * Have multiple channels visible at the same time with an Emacs/tmux layout
 
+If you have any questions, feel free to join #basictv on freenode
+
 #How can I get it?
 Currently, the only supported OS is Linux. However, the minimum specifications match a Raspberry Pi, so having a dedicated TV box for BasicTV is cheap and practical (OpenBox and a startup script and you should be golden).
-
-You would need to custom install an IR receiver to your Raspberry Pi for it to work.
