@@ -3,30 +3,27 @@ LDFLAGS+=-lstdc++ -lcurl -lSDL2_net -lSDL2_mixer -lSDL2 -lz -lcrypto
 #changed for personal reasons, clang++ is faster at compiling
 CXX:=clang++
 
-default: debug
+all: debug
 
-id:
+id_: input_
 	$(CXX) $(CXXFLAGS) -DDEBUG -O0 -g -c id/id_unified.cpp
 
-tv: id
+tv_: id_
 	$(CXX) $(CXXFLAGS) -DDEBUG -O0 -g -c tv/tv_unified.cpp
 
-net: id
+net_: id_
 	$(CXX) $(CXXFLAGS) -DDEBUG -O0 -g -c net/net_unified.cpp
 
-input: id
+input_: id_
 	$(CXX) $(CXXFLAGS) -DDEBUG -O0 -g -c input/input_unified.cpp
 
-encrypt: id
+encrypt_: id_
 	$(CXX) $(CXXFLAGS) -DDEBUG -O0 -g -c encrypt/encrypt_unified.cpp
 
-all: tv net input encrypt
-	$(CXX) $(CXXFLAGS) net_unified.o tv_unified.o id_unified.o encrypt_unified.o *.cpp $(LDFLAGS) 
+debug: tv_ net_ input_ encrypt_ id_
+	$(CXX) $(CXXFLAGS) -DDEBUG -O0 -g  *.cpp tv_unified.o net_unified.o input_unified.o id_unified.o encrypt_unified.o $(LDFLAGS) 
 
-debug: tv net input encrypt
-	$(CXX) $(CXXFLAGS) -DDEBUG -O0 -g tv_unified.o net_unified.o input_unified.o id_unified.o encrypt_unified.o *.cpp $(LDFLAGS) 
-
-fast: tv net input encrypt
+fast: tv_ net_ input_ encrypt_
 	$(CXX) $(CXXFLAGS) -Ofast -march=native tv_unified.o net_unified.o input_unified.o id_unified.o encrypt_unified.o *.cpp $(LDFLAGS)
 
 clean:
