@@ -1,4 +1,5 @@
 #include "../id/id.h"
+#include "../stats.h"
 #include "net_const.h"
 #ifndef NET_SOCKET_H
 #define NET_SOCKET_H
@@ -39,8 +40,9 @@ private:
 	// SOCKS user ID
 	std::array<uint8_t, 5> socks_user_id_str = {{0}};
 	void socket_check();
-	std::vector<std::pair<uint64_t, uint32_t> > inbound_stats;
-	std::vector<std::pair<uint64_t, uint32_t> > outbound_stats;
+	// timestamp and amount
+	id_t_ outbound_stat_sample_set_id = 0;
+	id_t_ inbound_stat_sample_set_id = 0;
 public:
 	data_id_t id;
 	net_socket_t();
@@ -65,7 +67,7 @@ public:
 	// fetch buffer sizes
 	uint64_t get_buffer_size();
 	// inbound and outbound stats
-	uint64_t get_outbound_traffic_stats(uint64_t start_micro_s_, uint64_t end_micro_s_);
-	uint64_t get_inbound_traffic_stats(uint64_t start_micro_s_, uint64_t end_micro_s_);
+	id_t_ get_inbound_stat_sample_set_id();
+	id_t_ get_outbound_stat_sample_set_id();
 };
 #endif

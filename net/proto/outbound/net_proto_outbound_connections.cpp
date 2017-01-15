@@ -47,26 +47,21 @@ static std::vector<std::pair<id_t_, std::vector<id_t_> > > net_proto_generate_pr
 				std::vector<id_t_>(
 					proto_socket->id.get_id())));
 	}
-}
-
-static std::vector<std::tuple<id_t_, uint32_t, uint64_t> > net_proto_generate_bandwidth_index(){
-	// encryption ID, number of sockets, total throughput
-	std::vector<std::tuple<id_t_, uint32_t, uint64_t> > retval;
-	
 	return retval;
 }
 
-void net_proto_loop_initiate_all_connections(){
-	// list of encryption IDs and their associated sockets
-	std::vector<std::pair<id_t_, std::vector<id_t_> > > socket_index =
-		net_proto_generate_proto_socket_index();
-	std::vector<std::tuple<id_t_, uint32_t, uint64_t> > bandwidth_index =
-		net_proto_generate_bandwidth_index();
+// vector of the encryption ID and all of the stats information for all sockets
+
+static std::vector<std::pair<id_t_, std::vector<std::pair<id_t_, std::vector<std::pair<uint64_t, uint64_t> > > > > > net_proto_generate_bandwidth_index_from_proto_socket_index(
+	std::vector<std::pair<id_t_, std::vector<id_t_> > > socket_index){
+	// encryption ID, number of sockets, total throughput
+	std::vector<std::pair<id_t_, std::vector<std::pair<id_t_, std::vector<std::pair<uint64_t, uint64_t> > > > > > retval;
 	for(uint64_t i = 0;i < socket_index.size();i++){
-		uint64_t bandwidth = 0;
-		for(uint64_t b = 0;b < socket_index[i].second.size();b++){
+		// sockets with the same encryption ID
+		std::vector<std::pair<id_t_, std::vector<std::pair<uint64_t, uint64_t> > > > socket_id_set;
+		for(uint64_t s = 0;s < socket_index[i].second.size();s++){
 			net_proto_socket_t *proto_socket =
-				PTR_DATA(socket_index[i].second[b],
+				PTR_DATA(socket_index[i].second[s],
 					 net_proto_socket_t);
 			if(proto_socket == nullptr){
 				continue;
@@ -77,9 +72,29 @@ void net_proto_loop_initiate_all_connections(){
 			if(socket == nullptr){
 				continue;
 			}
-			// Fetch the bandwidth from the socket (when that is
-			// implemented) and add it to bandwidth variable
+			stat_sample_set_t *inbound_sample_set =
+				PTR_DATA(socket->get_inbound_stat_sample_set_id(),
+					 stat_sample_set_t);
+			if(inbound_sample_set == nullptr){
+				continue;
+			}
+			std::pair<id_t_, std::vector<std::pair<uint64_t, uint64_t> > > tmp_stat =
+				std::make_pair(
+					proto_socket->id.get_id(),
+					inbound_sample_set->get_samples());
+			socket_id_set.push_back(tmp_stat);
 		}
+		std::pair<id_t_, std::vector<std::pair<id_t_, std::vector<std::pair<uint64_t, uint64_t> > > > > encrypt_id_pair;
+		encrypt_id_pair.first = socket_index[i].first;
+		encrypt_id_pair.second = socket_id_set;
+		retval.push_back(encrypt_id_pair);
 	}
+	return retval;
+}
+
+void net_proto_loop_initiate_all_connections(){
+	// list of encryption IDs and their associated sockets
+	std::vector<std::pair<id_t_, std::vector<id_t_> > > proto_socket_index =
+		net_proto_generate_proto_socket_index();
 	return;
 }

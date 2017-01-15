@@ -2,11 +2,15 @@
 #include "../util.h"
 #include "net.h"
 #include "net_socket.h"
+#include "../stats.h"
+#include "../id/id_api.h"
 
 net_socket_t::net_socket_t() : id(this, __FUNCTION__){
 	id.add_data(&status, 8);
 	// no real need to add anything else, should never
 	// be networked
+	outbound_stat_sample_set_id = (new stat_sample_set_t)->id.get_id();
+	inbound_stat_sample_set_id = (new stat_sample_set_t)->id.get_id();
 }
 
 net_socket_t::~net_socket_t(){}
@@ -67,6 +71,14 @@ void net_socket_t::send(std::vector<uint8_t> data){
 		disconnect();
 	}
 	print("sent " + std::to_string(sent_bytes) + " bytes", P_DEBUG);
+	stat_sample_set_t *outbound_sample_set =
+		PTR_DATA(outbound_stat_sample_set_id,
+			 stat_sample_set_t);
+	if(outbound_sample_set != nullptr){
+		outbound_sample_set->add_sample(
+			get_time_microseconds(),
+			sent_bytes);
+	}
 }
 
 /*
@@ -106,13 +118,24 @@ std::vector<uint8_t> net_socket_t::recv(uint64_t byte_count, uint64_t flags){
 	uint8_t tmp_data = 0;
 	// TODO: test to see if the activity() code works
 	do{
+		uint64_t data_received = 0;
 		while(activity()){
-
 			int32_t recv_retval = 0;
 			if((recv_retval = SDLNet_TCP_Recv(socket, &tmp_data, 1)) > 0){
 				local_buffer.push_back(tmp_data);
+				data_received++;
 			}else{
 				net_socket_recv_posix_error_checking(recv_retval);
+			}
+		}
+		if(data_received != 0){
+			stat_sample_set_t *inbound_stat_sample_set =
+				PTR_DATA(inbound_stat_sample_set_id,
+					 stat_sample_set_t);
+			if(inbound_stat_sample_set != nullptr){
+				inbound_stat_sample_set->add_sample(
+					get_time_microseconds(),
+					data_received);
 			}
 		}
 		if(local_buffer.size() >= byte_count){
@@ -294,26 +317,10 @@ uint64_t net_socket_t::get_buffer_size(){
 	return local_buffer.size();
 }
 
-uint64_t net_socket_t::get_outbound_traffic_stats(uint64_t start_micro_s_, uint64_t end_micro_s_){
-	uint64_t retval = 0;
-	for(uint64_t i = 0;i < outbound_stats.size();i++){
-		if(BETWEEN(start_micro_s_,
-			   outbound_stats[i].first,
-			   end_micro_s_)){
-			retval += outbound_stats[i].second;
-		}
-	}
-	return retval;
+id_t_ net_socket_t::get_inbound_stat_sample_set_id(){
+	return inbound_stat_sample_set_id;
 }
 
-uint64_t net_socket_t::get_inbound_traffic_stats(uint64_t start_micro_s_, uint64_t end_micro_s_){
-	uint64_t retval = 0;
-	for(uint64_t i = 0;i < inbound_stats.size();i++){
-		if(BETWEEN(start_micro_s_,
-			   inbound_stats[i].first,
-			   end_micro_s_)){
-			retval += inbound_stats[i].second;
-		}
-	}
-	return retval;
+id_t_ net_socket_t::get_outbound_stat_sample_set_id(){
+	return outbound_stat_sample_set_id;
 }
