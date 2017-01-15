@@ -92,9 +92,51 @@ static std::vector<std::pair<id_t_, std::vector<std::pair<id_t_, std::vector<std
 	return retval;
 }
 
-void net_proto_loop_initiate_all_connections(){
+/*
+  If Tor (or another proxy) is being used, and we have multiple sockets that
+  can route the information (or "circuits"), then we can establish multiple
+  redundant sockets over all of these sockets. There is a set download speed
+  for each socket, and when that is exceeded in a certain interval (say 10kbps
+  for Tor), then establish another connection on another socket. 
+ 
+  All connections are made assuming a Tor-like setup (no inbound TCP connecions
+  are allowed, holepunching is allowed), and a new net_peer_t is created and
+  associated with a net_proto_socket_t.
+  
+  It is assumed throughout this program that two different sockets with matching
+  encryption schemes are just two seperate connections to the same physical
+  computer, and statistically likely requests to one socket is just as likely
+  on the other.
+
+  If BasicTV isn't configured through settings.cfg to use Tor or to use a
+  list of different proxies, then establishing multiple sockets to a peer
+  is useless.
+ */
+
+std::vector<id_t_> net_proto_masquerade_connections(){
 	// list of encryption IDs and their associated sockets
 	std::vector<std::pair<id_t_, std::vector<id_t_> > > proto_socket_index =
 		net_proto_generate_proto_socket_index();
+	std::vector<std::pair<id_t_, std::vector<std::pair<id_t_, std::vector<std::pair<uint64_t, uint64_t> > > > > > bandwidth_index =
+		net_proto_generate_bandwidth_index_from_proto_socket_index(
+			proto_socket_index);
+}
+
+/*
+  The limit set in settings.cfg for socket creation is intentionally low to
+  make things work on crappy routers. The first "hard" limit for myself is
+  ulimit restricting the number of open file descriptors (keep reading for work
+  around).
+
+  File descriptors and network sockets overlap in all areas except for proxies.
+  More sockets can be created than what ulimit and SDL2 can by running multiple
+  sockets over SOCKS. 
+
+  TODO: seamlessly masquerade multiple net_socket_t over a SOCKS connection
+  somehow
+ */
+
+void net_proto_loop_initiate_all_connections(){
+	std::vector<id_t_> peer_queue;
 	return;
 }
