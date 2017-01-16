@@ -27,8 +27,6 @@
   std::pair entries
  */
 
-#define NET_SOCKET_USE_SOCKS (1 << 0)
-
 struct net_socket_t : public net_ip_t{
 private:
 	uint8_t status = 0;
@@ -49,7 +47,7 @@ public:
 	uint8_t get_status();
 	void connect();
 	void disconnect();
-
+	
 	// send and recv functions
 	void send(std::vector<uint8_t> data);
 	std::vector<uint8_t> recv(uint64_t byte_count = 0, uint64_t flags = 0);
@@ -59,6 +57,7 @@ public:
 	// inbound and outbound stats
 	id_t_ get_inbound_stat_sample_set_id();
 	id_t_ get_outbound_stat_sample_set_id();
+	vodi set_proxy_id(id_t_ proxy_id_);
 	id_t_ get_proxy_id();
 
 	// hacky stuff that should be streamlined and abstracted

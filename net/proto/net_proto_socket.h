@@ -24,18 +24,6 @@
 struct net_proto_socket_t{
 private:
 	id_t_ socket_id = 0;
-	/*
-	  I don't care about UDP for now, but had I bothered, I would have
-	  included chronological IDs for sequential packets, and nested
-	  that inside of a std::pair with an ID for the list of packets
-	  in general (which would be in an std::vector of different packet
-	  IDs).
-
-	  It would have been this:
-	  std::vector<std::pair<std::vector<std::pair<std::vector<uint8_t>, uint64_t> >, uint64_t> >
-
-	  I like TCP (working_buffer is all data received in order)
-	 */
 	std::vector<uint8_t> working_buffer;
 	// finalized buffer, removed DEV_CTRL_1, native endian, etc.
 	std::vector<std::vector<uint8_t> > buffer;
@@ -46,7 +34,7 @@ public:
 	void set_socket_id(id_t_ socket_id_);
 	id_t_ get_socket_id();
 	void update();
-	// probbaly don't need more granularity in the buffers
+	// probably don't need more granularity in the buffers
 	std::vector<std::vector<uint8_t> > get_buffer();
 };
 

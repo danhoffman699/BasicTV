@@ -65,13 +65,30 @@ void net_socket_t::send(std::vector<uint8_t> data){
 		disconnect();
 	}
 	print("sent " + std::to_string(sent_bytes) + " bytes", P_DEBUG);
+	std::pair<uint64_t, uint64_t> data_point =
+		std::make_pair(
+			get_time_microseconds(),
+			sent_bytes);
 	stat_sample_set_t *outbound_sample_set =
 		PTR_DATA(outbound_stat_sample_set_id,
 			 stat_sample_set_t);
 	if(outbound_sample_set != nullptr){
 		outbound_sample_set->add_sample(
-			get_time_microseconds(),
-			sent_bytes);
+			data_point.first,
+			data_point.second);
+	}
+	net_proxy_t *proxy =
+		PTR_DATA(proxy_id,
+			 net_proxy_t);
+	if(proxy != nullptr){
+		stat_sample_set_t *proxy_sample_set =
+			PTR_DATA(proxy->get_proxy_stat_sample_set_id(),
+				 stat_sample_set_t);
+		if(proxy_sample_set != nullptr){
+			proxy_sample_set->add_sample(
+				data_point.first,
+				data_point.second);
+		}
 	}
 }
 
@@ -237,4 +254,16 @@ id_t_ net_socket_t::get_inbound_stat_sample_set_id(){
 
 id_t_ net_socket_t::get_outbound_stat_sample_set_id(){
 	return outbound_stat_sample_set_id;
+}
+
+id_t_ net_socket_t::get_proxy_id(){
+	return proxy_id;
+}
+
+void net_socket_t::set_proxy_id(id_t_ proxy_id_){
+	if(proxy_id_ != proxy_id){
+		// nothing we can do
+		disconnect();
+	}
+	proxy_id = proxy_id_;
 }
