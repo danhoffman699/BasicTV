@@ -30,12 +30,6 @@ void net_socket_t::socket_check(){
 	}
 }
 
-/*
-  net_socket_t::get_status: returns the status variable. There
-  are no individual getters, and direct setters don't exist. All
-  flags that can be passed are preceded with NET_SOCKET
- */
-
 uint8_t net_socket_t::get_status(){
 	socket_check(); // should this be here?
 	return status;
@@ -158,91 +152,22 @@ std::vector<uint8_t> net_socket_t::recv_all_buffer(){
 }
 
 /*
-  net_socket_t::enable_socks: enables SOCKS proxy (Tor). Isn't responsible
-  for enabling or disabling anything Tor related, or to do anything specific
-  to the Tor network. However, external functions (should) exist that faciliate
-  new circuits, port assignment, and other interfacing requirements
-
-  TODO: possibly investigate SOCKS4a for domain name resolution and SOCKS5 for 
-  whatever new thing that does (but it looks pretty complex)
- */
-
-void net_socket_t::enable_socks(std::pair<std::string, uint16_t> socks_info,
-				std::pair<std::string, uint16_t> client_info){
-	client_conn = client_info;
-	socks_conn = socks_info;
-	std::array<uint8_t, 13> socks_request = {{0}};
-	uint32_t socks_user_id = true_rand(0, std::numeric_limits<uint32_t>::max());	
-	IPaddress client_addr, socks_addr;
-	SDLNet_ResolveHost(&client_addr, client_info.first.c_str(),
-			   client_info.second);
-	SDLNet_ResolveHost(&socks_addr, socks_info.first.c_str(),
-			   socks_info.second);
-	socket = SDLNet_TCP_Open(&socks_addr);
-	memcpy(&(socks_user_id_str), &socks_user_id, 4);
-	socks_user_id_str[4] = 0; // has to be null terminated
-	socks_request[0] = 0x04; // SOCKSv4
-	if(client_conn.first != ""){
-		socks_request[1] = 0x01; // establish a TCP/IP stream connection
-		memcpy(&(socks_request[4]), &client_addr.host, 4);
-	}else{
-		socks_request[1] = 0x02; // establish a TCP/IP port binding 
-	}
-	memcpy(&(socks_request[2]), &client_addr.port, 2);
-	memcpy(&(socks_request[8]), &(socks_user_id_str[0]), 4);
-	socks_request[12] = 0;
-	std::vector<uint8_t> request;
-	for(uint64_t i = 0;i < 13;i++){
-		request.push_back(socks_request[i]);
-	}
-	send(request);
-	switch(recv(8).at(1)){
-	case 0x5A:
-		print("request granted for SOCKS", P_NOTE);
-		status |= NET_SOCKET_USE_SOCKS;
-		break;
-	case 0x5B:
-		print("request rejected or failed for SOCKS", P_ERR);
-		break;
-	case 0x5C:
-		print("not running identd for SOCKS", P_ERR);
-		break;
-	case 0x5D:
-		print("identd can't confirm the user ID string", P_ERR);
-		break;
-	default:
-		print("unknown staus byte for SOCKS", P_ERR);
-		break;
-	}
-}
-
-void net_socket_t::disable_socks(){
-	/*
-	  Can probably get away with closing the connection
-	 */
-}
-
-/*
   net_socket_t::connect: connect (without SOCKS) to another client
  */
 
-void net_socket_t::connect(std::pair<std::string, uint16_t> conn_info){
-	P_V_S(conn_info.first, P_DEBUG);
-	P_V(conn_info.second, P_DEBUG);
-	client_conn = conn_info;
+void net_socket_t::connect(){
 	IPaddress tmp_ip;
 	int16_t res_host_retval = 0;
-	// 0.0.0.0 might be a better option instead of a blank string
-	if(client_conn.first == ""){
+	if(get_net_ip_str() == ""){
 		print("opening a listening socket", P_NOTE);
 		res_host_retval = SDLNet_ResolveHost(&tmp_ip,
 						     nullptr,
-						     client_conn.second);
+						     get_net_port());
 	}else{
 		print("opening a standard socket", P_NOTE);
 		res_host_retval = SDLNet_ResolveHost(&tmp_ip,
-						     client_conn.first.c_str(),
-						     client_conn.second);
+						     get_net_ip_str().c_str(),
+						     get_net_port());
 	}
 	if(res_host_retval == -1){
 		print((std::string)"cannot resolve host:"+SDL_GetError(),
@@ -275,20 +200,13 @@ void net_socket_t::set_tcp_socket(TCPsocket socket_){
 		print("cannot read IP", P_ERR);
 		return;
 	}
-	client_conn.first = ip_addr_tmp;
-	client_conn.second = tmp_ip.port;
+	set_net_ip(ip_addr_tmp,
+		   NBO_16(tmp_ip.port),
+		   NET_IP_VER_4);
 }
 
 TCPsocket net_socket_t::get_tcp_socket(){
 	return socket;
-}
-
-std::pair<std::string, uint16_t> net_socket_t::get_client_conn(){
-	return client_conn;
-}
-
-std::pair<std::string, uint16_t> net_socket_t::get_socks_conn(){
-	return socks_conn;
 }
 
 bool net_socket_t::activity(){
@@ -311,10 +229,6 @@ bool net_socket_t::activity(){
 	SDLNet_FreeSocketSet(tmp_set);
 	tmp_set = nullptr;
 	return retval;
-}
-
-uint64_t net_socket_t::get_buffer_size(){
-	return local_buffer.size();
 }
 
 id_t_ net_socket_t::get_inbound_stat_sample_set_id(){

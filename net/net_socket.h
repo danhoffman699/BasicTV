@@ -1,6 +1,7 @@
 #include "../id/id.h"
 #include "../stats.h"
 #include "net_const.h"
+#include "net_ip.h"
 #ifndef NET_SOCKET_H
 #define NET_SOCKET_H
 #include "SDL2/SDL_net.h"
@@ -28,46 +29,40 @@
 
 #define NET_SOCKET_USE_SOCKS (1 << 0)
 
-struct net_socket_t{
+struct net_socket_t : public net_ip_t{
 private:
 	uint8_t status = 0;
 	std::vector<uint8_t> local_buffer;
-	// IP and ports of clients
-	std::pair<std::string, uint16_t> client_conn;
-	std::pair<std::string, uint16_t> socks_conn;
 	// raw socket for SDL
 	TCPsocket socket = nullptr;
-	// SOCKS user ID
-	std::array<uint8_t, 5> socks_user_id_str = {{0}};
 	void socket_check();
-	// timestamp and amount
+	id_t_ proxy_id = 0;
 	id_t_ outbound_stat_sample_set_id = 0;
 	id_t_ inbound_stat_sample_set_id = 0;
 public:
 	data_id_t id;
 	net_socket_t();
 	~net_socket_t();
-	// general socket stuff, proxy-agnostic
+
+	// general socket stuff
 	bool is_alive();
 	uint8_t get_status();
-	void connect(std::pair<std::string, uint16_t> conn_info);
+	void connect();
 	void disconnect();
+
+	// send and recv functions
 	void send(std::vector<uint8_t> data);
 	std::vector<uint8_t> recv(uint64_t byte_count = 0, uint64_t flags = 0);
 	std::vector<uint8_t> recv_all_buffer();
-	// enable/disable SOCKS proxy, set as a flag in status
-	// throws on error
-	void enable_socks(std::pair<std::string, uint16_t> socks_info, std::pair<std::string, uint16_t> conn_info);
-	void disable_socks();
-	void set_tcp_socket(TCPsocket);
-	TCPsocket get_tcp_socket();
-	std::pair<std::string, uint16_t> get_client_conn();
-	std::pair<std::string, uint16_t> get_socks_conn();
 	bool activity();
-	// fetch buffer sizes
-	uint64_t get_buffer_size();
+
 	// inbound and outbound stats
 	id_t_ get_inbound_stat_sample_set_id();
 	id_t_ get_outbound_stat_sample_set_id();
+	id_t_ get_proxy_id();
+
+	// hacky stuff that should be streamlined and abstracted
+	void set_tcp_socket(TCPsocket);
+	TCPsocket get_tcp_socket();
 };
 #endif

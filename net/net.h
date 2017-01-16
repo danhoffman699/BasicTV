@@ -3,6 +3,7 @@
 #include "string"
 #include "vector"
 #include "curl/curl.h"
+
 namespace net{
 	std::string get_cache(std::string url, int stale_time);
 	void force_url(std::string url);

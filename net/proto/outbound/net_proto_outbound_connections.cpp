@@ -137,6 +137,6 @@ std::vector<id_t_> net_proto_masquerade_connections(){
  */
 
 void net_proto_loop_initiate_all_connections(){
-	std::vector<id_t_> peer_queue;
+	std::vector<id_t_> peer_list;
 	return;
 }

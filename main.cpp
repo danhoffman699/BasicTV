@@ -141,7 +141,8 @@ static void test_socket(){
 		std::cin >> port;
 		std::pair<std::string, uint16_t> laptop_conn =
 			std::make_pair(ip, port);
-		test_socket_->connect(laptop_conn);
+		test_socket_->set_net_ip(ip, port, NET_IP_VER_4);
+		test_socket_->connect();
 		test_socket_->send({'A', 'A', 'A', 'A'});
 		while(true){
 			sleep_ms(1);
@@ -200,14 +201,14 @@ static void test_max_tcp_sockets(){
 	bool dropped = false;
 	net_socket_t *inbound =
 		new net_socket_t;
-	inbound->connect(
-		std::make_pair("",
-			       50000)); // accepts connections
+	inbound->set_net_ip("", 50000, NET_IP_VER_4);
+	inbound->connect();
 	while(!dropped){
 		for(uint64_t i = 0;i < 128;i++){
 			net_socket_t *first =
 				new net_socket_t;
-			first->connect(std::make_pair(ip, 50000));
+			first->set_net_ip(ip, 50000, NET_IP_VER_4);
+			first->connect();
 			net_socket_t *second =
 				new net_socket_t;
 			sleep_ms(1); // probably isn't needed
@@ -308,7 +309,7 @@ int main(int argc_, char **argv_){
 	init();
 	//test_break_id_transport();
 	//test_id_transport();
-	//test_max_tcp_sockets();
+	test_max_tcp_sockets();
 	//test_compressor();
 	//test_socket();
 	while(running){

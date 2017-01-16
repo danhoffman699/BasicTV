@@ -14,9 +14,6 @@
 void convert::nbo::to(uint8_t *data, uint64_t size){
 #ifdef __ORDER_LITTLE_ENDIAN__
 	switch(size){
-	case 1:
-		NBO_8(*data);
-		return;
 	case 2:
 		NBO_16(*data);
 		return;
@@ -32,11 +29,8 @@ void convert::nbo::to(uint8_t *data, uint64_t size){
 		const uint64_t first = i;
 		const uint64_t second = size-i;
 		const uint8_t first_data = data[first];
-		data[first] = NBO_8(second);
-		data[second] = NBO_8(first_data);
-	}
-	if(unlikely(odd)){
-		data[(size/2)+1] = NBO_8(data[(size/2)+1]);
+		data[first] = second;
+		data[second] = first_data;
 	}
 #endif
 }

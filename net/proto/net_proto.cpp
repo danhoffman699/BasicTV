@@ -39,31 +39,32 @@ void net_proto_init(){
 	}catch(std::exception e){
 		print("cannot pull port from settings", P_ERR);
 	}
-	if(settings::get_setting("socks_enable") == "true"){
-		try{
-			std::string socks_proxy_ip = settings::get_setting("socks_proxy_ip");
-			uint16_t socks_proxy_port =
-				std::stoi(settings::get_setting("socks_proxy_port"));
-			if(socks_proxy_ip == ""){
-				throw std::runtime_error("");
-			}
-			incoming->enable_socks(
-				std::make_pair(socks_proxy_ip,
-					       socks_proxy_port),
-				std::make_pair("",
-					       tmp_port)
-				);
-		}catch(std::exception e){
-			uint32_t level = P_WARN;
-			if(settings::get_setting("socks_strict") == "true"){
-				level = P_ERR;
-			}
-			print("unable to configure SOCKS", level);
-		}
-	}else{
-		print("SOCKS has been disabled", P_NOTE);
-		incoming->connect({"", tmp_port});
-	}
+	// TODO: reimplement this when the information is done
+	// if(settings::get_setting("socks_enable") == "true"){
+	// 	try{
+	// 		std::string socks_proxy_ip = settings::get_setting("socks_proxy_ip");
+	// 		uint16_t socks_proxy_port =
+	// 			std::stoi(settings::get_setting("socks_proxy_port"));
+	// 		if(socks_proxy_ip == ""){
+	// 			throw std::runtime_error("");
+	// 		}
+	// 		incoming->enable_socks(
+	// 			std::make_pair(socks_proxy_ip,
+	// 				       socks_proxy_port),
+	// 			std::make_pair("",
+	// 				       tmp_port)
+	// 			);
+	// 	}catch(std::exception e){
+	// 		uint32_t level = P_WARN;
+	// 		if(settings::get_setting("socks_strict") == "true"){
+	// 			level = P_ERR;
+	// 		}
+	// 		print("unable to configure SOCKS", level);
+	// 	}
+	// }else{
+	// 	print("SOCKS has been disabled", P_NOTE);
+	// 	incoming->connect({"", tmp_port});
+	// }
 }
 
 void net_proto_close(){
