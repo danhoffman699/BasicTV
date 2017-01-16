@@ -72,55 +72,48 @@ void net_proto_close(){
 	// All data types should destroy any internal data
 }
 
-net_request_t::net_request_t(): id(this, __FUNCTION__){
+net_proto_request_t::net_proto_request_t(): id(this, __FUNCTION__){
 	// list of ids
 	id.add_data(&(ids), NET_REQUEST_MAX_LENGTH);
 	// only used for blacklist or whitelist
 	id.add_data(&flags, 1);
 }
 
-net_request_t::~net_request_t(){
+net_proto_request_t::~net_proto_request_t(){
 }
 
-void net_request_t::set_flags(uint8_t flags_){
+void net_proto_request_t::set_flags(uint8_t flags_){
 	flags = flags_;
 }
 
-uint8_t net_request_t::get_flags(){
+uint8_t net_proto_request_t::get_flags(){
 	return flags;
 }
 
-void net_request_t::add_id(uint64_t id_){
-	for(uint64_t i = 0;i < NET_REQUEST_MAX_LENGTH;i++){
-		if(ids[i] == 0){
-			ids[i] = id_;
-			return;
-		}
-	}
-	print("unable to add id to list", P_ERR);
+void net_proto_request_t::set_ids(std::vector<id_t_> ids_){
+	ids = ids_;
 }
 
-void net_request_t::del_id(uint64_t id_){
-	for(uint64_t i = 0;i < NET_REQUEST_MAX_LENGTH;i++){
-		if(ids[i] == id_){
-			ids[i] = 0;
-			return;
-		}
-	}
-	// don't complain if ID wasn't in array
+std::vector<id_t_> net_proto_request_t::get_ids(){
+	return ids;
 }
 
-uint64_t net_request_t::get_id(uint64_t entry){
-	if(entry >= NET_REQUEST_MAX_LENGTH){
-		print("entry is beyond NET_REQUEST_MAX_LENGTH", P_ERR);
-	}
-	return ids[entry];
-}
-
-void net_request_t::set_socket_id(uint64_t socket_id_){
+void net_proto_request_t::set_proto_socket_id(id_t_ socket_id_){
 	socket_id = socket_id_;
 }
 
-uint64_t net_request_t::get_socket_id(){
+uint64_t net_proto_request_t::get_proto_socket_id(){
 	return socket_id;
+}
+
+std::array<uint8_t, TYPE_LENGTH> net_proto_request_t::get_type(){
+	return type;
+}
+
+void net_proto_request_t::set_type(std::array<uint8_t, TYPE_LENGTH> type_){
+	type = type_;
+}
+
+uint64_t net_proto_request_t::get_last_query_timestamp_micro_s(){
+	return last_query_timestamp_micro_s;
 }

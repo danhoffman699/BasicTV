@@ -39,14 +39,12 @@ extern void net_proto_close();
 
 // this is the only use I can think of for the flags in net_request_
 
-#define NET_REQUEST_WHITELIST (0 << 0)
 #define NET_REQUEST_BLACKLIST (1 << 0)
-
-// only send data
-#define NET_REQUEST_SEND_DATA (0 << 1)
 
 // check to see if the data exists, don't actually send it over
 #define NET_REQUEST_ONLY_STATUS (1 << 1)
+
+// we know it is local if there is no net_proto_socket_t ID bound to it
 
 /*
   TODO: implement requesting all of a type
@@ -94,27 +92,31 @@ extern void net_proto_close();
 
  */
 
-struct net_request_t{
+struct net_proto_request_t{
 private:
 	std::array<uint8_t, TYPE_LENGTH> type = {{0}};
 	std::vector<id_t_> ids = {{0}};
 	uint8_t flags = 0;
 	uint64_t socket_id = 0;
+	uint64_t last_query_timestamp_micro_s = 0;
 public:
 	data_id_t id;
-	net_request_t();
-	~net_request_t();
-	void set_socket_id(uint64_t socket_id_);
-	uint64_t get_socket_id();
+	net_proto_request_t();
+	~net_proto_request_t();
+	void set_proto_socket_id(uint64_t socket_id_);
+	uint64_t get_proto_socket_id();
 	void set_flags(uint8_t flags);
 	uint8_t get_flags();
-	void add_id(uint64_t id_);
-	void del_id(uint64_t id_);
-	uint64_t get_id(uint64_t entry);
+	std::vector<id_t_> get_ids();
+	void set_ids(std::vector<id_t_> ids_);
+	void set_type(std::array<uint8_t, TYPE_LENGTH> type_);
+	std::array<uint8_t, TYPE_LENGTH> get_type();
 	bool is_local();
+	uint64_t get_last_query_timestamp_micro_s();
 };
 
-typedef net_request_t net_proto_request_t;
+// should change this naming convention
+typedef net_proto_request_t net_request_t;
 
 #endif
 #include "net_proto_peer.h"

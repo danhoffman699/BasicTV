@@ -4,67 +4,41 @@
 
 // sends all requests out in one network socket call
 
+// sends net_request_ts out, responses are handled in inbound
 void net_proto_loop_handle_outbound_requests(){
-	std::vector<uint64_t> all_requests =
-		id_api::cache::get("net_request_t");
-	for(uint64_t i = 0;i < all_requests.size();i++){
-		net_request_t *request =
-			PTR_DATA(all_requests[i],
-				 net_request_t);
-		if(request == nullptr){
-			print("request is a nullptr", P_WARN);
+	std::vector<id_t_> net_proto_requests =
+		id_api::cache::get("net_proto_request_t");
+	for(uint64_t i = 0;i < net_proto_requests.size();i++){
+		net_proto_request_t *proto_request =
+			PTR_DATA(net_proto_requests[i],
+				 net_proto_request_t);
+		if(proto_request == nullptr){
 			continue;
 		}
-		net_socket_t *socket =
-			PTR_DATA(request->get_socket_id(),
-				 net_socket_t);
-		if(socket == nullptr){
-			print("socket is a nullptr", P_WARN);
-			continue;
-		}
-		// if this isn't an outbound request
-		if(request->get_socket_id() == 0){
-			std::vector<uint8_t> all_export;
-			for(uint64_t i = 0;i < NET_REQUEST_MAX_LENGTH;i++){
-				data_id_t *tmp_id =
-					id_api::array::ptr_id(
-						request->get_id(i),
-						"");
-				if(tmp_id == nullptr){
-					// tmp_id is probably zero
-					print("unable to facilitate request", P_WARN);
-					continue;
-				}
-				std::vector<uint8_t> data =
-					tmp_id->export_data(0); // compresses
-				all_export.insert(
-					all_export.end(),
-					data.begin(),
-					data.end());
+		bool local = 0;
+		if(proto_request->get_proto_socket_id() == 0){
+			const uint64_t curr_timestamp_micro_s =
+				get_time_microseconds();
+			const uint64_t last_query_timestamp_micro_s =
+				proto_request->get_last_query_timestamp_micro_s();
+			uint64_t retry_interval_micro_s = 1000*10;
+			try{
+				retry_interval_micro_s =
+					std::stoi(
+						settings::get_setting(
+							"net_proto_request_retry_interval_micro_s"));
+			}catch(...){}
+			if(curr_timestamp_micro_s-last_query_timestamp_micro_s > retry_interval_micro_s){
+				/*
+				  TODO: actually send the information out to 
+				  peers
+
+				  This isn't written now because I need to hoard
+				  more stats from the inbound data before I can
+				  make an informed decision on who to query
+				  first.
+				 */
 			}
-			/*
-			  networking code might want to be refactored to handle
-			  such large buffers, but it needs to be that way for
-			  other reasons. Once the networking code can handle 
-			  arbitrarially large chunks of data, it would make
-			  sense to do it that way.
-			 */
-			all_export =
-				net_proto_apply_dev_ctrl(
-					all_export);
-			net_proto_standard_data_t std_data;
-			std_data.size = all_export.size();
-			std_data.ver_major = VERSION_MAJOR;
-			std_data.ver_minor = VERSION_MINOR;
-			std_data.ver_patch = VERSION_REVISION;
-			std_data.macros = 0;
-			std_data.unused = 0;
-			std::vector<uint8_t> metadata =
-				net_proto_write_packet_metadata(std_data);
-			all_export.insert(all_export.begin(),
-					  metadata.begin(),
-					  metadata.end());
-			socket->send(all_export);
-		} // other ones need to be taken care of in net_proto_import
+		}
 	}
 }

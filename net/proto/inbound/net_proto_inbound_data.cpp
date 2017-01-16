@@ -177,24 +177,31 @@
 // }
 
 /*
-  TODO: copy and convert code as needed to get this working with 
-  net_proto_socket_t (hopefuly simplify the decoding).
+  TODO: actually delete net_request_t after the data came to prevent
+  redundant queries
  */
 
-void net_proto_loop_dummy_read(){
+static void net_proto_loop_dummy_read(){
 }
 
-void net_proto_process_buffer_vector(id_t_ socket_id, std::vector<std::vector<uint8_t> > buffer_vector){
+static void net_proto_process_buffer_vector(net_proto_socket_t *proto_socket){
+	std::vector<std::vector<uint8_t> > buffer_vector =
+		proto_socket->get_buffer();
 	for(uint64_t i = 0;i < buffer_vector.size();i++){
-		id_t_ imported_data_id =
-			id_api::array::add_data(buffer_vector[i]);
-		data_id_t *imported_data_ptr =
-			PTR_ID(imported_data_id,
-			       net_request_t);
-		if(imported_data_ptr != nullptr){
-			net_request_t *request =
-				(net_request_t*)imported_data_ptr->get_ptr();
-			request->set_socket_id(socket_id);
+		try{
+			id_t_ imported_data_id =
+				id_api::array::add_data(buffer_vector[i]);
+			data_id_t *imported_data_ptr =
+				PTR_ID(imported_data_id,
+				       net_proto_request_t);
+			if(imported_data_ptr != nullptr){
+				net_proto_request_t *request =
+					(net_proto_request_t*)imported_data_ptr->get_ptr();
+				request->set_proto_socket_id(
+					proto_socket->id.get_id());
+			}
+		}catch(...){
+			// unable to parse that file
 		}
 	}
 }
@@ -211,10 +218,77 @@ void net_proto_loop_handle_inbound_data(){
 		}
 		proto_socket->update();
 		net_proto_process_buffer_vector(
-			proto_sockets[i],
-			proto_socket->get_buffer());
+			proto_socket);
 	}
 }
 
+/*
+  malicious_to_send is technically redundant for security purposes, since
+  any information with any security needs would have ID_DATA_NONET.
+  However, this speeds things up, allows for a blacklist on peers who attempt
+  this, and might prevent exporting one useless variable to eat up bandwidth.
+  Also, security redundancy is pretty important.
+ */
+
+// for security reasons
+static std::array<std::string, 2> malicious_to_send =
+{"encrypt_priv_key_t",
+ "net_proxy_t"};
+
+// for DoS/DDoS reasons
+static std::array<std::string, 3> malicious_to_bulk_send =
+{"tv_frame_video_t",
+ "tv_frame_audio_t",
+ "tv_frame_caption_t"};
+
+// net_con_req_t are in a different file
+// receives net_proto_request_t, sends data out
 void net_proto_loop_handle_inbound_requests(){
+	std::vector<id_t_> net_proto_requests =
+		id_api::cache::get("net_proto_request_t");
+	for(uint64_t i = 0;i < net_proto_requests.size();i++){
+		net_proto_request_t *request =
+			PTR_DATA(net_proto_requests[i],
+				 net_proto_request_t);
+		if(request == nullptr){
+			continue;
+		}
+		if(request->get_proto_socket_id() == 0){
+			continue;
+		}
+		const std::string type =
+			convert::array::type::from(
+				request->get_type());
+		const bool malicious_to_send_ =
+			std::find(
+				malicious_to_send.begin(),
+				malicious_to_send.end(),
+				type);
+		if(malicious_to_send_){
+			print("malicious to send period, not servicing", P_ERR);
+		}
+		const bool malicious_to_bulk_send_ =
+			std::find(
+				malicious_to_bulk_send.begin(),
+				malicious_to_bulk_send.end(),
+				type);
+		const bool bulk_send =
+			(convert::array::type::from(request->get_type()) != "") &&
+			!(request->get_flags() & NET_REQUEST_BLACKLIST);
+		if(bulk_send && malicious_to_bulk_send_){
+			print("detected malicious activity on a bulk send, not servicing", P_ERR);
+		}
+		// TODO: actually create a proper response to this
+		std::vector<id_t_> serve_vector =
+			request->get_ids();
+		net_proto_socket_t *curr_proto_socket =
+			PTR_DATA(request->get_proto_socket_id(),
+				 net_proto_socket_t);
+		if(curr_proto_socket == nullptr){
+			print("can't service to an invalid socket", P_NOTE);
+		} // disconnected
+		for(uint64_t i = 0;i < serve_vector.size();i++){
+			curr_proto_socket->send_id(serve_vector[i]);
+		}
+	}
 }

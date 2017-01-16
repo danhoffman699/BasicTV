@@ -27,6 +27,7 @@ private:
 	std::vector<std::vector<uint8_t> > buffer;
 	// timestamp of last update
 	uint64_t last_update_micro_s = 0;
+	std::vector<std::pair<uint64_t, id_t_> > id_log;
 public:
 	data_id_t id;
 	void set_socket_id(id_t_ socket_id_);

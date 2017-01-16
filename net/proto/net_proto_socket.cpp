@@ -145,4 +145,5 @@ void net_proto_socket_t::update(){
 			}
 		}
 	} // doesn't trip when the data isn't finished receiving
+	// TODO: find IDs for all new data and put it in the id_log
 }
