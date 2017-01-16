@@ -24,7 +24,6 @@ void convert::nbo::to(uint8_t *data, uint64_t size){
 		NBO_64(*data);
 		return;
 	}
-	const bool odd = !!(size & 1);
 	for(uint64_t i = 0;i < size/2;i++){
 		const uint64_t first = i;
 		const uint64_t second = size-i;

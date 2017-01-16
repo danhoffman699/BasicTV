@@ -5,6 +5,7 @@
 #include "../net_socket.h"
 #include "net_proto_meta.h"
 #include "net_proto_socket.h"
+#include "../../id/id_api.h"
 
 void net_proto_socket_t::set_socket_id(id_t_ socket_id_){
 	socket_id = socket_id_;
@@ -24,6 +25,42 @@ std::vector<std::vector<uint8_t> > net_proto_socket_t::get_buffer(){
 	retval = buffer;
 	buffer.clear();
 	return retval;
+}
+
+void net_proto_socket_t::send_id(id_t_ id_){
+	data_id_t *ptr_id =
+		PTR_ID(id_, );
+	if(ptr_id == nullptr){
+		print("can't send non-existent ID", P_NOTE);
+		return;
+	}
+	std::string type = ptr_id->get_type();
+	/*
+	  The "malicious" flag isn't the only protection. NONET flags in the
+	  data should be tripped when anything serious is being handled (RSA
+	  private keys). That doesn't inherently mean nothxing is sent though,
+	  and this makes it not fill the request at all.
+
+	  TODO: possibly add a class where exporting doesn't make sense and
+	  where exporting is malicious
+	 */
+	const bool malicious =
+		type == "encrypt_priv_key_t" ||
+		type == "net_socket_t";
+	if(malicious){
+		print("malicious request, not filling", P_WARN);
+	}else{
+		net_socket_t *socket =
+			PTR_DATA(socket_id,
+				 net_socket_t);
+		if(socket == nullptr){
+			print("socket is invalid, can't send", P_WARN);
+			return;
+		}
+		std::vector<uint8_t> exported_data =
+			ptr_id->export_data(ID_DATA_NONET);
+		socket->send(exported_data);
+	}
 }
 
 // isn't used outside of this file (should be in meta though).

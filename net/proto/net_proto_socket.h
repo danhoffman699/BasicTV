@@ -14,11 +14,9 @@
   net_proto_socket_t doesn't dive into nitty-gritty technical stuff (namely
   SOCKS proxies and TCP hole punching).
   
-  SOCKS and other types of proxies will have a dedicated file for protocol
-  level jargon. The same applies to UDP and TCP holepunching. Holepunching,
-  in just the technical, bare-metal, definition, isn't implemented yet
-  (net_con_req_t is not completed yet, but enough standards are in place to 
-  make reliant functions and systems work OK).
+  net_proto_socket_t handles holepunching. SOCKS and proxies, since they
+  aren't dependent upon the protocol, are handled one level down at
+  net_socket_t. Proxy identities are stored in net_proxy_t
  */
 
 struct net_proto_socket_t{
@@ -33,6 +31,7 @@ public:
 	data_id_t id;
 	void set_socket_id(id_t_ socket_id_);
 	id_t_ get_socket_id();
+	void send_id(id_t_ id_);
 	void update();
 	// probably don't need more granularity in the buffers
 	std::vector<std::vector<uint8_t> > get_buffer();

@@ -309,7 +309,7 @@ int main(int argc_, char **argv_){
 	init();
 	//test_break_id_transport();
 	//test_id_transport();
-	test_max_tcp_sockets();
+	//test_max_tcp_sockets();
 	//test_compressor();
 	//test_socket();
 	while(running){

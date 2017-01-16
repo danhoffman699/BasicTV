@@ -196,7 +196,7 @@ void tv_audio_init(){
 		P_V(output_chunk_size, P_WARN);
 		print("cannot open audio:" + (std::string)(Mix_GetError()), P_ERR);
 	}
-	//tv_audio_test_load_sine_wave();
+	tv_audio_test_load_sine_wave();
 }
 
 /*

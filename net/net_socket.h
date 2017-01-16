@@ -2,6 +2,7 @@
 #include "../stats.h"
 #include "net_const.h"
 #include "net_ip.h"
+#include "net_proxy.h"
 #ifndef NET_SOCKET_H
 #define NET_SOCKET_H
 #include "SDL2/SDL_net.h"
@@ -57,7 +58,7 @@ public:
 	// inbound and outbound stats
 	id_t_ get_inbound_stat_sample_set_id();
 	id_t_ get_outbound_stat_sample_set_id();
-	vodi set_proxy_id(id_t_ proxy_id_);
+	void set_proxy_id(id_t_ proxy_id_);
 	id_t_ get_proxy_id();
 
 	// hacky stuff that should be streamlined and abstracted

@@ -39,8 +39,14 @@ extern void net_proto_close();
 
 // this is the only use I can think of for the flags in net_request_
 
-#define NET_REQUEST_BLACKLIST (1 << 0)
 #define NET_REQUEST_WHITELIST (0 << 0)
+#define NET_REQUEST_BLACKLIST (1 << 0)
+
+// only send data
+#define NET_REQUEST_SEND_DATA (0 << 1)
+
+// check to see if the data exists, don't actually send it over
+#define NET_REQUEST_ONLY_STATUS (1 << 1)
 
 /*
   TODO: implement requesting all of a type

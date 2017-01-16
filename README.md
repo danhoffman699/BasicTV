@@ -5,7 +5,7 @@ A simple, decentralized Internet television system
 ##What is it?
 BasicTV is "a simple, decentralized Internet television system". You can flip through channels like you would a standard TV. There is no central entity. It also has:
 * Programmable IR remote codes: any free code can control your box
-* Extendible macros for ease of use
+* Extensible macros for ease of use
 * No bandwidth nor quality restrictions for content
 * Support for 3D TV (red and blue)
 * Support for multiple different quality audio and video streams for different connections

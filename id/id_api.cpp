@@ -47,8 +47,7 @@ data_id_t *id_api::array::ptr_id(uint64_t id,
 	// blank type is a wildcard, currently onlu used for RSA sorting
 	// "" is used for direct calls
 	if(retval->get_type() != type && type != ""){
-		P_V_S(retval->get_type(), P_ERR);
-		P_V_S(type, P_ERR);
+		// not really grounds for an error
 		return nullptr;
 	}
 	return retval;
