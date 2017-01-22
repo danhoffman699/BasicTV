@@ -18,7 +18,7 @@
 
 // NBO: network byte order
 
-#ifdef __sparc64_-
+#ifdef __sparc__
 #define __ORDER_BIG_ENDIAN__
 #else
 #define __ORDER_LITTLE_ENDIAN__
