@@ -4,6 +4,8 @@
 #include "string"
 #include "array"
 
+#include "endian.h"
+
 /*
   convert: if the conversion is simple enough to be written in plain C/C++,
   it goes here. If it needs external libraries, or needs special access
@@ -15,6 +17,14 @@
 // before opting for the slowest method
 
 // NBO: network byte order
+
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+#define __ORDER_LITTLE_ENDIAN__
+#warning Assuming little endian
+#elif __BYTE_ORDER == __BIG_ENDIAN
+#define __ORDER_BIG_ENDIAN__
+#warning Assuming big endian
+#endif
 
 #ifdef __ORDER_LITTLE_ENDIAN__
 
