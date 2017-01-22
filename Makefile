@@ -1,4 +1,4 @@
-CXXFLAGS+=-Wall -Wextra -std=c++11 -Wpedantic -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-padded -Wno-old-style-cast
+CXXFLAGS+=-Wall -std=c++11
 LDFLAGS+=-lstdc++ -lcurl -lSDL2_net -lSDL2_mixer -lSDL2 -lz -lcrypto -lopus
 
 all: debug
