@@ -15,13 +15,13 @@ void convert::nbo::to(uint8_t *data, uint64_t size){
 #ifdef __ORDER_LITTLE_ENDIAN__
 	switch(size){
 	case 2:
-		NBO_16(*data);
+		*data = NBO_16(*data);
 		return;
 	case 4:
-		NBO_32(*data);
+		*data = NBO_32(*data);
 		return;
 	case 8:
-		NBO_64(*data);
+		*data = NBO_64(*data);
 		return;
 	}
 	for(uint64_t i = 0;i < size/2;i++){
