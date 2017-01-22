@@ -2,8 +2,9 @@
 #include "encrypt_rsa.h"
 
 /*
-  DER is the standard for transporting RSA public keys with IDs (fingerprinting
-  doesn't offer enough security).
+  DER is the standard for transporting RSA public keys
+
+  IDs can use a hashing function.
 
   Private keys are exported in plain text for ease of use
 
@@ -26,7 +27,7 @@ std::vector<uint8_t> rsa::encrypt(std::vector<uint8_t> data,
 		print("invalid key type supplied", P_ERR);
 	}
 	if(rsa == nullptr){
-		print("can't allocate RSA key:"+std::to_string(ERR_get_error()), P_ERR);
+		print("can't allocate RSA key:"+(std::string)ERR_error_string(ERR_get_error(), nullptr), P_ERR);
 	}
 	std::vector<uint8_t> retval(RSA_size(rsa), 0);
 	uint32_t encrypt_retval = 0;
@@ -49,13 +50,17 @@ std::vector<uint8_t> rsa::encrypt(std::vector<uint8_t> data,
 	}else{
 		print("invalid key type supplied", P_ERR);
 	}
-	if(encrypt_retval != -1){
-		print("unable to encrypt RSA string:"+std::to_string(ERR_get_error()), P_ERR);
+	if(encrypt_retval == -1){
+		print("unable to encrypt RSA string:"+(std::string)ERR_error_string(ERR_get_error(), nullptr), P_ERR);
 	}
 	RSA_free(rsa);
 	rsa = nullptr;
 	return retval;
 }
+
+/*
+  TODO: resize the output data to leave off any trailing memory
+ */
 
 std::vector<uint8_t> rsa::decrypt(std::vector<uint8_t> data,
 				  std::vector<uint8_t> key,
@@ -73,8 +78,9 @@ std::vector<uint8_t> rsa::decrypt(std::vector<uint8_t> data,
 		print("invalid key type supplied", P_ERR);
 	}
 	if(rsa == nullptr){
-		print("can't allocate RSA key:"+std::to_string(ERR_get_error()), P_ERR);
+		print("can't allocate RSA key:"+(std::string)ERR_error_string(ERR_get_error(), nullptr), P_ERR);
 	}
+	
 	std::vector<uint8_t> retval(RSA_size(rsa), 0);
 	uint32_t encrypt_retval = 0;
 	if(type == ENCRYPT_KEY_TYPE_PRIV){
@@ -96,8 +102,8 @@ std::vector<uint8_t> rsa::decrypt(std::vector<uint8_t> data,
 	}else{
 		print("invalid key type supplied", P_ERR);
 	}
-	if(encrypt_retval != -1){
-		print("unable to encrypt RSA string:"+std::to_string(ERR_get_error()), P_ERR);
+	if(encrypt_retval == -1){
+		print("unable to encrypt RSA string:"+(std::string)ERR_error_string(ERR_get_error(), nullptr), P_ERR);
 	}
 	RSA_free(rsa);
 	rsa = nullptr;
@@ -123,7 +129,7 @@ std::pair<id_t_, id_t_> rsa::gen_key_pair(uint64_t bits){
 			nullptr,
 			nullptr);
 	if(rsa_key == nullptr){
-		print("can't generate new RSA key:"+std::to_string(ERR_get_error()), P_ERR);
+		print("can't generate new RSA key:"+(std::string)ERR_error_string(ERR_get_error(), nullptr), P_ERR);
 	}
 	uint8_t *priv_buf = 0;
 	int32_t priv_len =

@@ -45,7 +45,7 @@ public:
 /*
   stat_sample_set_id_t: a data set that plots a 64-bit and IDs
   Currently only used by the net_proto_socket_t struct to get statistical odds
-  that a peer has wanted information
+  that a peer has wanted information.
 */
 
 struct stat_sample_set_id_t{

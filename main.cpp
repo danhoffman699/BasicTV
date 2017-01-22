@@ -72,6 +72,7 @@ void no_mem(){
 
 static void init(){
 	std::set_new_handler(no_mem);	
+	ERR_load_crypto_strings();
 	/*
 	  settings_init() only reads from the file, it doesn't do anything
 	  critical to setting default values
@@ -98,6 +99,7 @@ static void close(){
 	input_close();
 	net_proto_close();
 	id_api::destroy_all_data();
+	ERR_free_strings();
 }
 
 static void test_compressor(){
@@ -300,7 +302,7 @@ static void test_break_id_transport(){
 
 // currently only does key generation
 
-static void test_rsa_encryption(){
+static void test_rsa_key_gen(){
 	std::pair<id_t_, id_t_> rsa_key_pair =
 		rsa::gen_key_pair(4096);
 	encrypt_priv_key_t *priv =
@@ -309,6 +311,10 @@ static void test_rsa_encryption(){
 	if(priv == nullptr){
 		print("priv key is a nullptr", P_ERR);
 	}
+	/*
+	  First is a macro for the encryption type
+	  Second is the DER formatted vector
+	 */
 	P_V(priv->get_encrypt_key().second.size(), P_NOTE);
 	encrypt_pub_key_t *pub =
 		PTR_DATA(rsa_key_pair.second,
@@ -317,6 +323,21 @@ static void test_rsa_encryption(){
 		print("pub key is a nullptr", P_ERR);
 	}
 	P_V(pub->get_encrypt_key().second.size(), P_NOTE);
+}
+
+static void test_rsa_encryption(){
+	std::pair<id_t_, id_t_> rsa_key_pair =
+		rsa::gen_key_pair(4096);
+	std::vector<uint8_t> test_data = {'E', 'N', 'C', 'R', 'Y', 'P', 'T'};
+	test_data =
+		encrypt_api::decrypt(
+			encrypt_api::encrypt(
+				test_data,
+				rsa_key_pair.first),
+			rsa_key_pair.second);
+	for(uint64_t i = 0;i < test_data.size();i++){
+		P_V_C(test_data[i], P_ERR);
+	}
 }
 
 static void test(){}
@@ -329,6 +350,7 @@ int main(int argc_, char **argv_){
 	argv = argv_;
 	init();
 	test_rsa_encryption();
+	//test_rsa_encryption();
 	//test_break_id_transport();
 	//test_id_transport();
 	//test_max_tcp_sockets();
