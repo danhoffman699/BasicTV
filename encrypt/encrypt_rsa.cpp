@@ -104,5 +104,50 @@ std::vector<uint8_t> rsa::decrypt(std::vector<uint8_t> data,
 	return retval;
 }
 
-std::pair<std::vector<uint8_t>, std::vector<uint8_t> > rsa::gen_key_pair(){
+// TODO: convert this to templates for readability
+
+std::pair<id_t_, id_t_> rsa::gen_key_pair(uint64_t bits){
+	encrypt_priv_key_t *priv_key =
+		new encrypt_priv_key_t;
+	encrypt_pub_key_t *pub_key =
+		new encrypt_pub_key_t;
+	for(uint32_t i = 0;i < 2*(bits/64);i++){
+		uint64_t rand_seed_tmp =
+			true_rand(0, ~0);
+		RAND_seed(&rand_seed_tmp, 8);
+	}
+	RSA *rsa_key =
+		RSA_generate_key(
+			bits,
+			65537,
+			nullptr,
+			nullptr);
+	if(rsa_key == nullptr){
+		print("can't generate new RSA key:"+std::to_string(ERR_get_error()), P_ERR);
+	}
+	uint8_t *priv_buf = 0;
+	int32_t priv_len =
+		i2d_RSAPrivateKey(rsa_key, &priv_buf);
+	priv_key->set_encrypt_key(
+		std::vector<uint8_t>(
+			priv_buf,
+			priv_buf+priv_len),
+		ENCRYPT_SCHEME_RSA);
+	uint8_t *pub_buf = 0;
+	int32_t pub_len =
+		i2d_RSAPublicKey(rsa_key, &pub_buf);
+	pub_key->set_encrypt_key(
+		std::vector<uint8_t>(
+			pub_buf,
+			pub_buf+pub_len),
+		ENCRYPT_SCHEME_RSA);
+	delete priv_buf;
+	priv_buf = nullptr;
+	delete pub_buf;
+	pub_buf = nullptr;
+	RSA_free(rsa_key);
+	rsa_key = nullptr;
+	return std::make_pair(
+		priv_key->id.get_id(),
+		pub_key->id.get_id());
 }

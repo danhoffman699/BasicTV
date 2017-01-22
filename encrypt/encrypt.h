@@ -41,6 +41,8 @@
 // RSA encryption scheme, works similarly to SSL
 #define ENCRYPT_RSA (1)
 
+#define ENCRYPT_SCHEME_RSA ENCRYPT_RSA
+
 // symmetric key system (documented in personal notes)
 
 #define ENCRYPT_SKS (2)

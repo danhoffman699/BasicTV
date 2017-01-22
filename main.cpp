@@ -298,11 +298,25 @@ static void test_break_id_transport(){
 	running = false;
 }
 
+// currently only does key generation
+
 static void test_rsa_encryption(){
-	encrypt_priv_key_t *priv_key =
-		new encrypt_priv_key_t;
-	encrypt_pub_key_t *pub_key =
-		new encrypt_pub_key_t;
+	std::pair<id_t_, id_t_> rsa_key_pair =
+		rsa::gen_key_pair(4096);
+	encrypt_priv_key_t *priv =
+		PTR_DATA(rsa_key_pair.first,
+			 encrypt_priv_key_t);
+	if(priv == nullptr){
+		print("priv key is a nullptr", P_ERR);
+	}
+	P_V(priv->get_encrypt_key().second.size(), P_NOTE);
+	encrypt_pub_key_t *pub =
+		PTR_DATA(rsa_key_pair.second,
+			 encrypt_pub_key_t);
+	if(pub == nullptr){
+		print("pub key is a nullptr", P_ERR);
+	}
+	P_V(pub->get_encrypt_key().second.size(), P_NOTE);
 }
 
 static void test(){}
@@ -314,6 +328,7 @@ int main(int argc_, char **argv_){
 	argc = argc_;
 	argv = argv_;
 	init();
+	test_rsa_encryption();
 	//test_break_id_transport();
 	//test_id_transport();
 	//test_max_tcp_sockets();

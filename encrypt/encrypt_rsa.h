@@ -21,7 +21,7 @@ namespace rsa{
 	std::vector<uint8_t> decrypt(std::vector<uint8_t> raw_data,
 				     std::vector<uint8_t> key,
 				     uint8_t type);
-	std::pair<std::vector<uint8_t>, std::vector<uint8_t> > gen_key_pair();
+	std::pair<id_t_, id_t_> gen_key_pair(uint64_t bits);
 };
 
 #endif
