@@ -13,14 +13,17 @@ static uint32_t output_chunk_size = 0;
 // tv_audio_channel_t is simple enough to stay in this file
 
 static void tv_audio_wave(std::vector<uint8_t> *retval, const char *data){
-	uint32_t data_ = *((uint32_t*)data);
 #ifdef __ORDER_BIG_ENDIAN__
-	data_ = __builtin_bswap32(data_);
-#endif
+	retval->push_back(((uint8_t*)&data_)[3]);
+	retval->push_back(((uint8_t*)&data_)[2]);
+	retval->push_back(((uint8_t*)&data_)[1]);
+	retval->push_back(((uint8_t*)&data_)[0]);
+#else
 	retval->push_back(((uint8_t*)&data_)[0]);
 	retval->push_back(((uint8_t*)&data_)[1]);
 	retval->push_back(((uint8_t*)&data_)[2]);
 	retval->push_back(((uint8_t*)&data_)[3]);
+#endif
 }
 
 static void tv_audio_wave(std::vector<uint8_t> *retval, uint32_t data){
