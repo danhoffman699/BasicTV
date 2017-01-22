@@ -82,7 +82,7 @@ void *id_api::array::ptr_data(uint64_t id,
 void *id_api::array::ptr_data(uint64_t id,
 			      std::array<uint8_t, TYPE_LENGTH> type,
 			      uint8_t flags){
-	return ptr_data(id, convert::array::type::from(type));
+	return ptr_data(id, convert::array::type::from(type), flags);
 }
 
 void id_api::array::add(data_id_t *ptr){
@@ -136,26 +136,26 @@ id_t_ id_api::array::add_data(std::vector<uint8_t> data_){
 #undef CHECK_TYPE
 
 std::vector<uint64_t> id_api::array::sort_by_rsa_pubkey(std::vector<uint64_t> tmp){
-	bool changed = true;
-	while(changed){
-		changed = false;
-		for(uint64_t i = 1;i < tmp.size()-1;i++){
-			data_id_t *tmp_array[2] = {nullptr};
-			tmp_array[0] = PTR_ID(tmp[i-1], "");
-			tmp_array[1] = PTR_ID(tmp[i], "");
-			//const bool rsa_greater_than =
-			//	pgp::cmp::greater_than(tmp_array[i-1]->get_pgp_cite_id(),
-			//			       tmp_array[i]->get_pgp_cite_id());
-			const bool rsa_greater_than = false;
-			if(rsa_greater_than){
-				uint64_t tmp_ = tmp[i-1];
-				tmp[i-1] = tmp[i];
-				tmp[i] = tmp_;
-				changed = true;
-				break; // ?
-			}
-		}
-	}
+	// bool changed = true;
+	// while(changed){
+	// 	changed = false;
+	// 	for(uint64_t i = 1;i < tmp.size()-1;i++){
+	// 		data_id_t *tmp_array[2] = {nullptr};
+	// 		tmp_array[0] = PTR_ID(tmp[i-1], "");
+	// 		tmp_array[1] = PTR_ID(tmp[i], "");
+	// 		//const bool rsa_greater_than =
+	// 		//	pgp::cmp::greater_than(tmp_array[i-1]->get_pgp_cite_id(),
+	// 		//			       tmp_array[i]->get_pgp_cite_id());
+	// 		const bool rsa_greater_than = false;
+	// 		if(rsa_greater_than){
+	// 			uint64_t tmp_ = tmp[i-1];
+	// 			tmp[i-1] = tmp[i];
+	// 			tmp[i] = tmp_;
+	// 			changed = true;
+	// 			break; // ?
+	// 		}
+	// 	}
+	// }
 	return tmp;
 }
 

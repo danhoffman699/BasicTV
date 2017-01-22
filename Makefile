@@ -1,4 +1,4 @@
-CXXFLAGS+=-Wall -std=c++11
+CXXFLAGS+=-Wall -Wextra -std=c++11 -Wno-unused-function
 LDFLAGS+=-lstdc++ -lcurl -lSDL2_net -lSDL2_mixer -lSDL2 -lz -lcrypto -lopus
 
 all: debug

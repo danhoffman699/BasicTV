@@ -38,9 +38,7 @@ id_t_ tv_frame_scroll_to_time(T data, uint64_t play_time){
 		const uint64_t start_time_micro_s =
 			data->get_start_time_micro_s();
 		const uint64_t end_time_micro_s =
-			data->get_end_time_micro_s();
-		const uint64_t ttl_micro_s =
-			data->get_ttl_micro_s();
+			data->get_end_time_micro_s(); // includes ttl_micro_s
 		const bool stay =
 			BETWEEN(start_time_micro_s,
 				play_time,

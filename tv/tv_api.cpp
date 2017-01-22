@@ -79,7 +79,7 @@ uint64_t tv::chan::next(uint64_t id, uint64_t flags){
 			}
 		}
 		}*/
-	return 0;
+	return id;
 }
 
 uint64_t tv::chan::prev(uint64_t id, uint64_t flags){
@@ -113,7 +113,7 @@ uint64_t tv::chan::prev(uint64_t id, uint64_t flags){
 			}
 		}
 		}*/
-	return 0;
+	return id;
 }
 
 uint64_t tv::chan::rand(uint64_t flags){

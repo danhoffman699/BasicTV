@@ -15,7 +15,6 @@ void net_proto_loop_handle_outbound_requests(){
 		if(proto_request == nullptr){
 			continue;
 		}
-		bool local = 0;
 		if(proto_request->get_proto_socket_id() == 0){
 			const uint64_t curr_timestamp_micro_s =
 				get_time_microseconds();

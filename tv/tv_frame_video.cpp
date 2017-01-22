@@ -35,9 +35,9 @@ static bool valid_bpc(uint8_t bpc){
 
 static void tv_frame_color_sanity_check(std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> color){
 	const uint64_t bpc = std::get<3>(color);
-	if(unlikely(std::get<0>(color) > MASK(bpc) ||
-		    std::get<1>(color) > MASK(bpc) ||
-		    std::get<2>(color) > MASK(bpc))){
+	if(unlikely(std::get<0>(color) > (uint64_t)MASK(bpc) ||
+		    std::get<1>(color) > (uint64_t)MASK(bpc) ||
+		    std::get<2>(color) > (uint64_t)MASK(bpc))){
 		print("color is not withing BPC bounds", P_ERR);
 	}
 	if(unlikely(!valid_bpc(bpc))){

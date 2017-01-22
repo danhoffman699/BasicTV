@@ -33,12 +33,12 @@ void net_proto_loop(){
 void net_proto_init(){
 	net_socket_t *incoming = new net_socket_t;
 	incoming_id = incoming->id.get_id();
-	uint16_t tmp_port = 0;
-	try{
-		tmp_port = (uint16_t)std::stoi(settings::get_setting("network_port"));
-	}catch(std::exception e){
-		print("cannot pull port from settings", P_ERR);
-	}
+	// uint16_t tmp_port = 0;
+	// try{
+	// 	tmp_port = (uint16_t)std::stoi(settings::get_setting("network_port"));
+	// }catch(std::exception e){
+	// 	print("cannot pull port from settings", P_ERR);
+	// }
 	// TODO: reimplement this when the information is done
 	// if(settings::get_setting("socks_enable") == "true"){
 	// 	try{

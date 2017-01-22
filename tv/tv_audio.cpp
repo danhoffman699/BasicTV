@@ -121,20 +121,12 @@ static void tv_audio_test_load_sine_wave(){
 		tv_frame_audio_t *audio =
 			new tv_frame_audio_t;
 		uint64_t length = 0;
-		uint64_t elapsed_time = 0;
 		if(current_start + sample_length_per_frame < chunk->alen){
 			print("adding full value of sample_length_per_frame", P_SPAM);
 			length = sample_length_per_frame;
-			elapsed_time = frame_duration_micro_s;
 		}else{
 			print("can't add full frame, ran out of room", P_SPAM);
 			length = chunk->alen-current_start;
-			const long double numerator =
-				chunk->alen-current_start;
-			const long double denominator =
-				sample_length_per_frame;
-			elapsed_time =
-				(numerator/denominator)*frame_duration_micro_s;
 		}
 		audio->set_data(
 			std::vector<uint8_t>(

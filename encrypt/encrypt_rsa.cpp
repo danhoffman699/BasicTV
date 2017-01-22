@@ -30,7 +30,7 @@ std::vector<uint8_t> rsa::encrypt(std::vector<uint8_t> data,
 		print("can't allocate RSA key:"+(std::string)ERR_error_string(ERR_get_error(), nullptr), P_ERR);
 	}
 	std::vector<uint8_t> retval(RSA_size(rsa), 0);
-	uint32_t encrypt_retval = 0;
+	int32_t encrypt_retval = 0;
 	if(type == ENCRYPT_KEY_TYPE_PRIV){
 		encrypt_retval =
 			RSA_private_encrypt(
@@ -82,7 +82,7 @@ std::vector<uint8_t> rsa::decrypt(std::vector<uint8_t> data,
 	}
 	
 	std::vector<uint8_t> retval(RSA_size(rsa), 0);
-	uint32_t encrypt_retval = 0;
+	int32_t encrypt_retval = 0;
 	if(type == ENCRYPT_KEY_TYPE_PRIV){
 		encrypt_retval =
 			RSA_private_decrypt(

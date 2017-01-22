@@ -16,6 +16,8 @@
 /*
   Don't initiate all connections, but initiate all connections that should be
   initiated at this time (statistically).
+
+  Returns a vector with the cite ID and all sockets with that cite ID
 */
 
 static std::vector<std::pair<id_t_, std::vector<id_t_> > > net_proto_generate_proto_socket_index(){
@@ -114,12 +116,17 @@ static std::vector<std::pair<id_t_, std::vector<std::pair<id_t_, std::vector<std
  */
 
 std::vector<id_t_> net_proto_masquerade_connections(){
-	// list of encryption IDs and their associated sockets
-	std::vector<std::pair<id_t_, std::vector<id_t_> > > proto_socket_index =
-		net_proto_generate_proto_socket_index();
-	std::vector<std::pair<id_t_, std::vector<std::pair<id_t_, std::vector<std::pair<uint64_t, uint64_t> > > > > > bandwidth_index =
-		net_proto_generate_bandwidth_index_from_proto_socket_index(
-			proto_socket_index);
+	// // list of encryption IDs and their associated sockets
+	// std::vector<std::pair<id_t_, std::vector<id_t_> > > proto_socket_index =
+	// 	net_proto_generate_proto_socket_index();
+	// std::vector<std::pair<id_t_, std::vector<std::pair<id_t_, std::vector<std::pair<uint64_t, uint64_t> > > > > > bandwidth_index =
+	// 	net_proto_generate_bandwidth_index_from_proto_socket_index(
+	// 		proto_socket_index);
+	// std::vector<id_t_> retval;
+	// for(uint64_t i = 0;i < proto_socket_index.size();i++){
+	// }
+	// return retval;
+	return std::vector<id_t_>();
 }
 
 /*
