@@ -246,7 +246,16 @@ uint64_t flip_bit_section(uint8_t begin, uint8_t end){
 		  falsely report the mask as one
 		 */
 	}
+#ifdef __ORDER_LITTLE_ENDIAN__
 	return ((((1 << end-begin-1)-1) << 1) | 1) << begin;
+#else
+	// SPARC64 didn't work with previous
+	uint64_t retval = 0;
+	for(uint64_t i = begin;i < end;i++){
+		retval |= (1 << i);
+	}
+	return retval;
+#endif
 }
 
 uint64_t get_time_microseconds(){
