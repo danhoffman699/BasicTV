@@ -5,6 +5,7 @@
 #include "vector"
 #include "SDL2/SDL.h"
 #include "array"
+#include "convert.h"
 #define STD_ARRAY_LENGTH 65536
 #define STD_ARRAY_SIZE STD_ARRAY_LENGTH
 #define BITCOIN_WALLET_LENGTH 36

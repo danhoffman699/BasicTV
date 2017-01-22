@@ -81,7 +81,7 @@ void tv_frame_video_t::set_pixel(uint16_t x,
 		get_raw_pixel_pos(x, y);
 	uint64_t *pixel = (uint64_t*)&(frame[pixel_pos]);
 	color = convert::color::bpc(color, bpc);
-#ifdef __ORDER_BIG_ENDIAN__
+#ifdef IS_BIG_ENDIAN
 	if(bpc != 8){
 		print("can't write non-8-bit BPCs on big endian yet", P_ERR);
 	}
@@ -102,15 +102,15 @@ std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> tv_frame_video_t::get_pixel(ui
 	std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> color;
 	const uint64_t *pixel =
 		(uint64_t*)&(frame[get_raw_pixel_pos(x_, y_)]);
-	#ifdef __ORDER_BIG_ENDIAN__
+#ifdef IS_BIG_ENDIAN
 	std::get<0>(color) = ((*pixel << (bpc*0)) & MASK(bpc));
 	std::get<1>(color) = ((*pixel << (bpc*1)) & MASK(bpc));
 	std::get<2>(color) = ((*pixel << (bpc*2)) & MASK(bpc));
-	#else
+#else
 	std::get<0>(color) = ((*pixel >> (bpc*0)) & MASK(bpc));
 	std::get<1>(color) = ((*pixel >> (bpc*1)) & MASK(bpc));
 	std::get<2>(color) = ((*pixel >> (bpc*2)) & MASK(bpc));
-	#endif
+#endif
 	std::get<3>(color) = bpc;
 	return color;
 }

@@ -4,8 +4,6 @@
 #include "string"
 #include "array"
 
-#include "endian.h"
-
 /*
   convert: if the conversion is simple enough to be written in plain C/C++,
   it goes here. If it needs external libraries, or needs special access
@@ -18,13 +16,16 @@
 
 // NBO: network byte order
 
+// TODO: actually have a list for both instead of defaulting to LE
+
 #ifdef __sparc__
-#define __ORDER_BIG_ENDIAN__
+#error This isnt big endian
+#define IS_BIG_ENDIAN
 #else
-#define __ORDER_LITTLE_ENDIAN__
+#define IS_LITTLE_ENDIAN
 #endif
 
-#ifdef __ORDER_LITTLE_ENDIAN__
+#ifdef IS_LITTLE_ENDIAN
 
 #ifdef __GNUC__
 
@@ -41,7 +42,7 @@
 
 #endif
 
-#elif __ORDER_BIG_ENDIAN__
+#elif IS_BIG_ENDIAN
 
 #define NBO_64(a) (a)
 #define NBO_32(a) (a)

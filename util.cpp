@@ -246,7 +246,7 @@ uint64_t flip_bit_section(uint8_t begin, uint8_t end){
 		  falsely report the mask as one
 		 */
 	}
-#ifdef __ORDER_LITTLE_ENDIAN__
+#ifdef IS_BIG_ENDIAN
 	return ((((1 << end-begin-1)-1) << 1) | 1) << begin;
 #else
 	// SPARC64 didn't work with previous

@@ -12,7 +12,7 @@
 */
 
 void convert::nbo::to(uint8_t *data, uint64_t size){
-#ifdef __ORDER_LITTLE_ENDIAN__
+#ifdef IS_LITTLE_ENDIAN
 	switch(size){
 	case 2:
 		*data = NBO_16(*data);

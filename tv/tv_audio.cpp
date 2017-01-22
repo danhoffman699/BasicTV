@@ -1,5 +1,6 @@
 #include "tv_audio.h"
 #include "tv.h"
+#include "../convert.h"
 
 static uint32_t output_sampling_rate = 0;
 static uint8_t output_bit_depth = 0;
@@ -20,7 +21,8 @@ static void tv_audio_wave(std::vector<uint8_t> *retval, const char *data){
 }
 
 static void tv_audio_wave(std::vector<uint8_t> *retval, uint32_t data){
-#ifdef __ORDER_BIG_ENDIAN__
+#ifdef IS_BIG_ENDIAN
+	throw std::runtime_error("this isn't big endian");
 	data = __builtin_bswap32(data);
 #endif
 	retval->push_back(((uint8_t*)&data)[0]);
@@ -30,7 +32,7 @@ static void tv_audio_wave(std::vector<uint8_t> *retval, uint32_t data){
 }
 
 static void tv_audio_wave(std::vector<uint8_t> *retval, uint16_t data){
-#ifdef __ORDER_BIG_ENDIAN__
+#ifdef IS_BIG_ENDIAN
 	data = __builtin_bswap16(data);
 #endif
 	retval->push_back(((uint8_t*)&data)[0]);

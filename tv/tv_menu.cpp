@@ -380,6 +380,14 @@ static void init_char_data(){
 			{{0, 1, 1, 1, 1, 0}},
 			{{0, 0, 1, 0, 1, 0}}
 		}};
+	char_data['*'] = {{
+			{{0, 0, 0, 1, 0, 0}},
+			{{0, 0, 1, 1, 1, 0}},
+			{{0, 0, 0, 1, 0, 0}},
+			{{0, 0, 0, 0, 0, 0}},
+			{{0, 0, 0, 0, 0, 0}},
+			{{0, 0, 0, 0, 0, 0}}
+		}};
 	// probably shouldn't do this
 	char_data['a'] = char_data['A'];
 	char_data['b'] = char_data['B'];
