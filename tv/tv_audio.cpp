@@ -13,20 +13,16 @@ static uint32_t output_chunk_size = 0;
 // tv_audio_channel_t is simple enough to stay in this file
 
 static void tv_audio_wave(std::vector<uint8_t> *retval, const char *data){
-#ifdef __ORDER_BIG_ENDIAN__
-	retval->push_back(((uint8_t*)data)[3]);
-	retval->push_back(((uint8_t*)data)[2]);
-	retval->push_back(((uint8_t*)data)[1]);
-	retval->push_back(((uint8_t*)data)[0]);
-#else
 	retval->push_back(((uint8_t*)data)[0]);
 	retval->push_back(((uint8_t*)data)[1]);
 	retval->push_back(((uint8_t*)data)[2]);
 	retval->push_back(((uint8_t*)data)[3]);
-#endif
 }
 
 static void tv_audio_wave(std::vector<uint8_t> *retval, uint32_t data){
+#ifdef __ORDER_BIG_ENDIAN__
+	data = __builtin_bswap32(data);
+#endif
 	retval->push_back(((uint8_t*)&data)[0]);
 	retval->push_back(((uint8_t*)&data)[1]);
 	retval->push_back(((uint8_t*)&data)[2]);
@@ -34,6 +30,9 @@ static void tv_audio_wave(std::vector<uint8_t> *retval, uint32_t data){
 }
 
 static void tv_audio_wave(std::vector<uint8_t> *retval, uint16_t data){
+#ifdef __ORDER_BIG_ENDIAN__
+	data = __builtin_bswap16(data);
+#endif
 	retval->push_back(((uint8_t*)&data)[0]);
 	retval->push_back(((uint8_t*)&data)[1]);
 }
@@ -78,13 +77,13 @@ static uint32_t tv_audio_sdl_format_from_depth(uint8_t bit_depth){
 		print("24-bit sound output isn't supported yet, falling back to 16-bit", P_WARN);
 	case 16:
 		print("using unsigned 16-bit system byte order", P_NOTE);
-		return AUDIO_U16SYS;
+		return AUDIO_U16LSB;
 	case 8:
 		print("using unsigned 8-bit system byte order (are you sure you want to do this?)", P_WARN);
 		return AUDIO_U8; // no SYS in 8-bit, is it assumed?
 	default:
 		print("unknown bit depth for SDL conversion, using 16-bit", P_WARN);
-		return AUDIO_U16SYS;
+		return AUDIO_U16LSB;
 	}
 }
 
