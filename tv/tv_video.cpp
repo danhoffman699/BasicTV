@@ -346,13 +346,14 @@ static void tv_init_test_menu(){
 	window->set_channel_id(channel->id.get_id());
 }
 
-static void tv_init_test_test_card(){
+static void tv_init_test_test_card(uint64_t x_res,
+				   uint64_t y_res){
 	tv_window_t *window =
 		new tv_window_t;
 	tv_channel_t *channel =
 		new tv_channel_t;
 	tv_frame_video_t *frame_video =
-		tv_frame_gen_xor_frame(1280, 720, 8);
+		tv_frame_gen_xor_frame(x_res, y_res, 8);
 	window->set_channel_id(channel->id.get_id());
 	channel->add_stream_id(frame_video->id.get_id());
 	window->add_active_stream_id(frame_video->id.get_id());
@@ -415,7 +416,7 @@ void tv_video_init(){
 		NULL,
 		SDL_MapRGB(SDL_GetWindowSurface(sdl_window)->format, 0, 0, 0));
 	SDL_UpdateWindowSurface(sdl_window);
-	tv_init_test_test_card();
+	tv_init_test_test_card(x_res, y_res);
 	//tv_init_test_menu();
 	//tv_init_test_webcam();
 }
