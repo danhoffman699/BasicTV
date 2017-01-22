@@ -14,15 +14,15 @@ static uint32_t output_chunk_size = 0;
 
 static void tv_audio_wave(std::vector<uint8_t> *retval, const char *data){
 #ifdef __ORDER_BIG_ENDIAN__
-	retval->push_back(((uint8_t*)&data_)[3]);
-	retval->push_back(((uint8_t*)&data_)[2]);
-	retval->push_back(((uint8_t*)&data_)[1]);
-	retval->push_back(((uint8_t*)&data_)[0]);
+	retval->push_back(((uint8_t*)data)[3]);
+	retval->push_back(((uint8_t*)data)[2]);
+	retval->push_back(((uint8_t*)data)[1]);
+	retval->push_back(((uint8_t*)data)[0]);
 #else
-	retval->push_back(((uint8_t*)&data_)[0]);
-	retval->push_back(((uint8_t*)&data_)[1]);
-	retval->push_back(((uint8_t*)&data_)[2]);
-	retval->push_back(((uint8_t*)&data_)[3]);
+	retval->push_back(((uint8_t*)data)[0]);
+	retval->push_back(((uint8_t*)data)[1]);
+	retval->push_back(((uint8_t*)data)[2]);
+	retval->push_back(((uint8_t*)data)[3]);
 #endif
 }
 
