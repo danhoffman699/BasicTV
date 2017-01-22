@@ -68,7 +68,7 @@ uint64_t tv_frame_video_t::get_raw_pixel_pos(uint16_t x,
 		x_res*y;
 	const uint64_t minor =
 		x;
-	const uint64_t raw_pixel_pos = 
+	uint64_t raw_pixel_pos = 
 		(major+minor)*3;
 	return raw_pixel_pos;
 }
@@ -85,10 +85,10 @@ void tv_frame_video_t::set_pixel(uint16_t x,
 	if(bpc != 8){
 		print("can't write non-8-bit BPCs on big endian yet", P_ERR);
 	}
-	(*pixel) &= ~flip_bit_section(0, bpc*3);
-	(*pixel) |= std::get<0>(color) & MASK(bpc);
-	(*pixel) |= (std::get<1>(color) & MASK(bpc)) >> (bpc);
-	(*pixel) |= (std::get<2>(color) & MASK(bpc)) >> (bpc*2);
+	uint8_t *pixel_byte = (uint8_t*)pixel;
+	pixel_byte[2] = std::get<2>(color) & MASK(bpc);
+	pixel_byte[1] = std::get<1>(color) & MASK(bpc);
+	pixel_byte[0] = std::get<0>(color) & MASK(bpc);
 #else
 	(*pixel) &= ~flip_bit_section(0, bpc*3);
 	(*pixel) |= std::get<0>(color) & MASK(bpc);
