@@ -80,8 +80,10 @@ void tv_frame_video_t::set_pixel(uint16_t x,
 	const uint64_t pixel_pos =
 		get_raw_pixel_pos(x, y);
 	uint64_t *pixel = (uint64_t*)&(frame[pixel_pos]);
+	const uint64_t bit_section =
+		~flip_bit_section(0, bpc*3);
 	color = convert::color::bpc(color, bpc);
-	(*pixel) &= ~flip_bit_section(0, bpc*3);
+	(*pixel) &= bit_section;
 	(*pixel) |= std::get<0>(color) & MASK(bpc);
 	(*pixel) |= (std::get<1>(color) & MASK(bpc)) << (bpc);
 	(*pixel) |= (std::get<2>(color) & MASK(bpc)) << (bpc*2);

@@ -276,6 +276,8 @@ uint64_t id_api::linked_list::distance_fast(id_t_ linked_list_id, id_t_ target_i
 		}
 		
 	}
+	print("finish implementing this", P_CRIT);
+	return 0;
 }
 
 std::vector<uint64_t> id_api::get_all(){
