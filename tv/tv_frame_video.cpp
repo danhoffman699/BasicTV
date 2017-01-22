@@ -83,7 +83,7 @@ void tv_frame_video_t::set_pixel(uint16_t x,
 	const uint64_t bit_section =
 		~flip_bit_section(0, bpc*3);
 	color = convert::color::bpc(color, bpc);
-#ifidef __ORDER_BIG_ENDIAN__
+#ifdef __ORDER_BIG_ENDIAN__
 	if(bpc != 8){
 		print("can't write non-8-bit BPCs on big endian yet", P_ERR);
 		(*pixel) &= bit_section;
