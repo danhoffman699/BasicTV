@@ -298,6 +298,13 @@ static void test_break_id_transport(){
 	running = false;
 }
 
+static void test_rsa_encryption(){
+	encrypt_priv_key_t *priv_key =
+		new encrypt_priv_key_t;
+	encrypt_pub_key_t *pub_key =
+		new encrypt_pub_key_t;
+}
+
 static void test(){}
 
 // TODO: define some ownership, don't actually use this

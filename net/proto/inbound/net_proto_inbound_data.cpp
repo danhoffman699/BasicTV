@@ -191,6 +191,7 @@ static void net_proto_process_buffer_vector(net_proto_socket_t *proto_socket){
 		try{
 			id_t_ imported_data_id =
 				id_api::array::add_data(buffer_vector[i]);
+			proto_socket->add_id_to_log(imported_data_id);
 			data_id_t *imported_data_ptr =
 				PTR_ID(imported_data_id,
 				       net_proto_request_t);

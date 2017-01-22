@@ -35,14 +35,24 @@ static data_id_t *id_find(uint64_t id){
 	return nullptr;
 }
 
+/*
+  TODO: make seperate functions for fast lookups only (ideally for use with the
+  stats library, since speed is more important than actually having the data)
+ */
+
 data_id_t *id_api::array::ptr_id(uint64_t id,
-				 std::string type){
+				 std::string type,
+				 uint8_t flags){
 	if(id == 0){
 		return nullptr;
 	}
 	data_id_t *retval = id_find(id);
 	if(retval == nullptr){
-		return nullptr;
+		if(flags & ID_LOOKUP_FAST){
+			return nullptr;
+		}
+		// should be as simple as creating a net_proto_request_t
+		print("haven't implemented data requests from ID lookups yet", P_ERR);
 	}
 	// blank type is a wildcard, currently onlu used for RSA sorting
 	// "" is used for direct calls
@@ -54,13 +64,15 @@ data_id_t *id_api::array::ptr_id(uint64_t id,
 }
 
 data_id_t *id_api::array::ptr_id(uint64_t id,
-				 std::array<uint8_t, TYPE_LENGTH> type){
-	return ptr_id(id, convert::array::type::from(type));
+				 std::array<uint8_t, TYPE_LENGTH> type,
+				 uint8_t flags){
+	return ptr_id(id, convert::array::type::from(type), flags);
 }
 
 void *id_api::array::ptr_data(uint64_t id,
-			      std::string type){
-	data_id_t *id_ptr = ptr_id(id, type);
+			      std::string type,
+			      uint8_t flags){
+	data_id_t *id_ptr = ptr_id(id, type, flags);
 	if(id_ptr == nullptr){
 		return nullptr;
 	}
@@ -68,7 +80,8 @@ void *id_api::array::ptr_data(uint64_t id,
 }
 
 void *id_api::array::ptr_data(uint64_t id,
-			      std::array<uint8_t, TYPE_LENGTH> type){
+			      std::array<uint8_t, TYPE_LENGTH> type,
+			      uint8_t flags){
 	return ptr_data(id, convert::array::type::from(type));
 }
 
@@ -151,7 +164,7 @@ std::vector<uint64_t> id_api::array::sort_by_rsa_pubkey(std::vector<uint64_t> tm
 
 static std::vector<uint64_t> *get_type_cache_ptr(std::array<uint8_t, TYPE_LENGTH> tmp){
 	for(uint64_t i = 0;i < type_cache.size();i++){
-		if(type_cache[i].second == tmp){
+		if(unlikely(type_cache[i].second == tmp)){
 			return &type_cache[i].first;
 		}
 	}
@@ -190,7 +203,6 @@ void id_api::cache::del(uint64_t id, std::string type){
 }
 
 std::vector<uint64_t> id_api::cache::get(std::array<uint8_t, TYPE_LENGTH> type){
-	
 	return *get_type_cache_ptr(type);
 }
 
@@ -209,6 +221,11 @@ std::vector<uint64_t> id_api::array::get_forward_linked_list(uint64_t id){
 	}
 	return retval;
 }
+
+/*
+  TODO: when more than the immediate neighbor can be stored, let this
+  function do that and set the number as a parameter
+ */
 
 void id_api::linked_list::link_vector(std::vector<uint64_t> vector){
 	switch(vector.size()){
@@ -236,6 +253,29 @@ void id_api::linked_list::link_vector(std::vector<uint64_t> vector){
 	}
 	PTR_ID(vector[vector.size()-1], )->set_prev_linked_list(
 		vector[vector.size()-2]);
+}
+
+uint64_t id_api::linked_list::distance_fast(id_t_ linked_list_id, id_t_ target_id){
+	if(unlikely(linked_list_id == target_id)){
+		return 0;
+	}
+	data_id_t *tmp_ptr =
+		PTR_ID_FAST(linked_list_id, );
+	if(tmp_ptr == nullptr){
+		print("linked list is invalid", P_ERR);
+	}
+	// Make this bi-direcitonal
+	std::vector<id_t_> scanned_ids;
+	while(std::find(scanned_ids.begin(),
+			scanned_ids.end()-1,
+			scanned_ids[scanned_ids.size()-1]) == scanned_ids.end()){
+		tmp_ptr =
+			PTR_ID_FAST(tmp_ptr->get_next_linked_list(), );
+		if(tmp_ptr == nullptr){
+			return 0;
+		}
+		
+	}
 }
 
 std::vector<uint64_t> id_api::get_all(){
@@ -294,7 +334,7 @@ void id_api::destroy(id_t_ id){
 	// net (proto and standard)
 	DELETE_TYPE_2(net_socket_t);
 	DELETE_TYPE_2(net_peer_t);	
-	DELETE_TYPE_2(net_request_t);
+	DELETE_TYPE_2(net_proto_request_t);
 	DELETE_TYPE_2(net_proto_con_req_t);
 	DELETE_TYPE_2(net_cache_t); // ?
 

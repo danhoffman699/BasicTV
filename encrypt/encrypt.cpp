@@ -40,10 +40,8 @@ void encrypt_key_t::set_encrypt_key(std::vector<uint8_t> key_,
 	encryption_scheme = encryption_scheme_;
 }
 
-void encrypt_key_t::get_encrypt_key(std::vector<uint8_t> *key_,
-				    uint8_t *encryption_scheme_){
-	*key_ = key;
-	*encryption_scheme_ = encryption_scheme;
+std::pair<uint8_t, std::vector<uint8_t> >  encrypt_key_t::get_encrypt_key(){
+	return std::make_pair(encryption_scheme, key);
 }
 
 encrypt_pub_key_t::encrypt_pub_key_t() : id(this, __FUNCTION__){
@@ -67,7 +65,8 @@ encrypt_priv_key_t::~encrypt_priv_key_t(){}
  */
 static void encrypt_pull_key_info(id_t_ id,
 				  std::vector<uint8_t> *key,
-				  uint8_t *encryption_scheme){
+				  uint8_t *encryption_scheme,
+				  uint8_t *key_type){
 	data_id_t *ptr = PTR_ID(id, );
 	if(ptr == nullptr){
 		print("id is nullptr", P_ERR);
@@ -78,14 +77,22 @@ static void encrypt_pull_key_info(id_t_ id,
 		if(pub_key == nullptr){
 			print("can't load public key", P_ERR);
 		}
-		pub_key->get_encrypt_key(key, encryption_scheme);
-	}else if(ptr->get_type() == "encrypt_pub_key_t"){
+		std::pair<uint8_t, std::vector<uint8_t> > key_data =
+			pub_key->get_encrypt_key();
+		*encryption_scheme = key_data.first;
+		*key = key_data.second;
+		*key_type = ENCRYPT_KEY_TYPE_PUB;
+ 	}else if(ptr->get_type() == "encrypt_priv_key_t"){
 		encrypt_priv_key_t *priv_key =
 			(encrypt_priv_key_t*)ptr->get_ptr();
 		if(priv_key == nullptr){
 			print("can't load private key", P_ERR);
 		}
-		priv_key->get_encrypt_key(key, encryption_scheme);
+		std::pair<uint8_t, std::vector<uint8_t> > key_data =
+			priv_key->get_encrypt_key();
+		*encryption_scheme = key_data.first;
+		*key = key_data.second;
+		*key_type = ENCRYPT_KEY_TYPE_PRIV;		
 	}else{
 		print("key ID is not a valid key", P_ERR);
 		// redundant
@@ -99,12 +106,14 @@ std::vector<uint8_t> encrypt_api::encrypt(std::vector<uint8_t> data,
 	std::vector<uint8_t> retval;
 	uint8_t encryption_scheme = ENCRYPT_UNDEFINED;
 	std::vector<uint8_t> key;
+	uint8_t key_type = 0;
 	encrypt_pull_key_info(key_id,
 			      &key,
-			      &encryption_scheme);
+			      &encryption_scheme,
+			      &key_type);
 	switch(encryption_scheme){
 	case ENCRYPT_RSA:
-		retval = rsa::encrypt(data, key);
+		retval = rsa::encrypt(data, key, key_type);
 		break;
 	case ENCRYPT_UNDEFINED:
 		print("no encryption scheme is set", P_ERR);
@@ -126,12 +135,14 @@ std::vector<uint8_t> encrypt_api::decrypt(std::vector<uint8_t> data,
 	std::vector<uint8_t> retval;
 	uint8_t encryption_scheme = ENCRYPT_UNDEFINED;
 	std::vector<uint8_t> key;
+	uint8_t key_type = 0;
 	encrypt_pull_key_info(key_id,
 			      &key,
-			      &encryption_scheme);
+			      &encryption_scheme,
+			      &key_type);
 	switch(encryption_scheme){
 	case ENCRYPT_RSA:
-		retval = rsa::decrypt(data, key);
+		retval = rsa::decrypt(data, key, key_type);
 		break;
 	case ENCRYPT_UNDEFINED:
 		print("no encryption scheme is set", P_ERR);

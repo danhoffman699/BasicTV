@@ -363,7 +363,7 @@ static void tv_init_test_webcam(){
 	// Without an offset, the frames are obsolete before they
 	// are rendered
 	const uint64_t refresh_rate = (1000.0*1000.0)/dev->get_frame_interval_micro_s(); // just an estimate
-	P_V(refresh_rate, P_SPAM);
+	P_V(refresh_rate, P_DEBUG);
 	const uint64_t time_start = get_time_microseconds();
 	for(uint64_t i = 0;i < 60;i++){
 		tv_frame_video_t *video =
@@ -376,6 +376,7 @@ static void tv_init_test_webcam(){
 	id_api::linked_list::link_vector(vector_array);
 	channel->add_stream_id(vector_array[0]);
 	window->set_channel_id(channel->id.get_id());
+	window->add_active_stream_id(vector_array[0]);
 }
 
 void tv_video_init(){
@@ -402,7 +403,7 @@ void tv_video_init(){
 		SDL_MapRGB(SDL_GetWindowSurface(sdl_window)->format, 0, 0, 0));
 	SDL_UpdateWindowSurface(sdl_window);
 	//tv_init_test_menu();
-	//tv_init_test_webcam();
+	tv_init_test_webcam();
 }
 
 void tv_video_close(){

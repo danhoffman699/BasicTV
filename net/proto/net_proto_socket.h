@@ -34,8 +34,10 @@ public:
 	id_t_ get_socket_id();
 	void send_id(id_t_ id_);
 	void update();
-	// probably don't need more granularity in the buffers
+	void add_id_to_log(id_t_ id_log_);
+	std::vector<std::pair<uint64_t, id_t_> > get_id_log();
 	std::vector<std::vector<uint8_t> > get_buffer();
+	uint16_t get_prob_of_id(id_t_ id_);
 };
 
 #endif

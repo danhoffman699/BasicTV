@@ -96,6 +96,6 @@ public:
 	uint64_t get_socket_id(uint32_t entry_);
 	void del_socket_id(uint64_t socket_);
 };
-
+// I should change this really soon
 typedef net_peer_t net_proto_peer_t;
 #endif

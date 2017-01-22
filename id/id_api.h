@@ -13,19 +13,33 @@
 
 // Function macros for common ID API calls
 
+/*
+  Currently only used in stats collection for sockets. If the information
+  doesn't exist locally, then it has fallen out of use. This DOES allow for
+  re-loading of cached data (since it shouldn't be too slow)
+ */
+#define ID_LOOKUP_FAST (1 << 0)
+
+#define PTR_DATA_FAST(id, type) ((type*)id_api::array::ptr_data(id, #type, ID_LOOKUP_FAST))
+#define PTR_ID_FAST(id, type) (id_api::array::ptr_id(id, #type, ID_LOOKUP_FAST))
+
 #define PTR_DATA(id, type) ((type*)id_api::array::ptr_data(id, #type))
 #define PTR_ID(id, type) (id_api::array::ptr_id(id, #type))
 
 namespace id_api{
 	namespace array{
 		data_id_t *ptr_id(uint64_t id,
-				  std::string type);
+				  std::string type,
+				  uint8_t flags = 0);
 		data_id_t *ptr_id(uint64_t id,
-				  std::array<uint8_t, TYPE_LENGTH> type);
+				  std::array<uint8_t, TYPE_LENGTH> type,
+				  uint8_t flags = 0);
 		void *ptr_data(uint64_t id,
-				  std::string type);
+				  std::string type,
+				  uint8_t flags = 0);
 		void *ptr_data(uint64_t id,
-				  std::array<uint8_t, TYPE_LENGTH> type);
+				  std::array<uint8_t, TYPE_LENGTH> type,
+				  uint8_t flags = 0);
 		void add(data_id_t *ptr);
 		void del(id_t_ id); // no type
 		id_t_ add_data(std::vector<uint8_t> data_);
@@ -48,6 +62,9 @@ namespace id_api{
 	namespace linked_list{
 		// next and previous are in the id itself, no interdependency
 		void link_vector(std::vector<uint64_t> vector);
+		// perhaps redefine this for standard when that's needed
+		uint64_t distance_fast(id_t_ linked_list_id,
+				       id_t_ target_id); // only used in stats
 	};
 	std::vector<uint64_t> get_all();
 	void free_mem();

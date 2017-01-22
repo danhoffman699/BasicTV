@@ -29,6 +29,9 @@ public:
 	uint64_t get_ttl_micro_s(){return ttl_micro_s;}
 	uint64_t get_end_time_micro_s(){return get_start_time_micro_s()+get_ttl_micro_s();}
 };
+
+// TODO: protect this against infinite loops
+
 template<typename T>
 id_t_ tv_frame_scroll_to_time(T data, uint64_t play_time){
 	while(data != nullptr){

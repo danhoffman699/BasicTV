@@ -30,46 +30,53 @@ void tv_dev_video_t::userp_init(uint64_t image_size){
 	}
 }
 
+/*
+  The commented out code seems to work OK, but it doesn't poll the correct
+  frame rate (I think the problem is with the video receiver not requesting
+  the proper frame rate, but this should be able to handle that).
+ */
+
 uint64_t tv_dev_video_t::get_frame_interval_micro_s(){
-	v4l2_format fmt;
-	CLEAR(fmt);
-	fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-	try{
-		set_ioctl(VIDIOC_G_FMT, &fmt);
-	}catch(std::exception e){
-		print("cannot fetch format", P_ERR);
-	}
-	v4l2_frmivalenum frame_interval;
-	CLEAR(frame_interval);
-	frame_interval.width = fmt.fmt.pix.width;
-	frame_interval.height = fmt.fmt.pix.height;
-	frame_interval.pixel_format = fmt.fmt.pix.pixelformat;
-	frame_interval.index = 1; // I don't know
-	try{
-		set_ioctl(VIDIOC_ENUM_FRAMEINTERVALS, &frame_interval);
-	}catch(std::exception e){
-		print("cannot set frame interval", P_ERR);
-	}
-	v4l2_fract fraction;
-	switch(frame_interval.type){
-	case V4L2_FRMIVAL_TYPE_DISCRETE:
-		fraction = frame_interval.discrete;
-		break;
-	case V4L2_FRMIVAL_TYPE_CONTINUOUS:
-	case V4L2_FRMIVAL_TYPE_STEPWISE:
-		fraction = frame_interval.stepwise.step;
-		break; // is this correct ^ ?
-	default:
-		CLEAR(fraction);
-		fraction.denominator = 1; // should have real detection
-	}
-	P_V(fraction.numerator, P_SPAM);
-	P_V(fraction.denominator, P_SPAM);
-	long double frame_interval_float =
-		(long double)fraction.numerator/
-		(long double)fraction.denominator;
-	uint64_t retval = (uint64_t)((frame_interval_float*1000*1000)+0.5);
-	return retval;
+	// v4l2_format fmt;
+	// CLEAR(fmt);
+	// fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+	// try{
+	// 	set_ioctl(VIDIOC_G_FMT, &fmt);
+	// }catch(std::exception e){
+	// 	print("cannot fetch format", P_ERR);
+	// }
+	// v4l2_frmivalenum frame_interval;
+	// CLEAR(frame_interval);
+	// frame_interval.width = fmt.fmt.pix.width;
+	// frame_interval.height = fmt.fmt.pix.height;
+	// frame_interval.pixel_format = fmt.fmt.pix.pixelformat;
+	// frame_interval.index = 1; // I don't know
+	// try{
+	// 	set_ioctl(VIDIOC_ENUM_FRAMEINTERVALS, &frame_interval);
+	// }catch(std::exception e){
+	// 	print("cannot set frame interval", P_ERR);
+	// }
+	// v4l2_fract fraction;
+	// switch(frame_interval.type){
+	// case V4L2_FRMIVAL_TYPE_DISCRETE:
+	// 	fraction = frame_interval.discrete;
+	// 	break;
+	// case V4L2_FRMIVAL_TYPE_CONTINUOUS:
+	// case V4L2_FRMIVAL_TYPE_STEPWISE:
+	// 	fraction = frame_interval.stepwise.step;
+	// 	break; // is this correct ^ ?
+	// default:
+	// 	CLEAR(fraction);
+	// 	fraction.denominator = 1; // should have real detection
+	// }
+	// P_V(fraction.numerator, P_SPAM);
+	// P_V(fraction.denominator, P_SPAM);
+	// long double frame_interval_float =
+	// 	(long double)fraction.numerator/
+	// 	(long double)fraction.denominator;
+	// uint64_t retval = (uint64_t)((frame_interval_float*1000*1000)+0.5);
+	// return retval;
+	return 1000*1000/10;
 }
 
 void tv_dev_video_t::standard_init(){

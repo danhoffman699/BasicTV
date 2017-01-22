@@ -2,6 +2,7 @@
 #include "net_socket.cpp"
 #include "net_proxy.cpp"
 #include "net_ip.cpp"
+#include "proto/net_proto_request.cpp"
 #include "proto/net_proto_socket.cpp"
 #include "proto/net_proto.cpp"
 #include "proto/net_proto_meta.cpp"

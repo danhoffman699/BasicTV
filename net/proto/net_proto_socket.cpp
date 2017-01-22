@@ -38,7 +38,7 @@ void net_proto_socket_t::send_id(id_t_ id_){
 	/*
 	  The "malicious" flag isn't the only protection. NONET flags in the
 	  data should be tripped when anything serious is being handled (RSA
-	  private keys). That doesn't inherently mean nothxing is sent though,
+	  private keys). That doesn't inherently mean nothing is sent though,
 	  and this makes it not fill the request at all.
 
 	  TODO: possibly add a class where exporting doesn't make sense and
@@ -146,4 +146,38 @@ void net_proto_socket_t::update(){
 		}
 	} // doesn't trip when the data isn't finished receiving
 	// TODO: find IDs for all new data and put it in the id_log
+}
+
+void net_proto_socket_t::add_id_to_log(id_t_ id_log_){
+	id_log.push_back(
+		std::make_pair(
+			get_time_microseconds(),
+			id_log_));
+}
+
+std::vector<std::pair<uint64_t, id_t_> > net_proto_socket_t::get_id_log(){
+	return id_log;
+}
+
+/*
+  TODO: generalize the statistics function and cap the amount of entries it can
+  have per socket.
+ */
+
+uint16_t net_proto_socket_t::get_prob_of_id(id_t_ id_){
+	uint16_t highest_stat = 0;
+	for(uint64_t i = 0;i < id_log.size();i++){
+		const uint64_t distance =
+			id_api::linked_list::distance_fast(
+				id_log[i].second,
+				id_);
+		const uint16_t curr_stat =
+			(1.0/(distance+1))*65535;
+		if(unlikely(curr_stat > highest_stat)){
+			highest_stat = curr_stat;
+		}
+	}
+	// actually interpreted as x/65535
+	P_V(highest_stat, P_SPAM);
+	return highest_stat;
 }

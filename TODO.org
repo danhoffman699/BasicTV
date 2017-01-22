@@ -1,7 +1,7 @@
 * TODO Polish networking protocol
   - [ ] Use compression on exporting
   - [ ] Stabilize net_socket_t code
-  - [ ] Add support for vectors (std::vector<uint8_t/uint64_t>) in data_ptr
+  - [X] Add support for vectors (std::vector<uint8_t/id_t_>) in data_ptr
   - [ ] Finalize net_con_req_t
 * TODO Multithreading
   - [ ] Include locks on data_id_t

@@ -36,13 +36,17 @@
 // undefined encryption scheme
 #define ENCRYPT_UNDEFINED (0)
 
+// no encryption, only used for testing
+
 // RSA encryption scheme, works similarly to SSL
 #define ENCRYPT_RSA (1)
 
 // symmetric key system (documented in personal notes)
-/*
- */
+
 #define ENCRYPT_SKS (2)
+
+#define ENCRYPT_KEY_TYPE_PRIV (1)
+#define ENCRYPT_KEY_TYPE_PUB (2)
 
 struct encrypt_key_pair_t{
 private:
@@ -52,6 +56,7 @@ public:
 	data_id_t id;
 	encrypt_key_pair_t();
 	~encrypt_key_pair_t();
+	void gen_new_key_pair();
 	id_t_ get_priv_key_id();
 	void set_priv_key_id(id_t_ priv_key_);
 	id_t_ get_pub_key_id();
@@ -66,15 +71,15 @@ public:
 struct encrypt_key_t{
 protected:
 	std::vector<uint8_t> key;
-	uint8_t encryption_scheme = 0;
+	uint8_t encryption_scheme = ENCRYPT_UNDEFINED;
 public:
 	encrypt_key_t();
 	~encrypt_key_t();
 	void list_virtual_data(data_id_t *id);
 	void set_encrypt_key(std::vector<uint8_t> key_,
-			     uint8_t encryption_scheme_);
-	void get_encrypt_key(std::vector<uint8_t> *key_,
-			     uint8_t *encryption_scheme_);
+	 		     uint8_t encryption_scheme_);
+	std::pair<uint8_t, std::vector<uint8_t> > get_encrypt_key();
+	std::vector<uint8_t> get_fingerprint();
 };
 
 struct encrypt_pub_key_t : virtual encrypt_key_t{
@@ -84,6 +89,10 @@ public:
 	encrypt_pub_key_t();
 	~encrypt_pub_key_t();
 };
+
+/*
+  uses NONET, only difference
+ */
 
 struct encrypt_priv_key_t : virtual encrypt_key_t{
 private:
