@@ -80,19 +80,17 @@ void tv_frame_video_t::set_pixel(uint16_t x,
 	const uint64_t pixel_pos =
 		get_raw_pixel_pos(x, y);
 	uint64_t *pixel = (uint64_t*)&(frame[pixel_pos]);
-	const uint64_t bit_section =
-		~flip_bit_section(0, bpc*3);
 	color = convert::color::bpc(color, bpc);
 #ifdef __ORDER_BIG_ENDIAN__
 	if(bpc != 8){
 		print("can't write non-8-bit BPCs on big endian yet", P_ERR);
-		(*pixel) &= bit_section;
-		(*pixel) |= std::get<0>(color) & MASK(bpc);
-		(*pixel) |= (std::get<1>(color) & MASK(bpc)) >> (bpc);
-		(*pixel) |= (std::get<2>(color) & MASK(bpc)) >> (bpc*2);
 	}
+	(*pixel) &= ~flip_bit_section(0, bpc*3);
+	(*pixel) |= std::get<0>(color) & MASK(bpc);
+	(*pixel) |= (std::get<1>(color) & MASK(bpc)) >> (bpc);
+	(*pixel) |= (std::get<2>(color) & MASK(bpc)) >> (bpc*2);
 #else
-	(*pixel) &= bit_section;
+	(*pixel) &= ~flip_bit_section(0, bpc*3);
 	(*pixel) |= std::get<0>(color) & MASK(bpc);
 	(*pixel) |= (std::get<1>(color) & MASK(bpc)) << (bpc);
 	(*pixel) |= (std::get<2>(color) & MASK(bpc)) << (bpc*2);
@@ -104,9 +102,15 @@ std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> tv_frame_video_t::get_pixel(ui
 	std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> color;
 	const uint64_t *pixel =
 		(uint64_t*)&(frame[get_raw_pixel_pos(x_, y_)]);
+	#ifdef __ORDER_BIG_ENDIAN__
+	std::get<0>(color) = ((*pixel << (bpc*0)) & MASK(bpc));
+	std::get<1>(color) = ((*pixel << (bpc*1)) & MASK(bpc));
+	std::get<2>(color) = ((*pixel << (bpc*2)) & MASK(bpc));
+	#else
 	std::get<0>(color) = ((*pixel >> (bpc*0)) & MASK(bpc));
 	std::get<1>(color) = ((*pixel >> (bpc*1)) & MASK(bpc));
 	std::get<2>(color) = ((*pixel >> (bpc*2)) & MASK(bpc));
+	#endif
 	std::get<3>(color) = bpc;
 	return color;
 }

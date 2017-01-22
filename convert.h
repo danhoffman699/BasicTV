@@ -18,12 +18,10 @@
 
 // NBO: network byte order
 
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-#define __ORDER_LITTLE_ENDIAN__
-#warning Assuming little endian
-#elif __BYTE_ORDER == __BIG_ENDIAN
+#ifdef __sparc64_-
 #define __ORDER_BIG_ENDIAN__
-#warning Assuming big endian
+#else
+#define __ORDER_LITTLE_ENDIAN__
 #endif
 
 #ifdef __ORDER_LITTLE_ENDIAN__
