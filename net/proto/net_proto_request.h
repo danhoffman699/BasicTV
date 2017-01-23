@@ -68,7 +68,7 @@ private:
 	std::vector<id_t_> ids = {{0}};
 	// local information
 	// socket_id of connection, 0 if outbound
-	uint64_t socket_id = 0;
+	id_t_ socket_id = 0;
 	/*
 	  One ID paired with a vector of sockets and their respective
 	  probability of having the information. This is generated manually
@@ -83,7 +83,7 @@ public:
 	net_proto_request_t();
 	~net_proto_request_t();
 	void set_proto_socket_id(uint64_t socket_id_);
-	uint64_t get_proto_socket_id();
+	id_t_ get_proto_socket_id();
 	void update_probs();	
 	void set_flags(uint8_t flags);
 	uint8_t get_flags();

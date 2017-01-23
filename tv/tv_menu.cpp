@@ -558,7 +558,7 @@ void tv_menu_t::set_highlighed(uint16_t highlighted_){
 	highlighed = highlighted_;
 }
 
-uint64_t tv_menu_t::get_frame_id(){
+id_t_ tv_menu_t::get_frame_id(){
 	return frame_id;
 }
 

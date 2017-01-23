@@ -24,7 +24,7 @@
 
 uint64_t tv::chan::count(uint64_t flags){
 	uint64_t retval = 0;
-	std::vector<uint64_t> channel_id_list =
+	std::vector<id_t_> channel_id_list =
 		id_api::cache::get("tv_channel_t");
 	for(uint64_t i = 0;i < channel_id_list.size();i++){
 		try{
@@ -49,77 +49,33 @@ uint64_t tv::chan::count(uint64_t flags){
 	return retval;
 }
 
-uint64_t tv::chan::next(uint64_t id, uint64_t flags){
-	/*std::vector<uint64_t> all_channels =
+id_t_ tv::chan::next_id(id_t_ id, uint64_t flags){
+	std::vector<id_t_> all_channels =
 		id_api::cache::get("tv_channel_t");
-	for(uint64_t i = 0;i < all_channels.size();i++){
-		tv_channel_t *channel = PTR_DATA(all_channels[i], tv_channel_t);
-		if(channel == nullptr){
-			continue;
-		}
-		const bool streaming =
-			channel->is_streaming() == (flags & TV_CHAN_STREAMING);
-		const bool audio =
-			(!channel->is_audio()) == (flags & TV_CHAN_NO_AUDIO);
-		const bool video =
-			(!channel->is_video()) == (flags & TV_CHAN_NO_VIDEO);
-		// checks for matches, not actual true statements
-		if(!(streaming && audio && video)){
-			all_channels.erase(all_channels.begin()+i);
-			i--;
+	id_t_ retval = 0;
+	bool swapped_pos = true;
+	while(swapped_pos){
+		swapped_pos = false;
+		for(uint64_t i = 0;i < all_channels.size();i++){
+			/*
+			  Sort by encryption fingerprint, get the next
+			 */
 		}
 	}
-	const std::vector<uint64_t> pgp_sorted =
-		id_api::array::sort_by_pgp_pubkey(
-		        all_channels);
-	for(uint64_t i = 0;i < pgp_sorted.size();i++){
-		if(pgp_sorted[i] == id){
-			if(i != pgp_sorted.size()-2){
-				return pgp_sorted[i+1];
-			}
-		}
-		}*/
+	return retval;
+	
+}
+
+id_t_ tv::chan::prev_id(id_t_ id, uint64_t flags){
+	std::vector<id_t_> all_channels =
+		id_api::cache::get("tv_channel_t");
 	return id;
 }
 
-uint64_t tv::chan::prev(uint64_t id, uint64_t flags){
-	/*std::vector<uint64_t> all_channels =
-		id_api::cache::get("tv_channel_t");
-	for(uint64_t i = 0;i < all_channels.size();i++){
-		tv_channel_t *channel =
-			PTR_DATA(all_channels[i], tv_channel_t);
-		if(channel == nullptr){
-			continue;
-		}
-		const bool streaming =
-			channel->is_streaming() == (flags & TV_CHAN_STREAMING);
-		const bool audio =
-			(!channel->is_audio()) == (flags & TV_CHAN_NO_AUDIO);
-		const bool video =
-			(!channel->is_video()) == (flags & TV_CHAN_NO_VIDEO);
-		// checks for matches, not actual true statements
-		if(!(streaming && audio && video)){
-			all_channels.erase(all_channels.begin()+i);
-			i--;
-		}
-	}
-	const std::vector<uint64_t> pgp_sorted =
-		id_api::array::sort_by_pgp_pubkey(
-		        all_channels);
-	for(uint64_t i = 0;i < pgp_sorted.size();i++){
-		if(pgp_sorted[i] == id){
-			if(i != 1){
-				return pgp_sorted[i-1];
-			}
-		}
-		}*/
-	return id;
-}
-
-uint64_t tv::chan::rand(uint64_t flags){
+id_t_ tv::chan::rand_id(uint64_t flags){
 	uint64_t channel_count = count(flags);
-	uint64_t id_from_start = true_rand(0, channel_count-1);
-	std::vector<uint64_t> channel_id =
+	id_t_ id_from_start = true_rand(0, channel_count-1);
+	std::vector<id_t_> channel_id =
 		id_api::cache::get("tv_channel_t");
 	return channel_id.at(id_from_start);
 }

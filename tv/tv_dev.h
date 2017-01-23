@@ -14,15 +14,15 @@ class tv_dev_t{
 private:
 	std::string filename;
 	int64_t file_descriptor = 0;
-	uint64_t last_frame_id = 0;
+	id_t_ last_frame_id = 0;
 	// timestamp ought to be associated with frame
 public:
 	tv_dev_t();
 	~tv_dev_t();
 	void list_virtual_data(data_id_t *id);
 	void open_dev(std::string filename_);
-	uint64_t get_last_frame_id();
-	void set_last_frame_id(uint64_t last_frame_id_);
+	id_t_ get_last_frame_id();
+	void set_last_frame_id(id_t_ last_frame_id_);
 	uint64_t get_file_descriptor();
 	int set_ioctl(int request,
 		      void *arg);

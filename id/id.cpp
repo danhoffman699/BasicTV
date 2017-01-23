@@ -1,5 +1,4 @@
 #include "id.h"
-#include "id_index.h"
 #include "id_api.h"
 #include "../main.h"
 #include "../util.h"
@@ -159,7 +158,6 @@ std::vector<uint8_t> data_id_t::export_data(uint8_t flags_){
 	if(is_owner()){
 		ID_EXPORT(id);
 		ID_EXPORT(type);
-		ID_EXPORT(rsa_cite_id);
 		transport_i_t trans_i = 0;
 		transport_size_t trans_size = 0;
 		for(uint64_t i = 0;i < data_vector.size();i++){
@@ -218,12 +216,10 @@ static void id_import_raw(uint8_t* var, uint8_t flags, uint64_t size, std::vecto
 #define ID_IMPORT(var) id_import_raw((uint8_t*)&var, 0, sizeof(var), &data)
 
 void data_id_t::import_data(std::vector<uint8_t> data){
-	uint64_t trans_id = 0;
+	id_t_ trans_id = 0;
 	std::array<uint8_t, TYPE_LENGTH> trans_type = {{0}};
-	uint64_t trans_rsa_cite_id = 0;
 	ID_IMPORT(trans_id);
 	ID_IMPORT(trans_type);
-	ID_IMPORT(trans_rsa_cite_id);
 	transport_i_t trans_i = 0;
 	transport_size_t trans_size = 0;
 	while(data.size() > sizeof(transport_i_t) + sizeof(transport_size_t)){
@@ -264,19 +260,19 @@ void data_id_t::rsa_decrypt_backlog(){
 	rsa_backlog.clear();
 }
 
-uint64_t data_id_t::get_prev_linked_list(){
+id_t_ data_id_t::get_prev_linked_list(){
 	return linked_list.first;
 }
 
-uint64_t data_id_t::get_next_linked_list(){
+id_t_ data_id_t::get_next_linked_list(){
 	return linked_list.second;
 }
 
-void data_id_t::set_prev_linked_list(uint64_t data){
+void data_id_t::set_prev_linked_list(id_t_ data){
 	linked_list.first = data;
 }
 
-void data_id_t::set_next_linked_list(uint64_t data){
+void data_id_t::set_next_linked_list(id_t_ data){
 	linked_list.second = data;
 }
 

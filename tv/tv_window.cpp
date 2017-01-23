@@ -15,11 +15,11 @@ tv_window_t::tv_window_t() : id(this, __FUNCTION__){
 tv_window_t::~tv_window_t(){
 }
 
-uint64_t tv_window_t::get_channel_id(){
+id_t_ tv_window_t::get_channel_id(){
 	return channel_id;
 }
 
-void tv_window_t::set_channel_id(uint64_t channel_id_){
+void tv_window_t::set_channel_id(id_t_ channel_id_){
 	channel_id = channel_id_;
 }
 

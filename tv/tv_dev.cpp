@@ -19,11 +19,11 @@ void tv_dev_t::open_dev(std::string filename_){
 	}
 }
 
-uint64_t tv_dev_t::get_last_frame_id(){
+id_t_ tv_dev_t::get_last_frame_id(){
 	return last_frame_id;
 }
 
-void tv_dev_t::set_last_frame_id(uint64_t last_frame_id_){
+void tv_dev_t::set_last_frame_id(id_t_ last_frame_id_){
 	last_frame_id = last_frame_id_;
 }
 

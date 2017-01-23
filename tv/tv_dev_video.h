@@ -24,7 +24,7 @@ public:
 	data_id_t id;
 	tv_dev_video_t(std::string filename_);
 	~tv_dev_video_t();
-	uint64_t update();
+	id_t_ update();
 	uint64_t get_frame_interval_micro_s();
 };
 

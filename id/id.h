@@ -67,7 +67,6 @@ private:
 	id_t_ id = 0;
        	std::array<uint8_t, TYPE_LENGTH> type = {{0}};
 	void *ptr = nullptr;
-	id_t_ rsa_cite_id = 0;
 	std::vector<std::vector<uint8_t> > rsa_backlog;
 	std::vector<data_id_ptr_t> data_vector;
 	std::pair<id_t_, id_t_> linked_list = {0,0};
@@ -81,18 +80,18 @@ public:
 	data_id_t(void *ptr_, std::string type_);
 	~data_id_t();
 	// getters and setters
-	uint64_t get_id();
+	id_t_ get_id();
 	std::string get_type();
 	void *get_ptr();
-	void set_rsa_cite_id(uint64_t id_){rsa_cite_id = id_;} // probably should fix this soon
-	void set_encrypt_cite_id(uint64_t id_){rsa_cite_id = id_;}
-	uint64_t get_rsa_cite_id();
-	uint64_t get_encrypt_cite_id(){return get_rsa_cite_id();}
+	void set_rsa_cite_id(id_t_ id_){rsa_cite_id = id_;} // probably should fix this soon
+	void set_encrypt_cite_id(id_t_ id_){rsa_cite_id = id_;}
+	id_t_ get_rsa_cite_id();
+	id_t_ get_encrypt_cite_id(){return get_rsa_cite_id();}
 	uint64_t get_data_index_size();
-	uint64_t get_next_linked_list();
-	uint64_t get_prev_linked_list();
-	void set_next_linked_list(uint64_t data);
-	void set_prev_linked_list(uint64_t data);
+	id_t_ get_next_linked_list();
+	id_t_ get_prev_linked_list();
+	void set_next_linked_list(id_t_ data);
+	void set_prev_linked_list(id_t_ data);
 	// pointer list modififers
 	/*
 	  size of data is referring to the type size and the array size, whereas

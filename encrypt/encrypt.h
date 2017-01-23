@@ -6,6 +6,8 @@
 #include "openssl/rsa.h"
 #include "openssl/engine.h"
 #include "openssl/err.h"
+#include "openssl/sha.h"
+#include "sstream"
 /*
   encrypt.h: Encryption API
 
@@ -110,6 +112,14 @@ namespace encrypt_api{
 				     id_t_ key_id);
 	std::vector<uint8_t> decrypt(std::vector<uint8_t> data,
 				     id_t_ key_id);
+	namespace hash{
+		namespace sha256{
+			std::array<uint8_t, 32> gen_raw(std::vector<uint8_t> data);
+			std::string gen_str(std::vector<uint8_t> data);
+			std::string gen_str_from_raw(std::array<uint8_t, 32> data);
+		};
+	};
+	std::vector<uint8_t> get_sha256_hash(std::vector<uint8_t> data);
 };
 
 #endif

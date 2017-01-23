@@ -28,45 +28,50 @@
 
 namespace id_api{
 	namespace array{
-		data_id_t *ptr_id(uint64_t id,
+		data_id_t *ptr_id(id_t_ id,
 				  std::string type,
 				  uint8_t flags = 0);
-		data_id_t *ptr_id(uint64_t id,
+		data_id_t *ptr_id(id_t_ id,
 				  std::array<uint8_t, TYPE_LENGTH> type,
 				  uint8_t flags = 0);
-		void *ptr_data(uint64_t id,
+		void *ptr_data(id_t_ id,
 				  std::string type,
 				  uint8_t flags = 0);
-		void *ptr_data(uint64_t id,
+		void *ptr_data(id_t_ id,
 				  std::array<uint8_t, TYPE_LENGTH> type,
 				  uint8_t flags = 0);
 		void add(data_id_t *ptr);
 		void del(id_t_ id); // no type
 		id_t_ add_data(std::vector<uint8_t> data_);
-		std::vector<uint64_t> sort_by_rsa_pubkey(std::vector<uint64_t> tmp);
-		std::vector<uint64_t> get_forward_linked_list(uint64_t id);
 	}
 	namespace cache{
 		// get_type_vector_ptr should never be used outside of id_api.cpp	
-		void add(uint64_t id,
+		void add(id_t_ id,
 			 std::array<uint8_t, TYPE_LENGTH> type);
-		void add(uint64_t id,
+		void add(id_t_ id,
 			 std::string type);
-		void del(uint64_t id,
+		void del(id_t_ id,
 			 std::array<uint8_t, TYPE_LENGTH> type);
-		void del(uint64_t id,
+		void del(id_t_ id,
 			 std::string type);
-		std::vector<uint64_t> get(std::array<uint8_t, TYPE_LENGTH> type);
-		std::vector<uint64_t> get(std::string type);
+		std::vector<id_t_> get(std::array<uint8_t, TYPE_LENGTH> type);
+		std::vector<id_t_> get(std::string type);
 	}
 	namespace linked_list{
 		// next and previous are in the id itself, no interdependency
-		void link_vector(std::vector<uint64_t> vector);
+		void link_vector(std::vector<id_t_> vector);
 		// perhaps redefine this for standard when that's needed
 		uint64_t distance_fast(id_t_ linked_list_id,
 				       id_t_ target_id); // only used in stats
+		std::vector<id_t_> get_forward_linked_list(id_t_ id);
 	};
-	std::vector<uint64_t> get_all();
+	namespace sort{
+		std::vector<id_t_> fingerprint(std::vector<id_t_> tmp);
+		/*
+		  Perhaps sort by last access time (when that gets implemented)?
+		 */
+	};
+	std::vector<id_t_> get_all();
 	void free_mem();
 	void destroy(id_t_ id);
 	void destroy_all_data();

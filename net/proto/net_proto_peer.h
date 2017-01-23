@@ -1,5 +1,6 @@
 #ifndef NET_PROTO_PEER_H
 #define NET_PROTO_PEER_H
+#include "../net_ip.h"
 /*
   net_peer_t: information about a network peer
 
@@ -47,8 +48,6 @@
   3. Making a more accurate estimate of the activity on the network
 */
 
-#define NET_IP_RAW_SIZE 16
-
 #define NET_PEER_TCP 0
 #define NET_PEER_UDP 1
 
@@ -73,28 +72,16 @@
 
 #define NET_PEER_NAT_ADDRESS_PORT_RESTRICTED (1 >> 6)
 
-struct net_peer_t{
+struct net_peer_t : public net_ip_t{
 private:
-	// IPv6-able, but not used because of SDL2 not supporting it
-	std::array<uint8_t, NET_IP_RAW_SIZE> ip = {{0}};
-	uint16_t port = 0;
 	uint8_t flags = 0;
-	std::array<uint64_t, NET_PROTO_MAX_SOCKET_PER_PEER> socket = {{0}};
 	std::array<uint8_t, BITCOIN_WALLET_LENGTH> bitcoin_wallet = {{0}};
 public:
 	data_id_t id;
-	/*
-	  IPaddress is passed because it is easy to do so, it isn't actually
-	  stored as one. It is stored in two variables and converted OTF to
-	  ip_addr to easily network peer information across the internet
-	 */
 	net_peer_t();
 	~net_peer_t();
-	void set_ip_addr(uint32_t ipv4, uint16_t port);
-	void set_ip_addr(std::array<uint8_t, NET_IP_RAW_SIZE> ipv4, uint16_t port);
-	void add_socket_id(uint64_t socket_);
-	uint64_t get_socket_id(uint32_t entry_);
-	void del_socket_id(uint64_t socket_);
+	void set_bitcoin_wallet(std::array<uint8_t, BITCOIN_WALLET_LENGTH> bitcoin_wallet_);
+	std::array<uint8_t, BITCOIN_WALLET_LENGTH> get_bitcoin_wallet();
 };
 // I should change this really soon
 typedef net_peer_t net_proto_peer_t;

@@ -231,10 +231,10 @@ static SDL_Rect tv_render_gen_window_rect(tv_window_t *window,
 	return window_rect;
 }
 
-static uint64_t tv_render_id_of_last_valid_frame(uint64_t current,
-						 uint64_t timestamp_micro_s){
-	std::vector<uint64_t> frame_linked_list =
-		id_api::array::get_forward_linked_list(current);
+static id_t_ tv_render_id_of_last_valid_frame(id_t_ current,
+					      uint64_t timestamp_micro_s){
+	std::vector<id_t_> frame_linked_list =
+		id_api::linked_list::get_forward_linked_list(current);
 	for(uint64_t i = 0;i < frame_linked_list.size();i++){
 		tv_frame_video_t *frame =
 			PTR_DATA(frame_linked_list[i], tv_frame_video_t);
@@ -285,7 +285,7 @@ static uint64_t tv_render_get_preferable_frame_list(tv_channel_t *channel){
 }
 
 static void tv_render_all(){
-	std::vector<uint64_t> all_windows =
+	std::vector<id_t_> all_windows =
 		id_api::cache::get("tv_window_t");
 	SDL_Surface *sdl_window_surface =
 		SDL_GetWindowSurface(sdl_window);

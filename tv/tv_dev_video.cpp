@@ -216,7 +216,7 @@ void tv_dev_video_t::update_raw_pixel_data(){
 	set_ioctl(VIDIOC_DQBUF, &buf);
 }
 
-uint64_t tv_dev_video_t::update(){
+id_t_ tv_dev_video_t::update(){
 	// TODO: enforce the refresh rate here
 	update_raw_pixel_data();
 	update_pixel_data();

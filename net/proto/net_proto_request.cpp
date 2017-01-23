@@ -32,7 +32,7 @@ void net_proto_request_t::set_proto_socket_id(id_t_ socket_id_){
 	socket_id = socket_id_;
 }
 
-uint64_t net_proto_request_t::get_proto_socket_id(){
+id_t_ net_proto_request_t::get_proto_socket_id(){
 	return socket_id;
 }
 

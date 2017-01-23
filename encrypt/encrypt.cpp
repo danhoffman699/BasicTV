@@ -158,3 +158,37 @@ std::vector<uint8_t> encrypt_api::decrypt(std::vector<uint8_t> data,
 		&encryption_scheme+1);
 	return retval;
 }
+
+std::array<uint8_t, 32> encrypt_api::hash::sha256::gen_raw(std::vector<uint8_t> data){
+	std::array<uint8_t, 32> retval;
+	SHA256_CTX sha256;
+	if(SHA256_Init(&sha256) == 0){
+		print("can't initialize SHA256_CTX", P_ERR);
+	}
+	if(SHA256_Update(&sha256, &(data[0]), data.size()) == 0){
+		print("can't update SHA256_CTX", P_ERR);
+	}
+	if(SHA256_Final(&(retval[0]), &sha256) == 0){
+		print("can't compute SHA256_CTX", P_ERR);
+	}
+	return retval;
+}
+
+static std::string to_hex(uint8_t s){
+	std::stringstream ss;
+	ss << std::hex << (int32_t)s << std::endl;
+	return ss.str();
+}
+
+std::string encrypt_api::hash::sha256::gen_str(std::vector<uint8_t> data){
+	return gen_str_from_raw(gen_raw(data));
+}
+
+std::string encrypt_api::hash::sha256::gen_str_from_raw(std::array<uint8_t, 32> data){
+	std::string retval;
+	for(uint16_t i = 0;i < 32;i++){
+		retval += to_hex(data[i]);
+	}
+	P_V_S(retval, P_SPAM);
+	return retval;
+}

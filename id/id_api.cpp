@@ -23,10 +23,10 @@
 
 
 static std::vector<data_id_t*> id_list;
-static std::vector<std::pair<std::vector<uint64_t>, std::array<uint8_t, TYPE_LENGTH> > > type_cache;
+static std::vector<std::pair<std::vector<id_t_>, std::array<uint8_t, TYPE_LENGTH> > > type_cache;
 
-static data_id_t *id_find(uint64_t id){
-	for(uint64_t i = 0;i < id_list.size();i++){
+static data_id_t *id_find(id_t_ id){
+	for(id_t_ i = 0;i < id_list.size();i++){
 		if(unlikely(id_list[i]->get_id() == id)){
 			return id_list[i];
 		}
@@ -40,7 +40,7 @@ static data_id_t *id_find(uint64_t id){
   stats library, since speed is more important than actually having the data)
  */
 
-data_id_t *id_api::array::ptr_id(uint64_t id,
+data_id_t *id_api::array::ptr_id(id_t_ id,
 				 std::string type,
 				 uint8_t flags){
 	if(id == 0){
@@ -63,13 +63,13 @@ data_id_t *id_api::array::ptr_id(uint64_t id,
 	return retval;
 }
 
-data_id_t *id_api::array::ptr_id(uint64_t id,
+data_id_t *id_api::array::ptr_id(id_t_ id,
 				 std::array<uint8_t, TYPE_LENGTH> type,
 				 uint8_t flags){
 	return ptr_id(id, convert::array::type::from(type), flags);
 }
 
-void *id_api::array::ptr_data(uint64_t id,
+void *id_api::array::ptr_data(id_t_ id,
 			      std::string type,
 			      uint8_t flags){
 	data_id_t *id_ptr = ptr_id(id, type, flags);
@@ -79,7 +79,7 @@ void *id_api::array::ptr_data(uint64_t id,
 	return id_ptr->get_ptr();
 }
 
-void *id_api::array::ptr_data(uint64_t id,
+void *id_api::array::ptr_data(id_t_ id,
 			      std::array<uint8_t, TYPE_LENGTH> type,
 			      uint8_t flags){
 	return ptr_data(id, convert::array::type::from(type), flags);
@@ -108,13 +108,13 @@ void id_api::array::del(id_t_ id){
  */
 
 id_t_ id_api::array::add_data(std::vector<uint8_t> data_){
-	uint64_t id = 0;
+	id_t_ id = 0;
 	std::array<uint8_t, TYPE_LENGTH> type;
 	type.fill(0);
 	/*
 	  TODO: complete this
 	 */
-	std::vector<uint64_t> tmp_type_cache =
+	std::vector<id_t_> tmp_type_cache =
 		id_api::cache::get(type);
 	for(uint64_t i = 0;i < tmp_type_cache.size();i++){
 		if(tmp_type_cache[i] == id){
@@ -135,57 +135,37 @@ id_t_ id_api::array::add_data(std::vector<uint8_t> data_){
 
 #undef CHECK_TYPE
 
-std::vector<uint64_t> id_api::array::sort_by_rsa_pubkey(std::vector<uint64_t> tmp){
-	// bool changed = true;
-	// while(changed){
-	// 	changed = false;
-	// 	for(uint64_t i = 1;i < tmp.size()-1;i++){
-	// 		data_id_t *tmp_array[2] = {nullptr};
-	// 		tmp_array[0] = PTR_ID(tmp[i-1], "");
-	// 		tmp_array[1] = PTR_ID(tmp[i], "");
-	// 		//const bool rsa_greater_than =
-	// 		//	pgp::cmp::greater_than(tmp_array[i-1]->get_pgp_cite_id(),
-	// 		//			       tmp_array[i]->get_pgp_cite_id());
-	// 		const bool rsa_greater_than = false;
-	// 		if(rsa_greater_than){
-	// 			uint64_t tmp_ = tmp[i-1];
-	// 			tmp[i-1] = tmp[i];
-	// 			tmp[i] = tmp_;
-	// 			changed = true;
-	// 			break; // ?
-	// 		}
-	// 	}
-	// }
+std::vector<id_t_> id_api::sort::fingerprint(std::vector<id_t_> tmp){
+	// TODO: actually get the finerprints
 	return tmp;
 }
 
-
 // Type cache code
 
-static std::vector<uint64_t> *get_type_cache_ptr(std::array<uint8_t, TYPE_LENGTH> tmp){
+static std::vector<id_t_> *get_type_cache_ptr(std::array<uint8_t, TYPE_LENGTH> tmp){
 	for(uint64_t i = 0;i < type_cache.size();i++){
 		if(unlikely(type_cache[i].second == tmp)){
 			return &type_cache[i].first;
 		}
 	}
-	type_cache.push_back(std::make_pair(std::vector<uint64_t>({}), tmp));
+	type_cache.push_back(std::make_pair(std::vector<id_t_>({}), tmp));
 	print("type cache of " + (std::string)(char*)(&tmp[0]) + " is " + std::to_string(type_cache.size()), P_SPAM);
 	return &type_cache[type_cache.size()-1].first;
 }
 
-void id_api::cache::add(uint64_t id, std::array<uint8_t, TYPE_LENGTH> type){
-	std::vector<uint64_t> *vector =
+void id_api::cache::add(id_t_ id, std::array<uint8_t, TYPE_LENGTH> type){
+	std::vector<id_t_> *vector =
 		get_type_cache_ptr(type);
 	vector->push_back(id);
 	vector = nullptr;
 }
 
-void id_api::cache::add(uint64_t id, std::string type){
+void id_api::cache::add(id_t_ id, std::string type){
 	add(id, convert::array::type::to(type));
 }
 
-void id_api::cache::del(uint64_t id, std::array<uint8_t, TYPE_LENGTH> type){
-	std::vector<uint64_t> *vector =
+void id_api::cache::del(id_t_ id, std::array<uint8_t, TYPE_LENGTH> type){
+	std::vector<id_t_> *vector =
 		get_type_cache_ptr(type);
 	for(uint64_t i = 0;i < vector->size();i++){
 		if((*vector)[i] == id){
@@ -198,22 +178,22 @@ void id_api::cache::del(uint64_t id, std::array<uint8_t, TYPE_LENGTH> type){
 	print("couldn't find ID in type cache", P_ERR);
 }
 
-void id_api::cache::del(uint64_t id, std::string type){
+void id_api::cache::del(id_t_ id, std::string type){
 	del(id, convert::array::type::to(type));
 }
 
-std::vector<uint64_t> id_api::cache::get(std::array<uint8_t, TYPE_LENGTH> type){
+std::vector<id_t_> id_api::cache::get(std::array<uint8_t, TYPE_LENGTH> type){
 	return *get_type_cache_ptr(type);
 }
 
-std::vector<uint64_t> id_api::cache::get(std::string type){
+std::vector<id_t_> id_api::cache::get(std::string type){
 	return get(convert::array::type::to(type));
 }
 
 // TODO: make a forwards and backwards function too
-// redefine this in linked_list
-std::vector<uint64_t> id_api::array::get_forward_linked_list(uint64_t id){
-	std::vector<uint64_t> retval;
+
+std::vector<id_t_> id_api::linked_list::get_forward_linked_list(id_t_ id){
+	std::vector<id_t_> retval;
 	while(id != 0){
 		data_id_t *id_ptr = PTR_ID(id, );
 		retval.push_back(id);
@@ -227,7 +207,7 @@ std::vector<uint64_t> id_api::array::get_forward_linked_list(uint64_t id){
   function do that and set the number as a parameter
  */
 
-void id_api::linked_list::link_vector(std::vector<uint64_t> vector){
+void id_api::linked_list::link_vector(std::vector<id_t_> vector){
 	switch(vector.size()){
 	case 0:
 		print("vector is empty", P_NOTE);
@@ -280,9 +260,9 @@ uint64_t id_api::linked_list::distance_fast(id_t_ linked_list_id, id_t_ target_i
 	return 0;
 }
 
-std::vector<uint64_t> id_api::get_all(){
-	std::vector<uint64_t> retval;
-	for(uint64_t i = 0;i < id_list.size();i++){
+std::vector<id_t_> id_api::get_all(){
+	std::vector<id_t_> retval;
+	for(id_t_ i = 0;i < id_list.size();i++){
 		if(id_list[i] != nullptr){
 			retval.push_back(id_list[i]->get_id());
 		}
