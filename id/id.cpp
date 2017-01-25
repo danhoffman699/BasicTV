@@ -261,23 +261,29 @@ std::vector<uint8_t> data_id_t::export_data(uint8_t flags_){
 			trans_i = i;
 			trans_size = data_vector[i].get_length();
 			ID_EXPORT(trans_i);
-			void *ptr_to_export = data_vector[i].get_ptr();
+			uint8_t *ptr_to_export = (uint8_t*)data_vector[i].get_ptr();
 			if(data_vector[i].get_flags() & ID_DATA_BYTE_VECTOR){
-				ptr_to_export =
-					((std::vector<uint8_t>*)ptr_to_export)->data();
-				trans_size = ((std::vector<uint8_t>*)ptr_to_export)->size()*1;
+				std::vector<uint8_t> *vector =
+					(std::vector<uint8_t>*)ptr_to_export;
+				ptr_to_export = vector->data();
+				trans_size = vector->size();
 			}else if(data_vector[i].get_flags() & ID_DATA_ID_VECTOR){
-				ptr_to_export =
-					((std::vector<id_t_>*)ptr_to_export)->data();
-				trans_size = ((std::vector<id_t_>*)ptr_to_export)->size()*40;
+				std::vector<id_t_> *vector =
+					(std::vector<id_t_>*)ptr_to_export;
+				ptr_to_export = (uint8_t*)vector->data();
+				trans_size = vector->size()*sizeof(id_t_);
 			}else if(data_vector[i].get_flags() & ID_DATA_EIGHT_BYTE_VECTOR){
-				ptr_to_export =
-					((std::vector<uint64_t>*)ptr_to_export)->data();
-				trans_size = ((std::vector<uint64_t>*)ptr_to_export)->size()*8;
+				std::vector<uint64_t> *vector =
+					(std::vector<uint64_t>*)ptr_to_export;
+				ptr_to_export = (uint8_t*)vector->data();
+				trans_size = vector->size()*sizeof(uint64_t);
 			}else if(data_vector[i].get_flags() & ID_DATA_ID){
 				trans_size *= 40;
 			}
 			ID_EXPORT(trans_size);
+			P_V_S(convert::array::type::from(type), P_SPAM);
+			P_V(trans_size, P_SPAM);
+			P_V(data_vector[i].get_length(), P_SPAM);
 			id_export_raw((uint8_t*)ptr_to_export, trans_size, &retval);
 		}
 		P_V(retval.size(), P_NOTE);

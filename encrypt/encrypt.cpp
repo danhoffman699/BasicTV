@@ -6,8 +6,7 @@ encrypt_key_t::~encrypt_key_t(){}
 
 void encrypt_key_t::list_virtual_data(data_id_t *id){
 	id->add_data(&key,
-		     65536, // absolute max size
-		     ID_DATA_BYTE_VECTOR);
+		     65536);
 	id->add_data(&encryption_scheme,
 		     1);
 }

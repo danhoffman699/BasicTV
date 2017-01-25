@@ -148,6 +148,12 @@ void system_handler::write(std::string cmd, std::string file){
 	file::wait_for_file(file);
 }
 
+void system_handler::mkdir(std::string dir){
+	if(!file::exists(dir)){
+		run("mkdir " + dir);
+	}
+}
+
 std::string system_handler::cmd_output(std::string cmd){
 	write(cmd, "TMP_OUT");
 	const std::string file_data = file::read_file("TMP_OUT");

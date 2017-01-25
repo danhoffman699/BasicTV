@@ -370,9 +370,11 @@ void id_api::destroy(id_t_ id){
 		const std::string filename =
 			id_api_get_filename(id);
 		system_handler::rm(filename);
+		system_handler::mkdir("data_folder/"+ptr->get_type());
 		std::ofstream out(filename, std::ios::out | std::ios::binary);
 		if(out.is_open() == false){
 			print("cannot open file for exporting", P_ERR);
+			
 		}
 		out.write((const char*)exportable_data.data(), exportable_data.size());
 		out.close();
