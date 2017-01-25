@@ -1,27 +1,5 @@
 #include "encrypt.h"
 
-encrypt_key_pair_t::encrypt_key_pair_t() : id(this, __FUNCTION__){
-}
-
-encrypt_key_pair_t::~encrypt_key_pair_t(){
-}
-
-id_t_ encrypt_key_pair_t::get_priv_key_id(){
-	return priv_key;
-}
-
-void encrypt_key_pair_t::set_priv_key_id(id_t_ priv_key_){
-	priv_key = priv_key_;
-}
-
-id_t_ encrypt_key_pair_t::get_pub_key_id(){
-	return pub_key;
-}
-
-void encrypt_key_pair_t::set_pub_key_id(id_t_ pub_key_){
-	pub_key = pub_key_;
-}
-
 encrypt_key_t::encrypt_key_t(){}
 
 encrypt_key_t::~encrypt_key_t(){}
@@ -56,6 +34,14 @@ encrypt_priv_key_t::encrypt_priv_key_t() : id(this, __FUNCTION__){
 }
 
 encrypt_priv_key_t::~encrypt_priv_key_t(){}
+
+id_t_ encrypt_priv_key_t::get_pub_key_id(){
+	return pub_key_id;
+}
+
+void encrypt_priv_key_t::set_pub_key_id(id_t_ pub_key_id_){
+	pub_key_id = pub_key_id_;
+}
 
 
 /*
@@ -172,12 +158,6 @@ std::array<uint8_t, 32> encrypt_api::hash::sha256::gen_raw(std::vector<uint8_t> 
 		print("can't compute SHA256_CTX", P_ERR);
 	}
 	return retval;
-}
-
-static std::string to_hex(uint8_t s){
-	std::stringstream ss;
-	ss << std::hex << (int32_t)s << std::endl;
-	return ss.str();
 }
 
 std::string encrypt_api::hash::sha256::gen_str(std::vector<uint8_t> data){

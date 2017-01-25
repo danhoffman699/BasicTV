@@ -49,7 +49,7 @@ bool tv_frame_standard_t::valid(uint64_t timestamp_micro_s){
 
 void tv_frame_standard_t::add_dep(id_t_ id_){
 	for(uint64_t i = 0;i < TV_FRAME_DEP_SIZE;i++){
-		if(dep[i] == 0){
+		if(dep[i] == ID_BLANK_ID){
 			dep[i] = id_;
 			return;
 		}
@@ -60,7 +60,7 @@ void tv_frame_standard_t::add_dep(id_t_ id_){
 void tv_frame_standard_t::del_dep(id_t_ id_){
 	for(uint64_t i = 0;i < TV_FRAME_DEP_SIZE;i++){
 		if(dep[i] == id_){
-			dep[i] = 0;
+			dep[i] = ID_BLANK_ID;
 			return;
 		}
 	}

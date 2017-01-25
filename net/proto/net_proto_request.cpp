@@ -3,9 +3,10 @@
 #include "net_proto_socket.h"
 
 net_proto_request_t::net_proto_request_t(): id(this, __FUNCTION__){
-	// list of ids
-	id.add_data(&(ids), NET_REQUEST_MAX_LENGTH);
-	// only used for blacklist or whitelist
+	// ids
+	id.add_data(&(ids), 65536);
+	// modiciation incrementors
+	id.add_data(&(mod), 65536);
 	id.add_data(&flags, 1);
 }
 
@@ -22,10 +23,29 @@ uint8_t net_proto_request_t::get_flags(){
 
 void net_proto_request_t::set_ids(std::vector<id_t_> ids_){
 	ids = ids_;
+	for(uint64_t i = 0;i < ids_.size();i++){
+		uint64_t mod_inc = 0;
+		data_id_t *id_ =
+			PTR_ID_FAST(ids_[i], );
+		if(id_ != nullptr){
+			mod_inc = id_->get_mod_inc();
+		}
+		mod.push_back(mod_inc);
+	}
 }
 
 std::vector<id_t_> net_proto_request_t::get_ids(){
+	if(ids.size() != mod.size()){
+		print("id and mod vectors aren't the same size", P_ERR);
+	}
 	return ids;
+}
+
+std::vector<uint64_t> net_proto_request_t::get_mod(){
+	if(ids.size() != mod.size()){
+		print("id and mod vectors aren't the same size", P_ERR);
+	}
+	return mod;
 }
 
 void net_proto_request_t::set_proto_socket_id(id_t_ socket_id_){

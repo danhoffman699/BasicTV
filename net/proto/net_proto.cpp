@@ -14,7 +14,7 @@
 #include "outbound/net_proto_outbound_data.h"
 #include "net_proto_meta.h"
 
-static id_t_ incoming_id = 0;
+static id_t_ incoming_id = ID_BLANK_ID;
 
 void net_proto_loop(){
 	net_socket_t *incoming_socket =

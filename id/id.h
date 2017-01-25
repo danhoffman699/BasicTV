@@ -18,29 +18,19 @@
  */
 
 #define TYPE_LENGTH 32 // standard maximum length for C++ types
+typedef std::array<uint8_t, 40> id_t_;
+//typedef uint64_t id_t_; // needs a snazzier name
 
-/*
-  (currently unused) ID system
-  First 128-bits are a random number acting as a UUID
-  The next 512 bits (rest of it) is the SHA-512 hash of the public key used to
-  decrypt this. This is manually searched for, which will reveal the encryption
-  scheme used and citing information.
+const id_t_ blank_id = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
 
-  In order for the requested ID to match the received ID, the public key
-  fingerprints have to equal.
-  
-  Legitimate proof of net_peer_t is taken care of in a TLS style manner (see
-  net/proto/net_proto_peer.h for more documentation)
- */
-//typedef std::array<uint8_t, 96> id_t_;
-typedef uint64_t id_t_; // needs a snazzier name
+#define ID_BLANK_ID blank_id
 
-#define ID_DATA_NOEXPORT (1 << 0)
-#define ID_DATA_NOEXP ID_DATA_NOEXPORT
+#define ID_DATA_NOEXP (1 << 0)
 #define ID_DATA_NONET (1 << 1)
 #define ID_DATA_ID (1 << 2)
 #define ID_DATA_BYTE_VECTOR (1 << 3)
-#define ID_DATA_ID_VECTOR (1 << 4)
+#define ID_DATA_EIGHT_BYTE_VECTOR (1 << 4)
+#define ID_DATA_ID_VECTOR (1 << 5)
 
 #define ID_DATA_CACHE ID_DATA_NOEXPORT
 
@@ -64,29 +54,33 @@ public:
 struct data_id_t{
 private:
 	// half UUID, half RSA fingerprint (for verification)
-	id_t_ id = 0;
+	id_t_ id = ID_BLANK_ID;
        	std::array<uint8_t, TYPE_LENGTH> type = {{0}};
 	void *ptr = nullptr;
+	id_t_ encrypt_pub_key_id = ID_BLANK_ID;
 	std::vector<std::vector<uint8_t> > rsa_backlog;
 	std::vector<data_id_ptr_t> data_vector;
-	std::pair<id_t_, id_t_> linked_list = {0,0};
+	std::pair<id_t_, id_t_> linked_list = {ID_BLANK_ID, ID_BLANK_ID};
 	std::vector<uint8_t> imported_data; // encrypted data if imported
 	void init_list_all_data();
 	void init_gen_id();
 	void init_type_cache();
 	// set at get_ptr(), used for selective exporting
 	uint64_t last_access_timestamp_micro_s = 0;
+	// incremented every time a getter or setter is called in either this
+	// function or the parent data type (manually call mod_inc();
+	uint64_t modification_incrementor = 0;
 public:
 	data_id_t(void *ptr_, std::string type_);
 	~data_id_t();
 	// getters and setters
-	id_t_ get_id();
+	// skip check for hash, only used internally
+	id_t_ get_id(bool skip = false);
 	std::string get_type();
 	void *get_ptr();
-	void set_rsa_cite_id(id_t_ id_){rsa_cite_id = id_;} // probably should fix this soon
-	void set_encrypt_cite_id(id_t_ id_){rsa_cite_id = id_;}
-	id_t_ get_rsa_cite_id();
-	id_t_ get_encrypt_cite_id(){return get_rsa_cite_id();}
+	void mod_inc(){modification_incrementor++;}
+	uint64_t get_mod_inc(){return modification_incrementor;}
+	id_t_ get_encrypt_pub_key_id();
 	uint64_t get_data_index_size();
 	id_t_ get_next_linked_list();
 	id_t_ get_prev_linked_list();
@@ -103,9 +97,17 @@ public:
 		uint32_t size_,
 		uint64_t flags = 0);
 	void add_data(
+		id_t_ *ptr_,
+		uint32_t size_,
+		uint64_t flags = 0);
+	void add_data(
 		std::vector<uint8_t> *ptr_,
 		uint32_t size_,
 		uint64_t flags_ = 0);
+	void add_data(
+		std::vector<uint64_t> *ptr_,
+		uint32_t size_,
+		uint64_t flags = 0);
 	void add_data(
 		std::vector<id_t_> *ptr_,
 		uint32_t size_,
@@ -120,4 +122,12 @@ public:
 	void nonet_all_data();
 	uint64_t get_last_access_timestamp_micro_s(){return last_access_timestamp_micro_s;}
 };
+
+extern std::array<uint8_t, 32> get_id_hash(id_t_ id);
+extern void set_id_hash(id_t_ *id, std::array<uint8_t, 32> hash);
+extern uint64_t get_id_uuid(id_t_ id);
+extern void set_id_uuid(id_t_ *id, uint64_t uuid);
+
+extern std::string id_to_str(id_t_ id);
+
 #endif

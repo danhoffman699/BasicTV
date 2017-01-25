@@ -52,7 +52,7 @@ uint64_t tv::chan::count(uint64_t flags){
 id_t_ tv::chan::next_id(id_t_ id, uint64_t flags){
 	std::vector<id_t_> all_channels =
 		id_api::cache::get("tv_channel_t");
-	id_t_ retval = 0;
+	id_t_ retval = ID_BLANK_ID;
 	bool swapped_pos = true;
 	while(swapped_pos){
 		swapped_pos = false;
@@ -74,7 +74,7 @@ id_t_ tv::chan::prev_id(id_t_ id, uint64_t flags){
 
 id_t_ tv::chan::rand_id(uint64_t flags){
 	uint64_t channel_count = count(flags);
-	id_t_ id_from_start = true_rand(0, channel_count-1);
+	uint64_t id_from_start = true_rand(0, channel_count-1);
 	std::vector<id_t_> channel_id =
 		id_api::cache::get("tv_channel_t");
 	return channel_id.at(id_from_start);

@@ -15,7 +15,7 @@ void net_proto_loop_handle_outbound_requests(){
 		if(proto_request == nullptr){
 			continue;
 		}
-		if(proto_request->get_proto_socket_id() == 0){
+		if(proto_request->get_proto_socket_id() == ID_BLANK_ID){
 			const uint64_t curr_timestamp_micro_s =
 				get_time_microseconds();
 			const uint64_t last_query_timestamp_micro_s =

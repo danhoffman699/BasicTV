@@ -29,9 +29,9 @@ public:
 };
 struct tv_menu_t{
 private:
-	std::array<uint64_t, 64> entry = {{0}};
+	std::array<id_t_, 64> entry = {{ID_BLANK_ID}};
 	uint16_t highlighed = 0;
-	id_t_ frame_id = 0;
+	id_t_ frame_id = ID_BLANK_ID;
 	void update_frame();
 public:
 	data_id_t id;

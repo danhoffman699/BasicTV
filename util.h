@@ -72,7 +72,10 @@ namespace pre_pro{
 namespace system_handler{
 	std::string cmd_output(std::string cmd);
 	int run(std::string str);
+	// file operators
 	void write(std::string cmd, std::string file);
+	void rm(std::string file);
+	std::vector<std::string> find(std::string directory, std::string search);
 };
 
 /*
@@ -139,6 +142,8 @@ std::string fix_to_length(std::string string, uint64_t size);
 uint64_t get_time_microseconds();
 
 void prefetch_range(void* addr, uint32_t range);
+
+std::string to_hex(uint8_t s);
 
 #endif
 #include "convert.h"

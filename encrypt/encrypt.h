@@ -23,8 +23,8 @@
 
 /*
   Important info about encryption system:
-  All fingerprints on public key encryption are the SHA-512 hash of the public
-  key (512 bits long, so 64 byte)
+  All fingerprints on public key encryption are the SHA-256 hash of the public
+  key (256 bits long, so 32 bytes)
 
   This system guarantees ownership of content by public keys. Proof of owning
   public keys should come from external references: posting links to webpages
@@ -52,21 +52,6 @@
 #define ENCRYPT_KEY_TYPE_PRIV (1)
 #define ENCRYPT_KEY_TYPE_PUB (2)
 
-struct encrypt_key_pair_t{
-private:
-	id_t_ priv_key = 0;
-	id_t_ pub_key = 0;
-public:
-	data_id_t id;
-	encrypt_key_pair_t();
-	~encrypt_key_pair_t();
-	void gen_new_key_pair();
-	id_t_ get_priv_key_id();
-	void set_priv_key_id(id_t_ priv_key_);
-	id_t_ get_pub_key_id();
-	void set_pub_key_id(id_t_ pub_key_);
-};
-
 /*
   The inevitable symmetric key system that is going to be used will be using
   this with a new encryption_scheme
@@ -83,7 +68,6 @@ public:
 	void set_encrypt_key(std::vector<uint8_t> key_,
 	 		     uint8_t encryption_scheme_);
 	std::pair<uint8_t, std::vector<uint8_t> > get_encrypt_key();
-	std::vector<uint8_t> get_fingerprint();
 };
 
 struct encrypt_pub_key_t : virtual encrypt_key_t{
@@ -100,8 +84,11 @@ public:
 
 struct encrypt_priv_key_t : virtual encrypt_key_t{
 private:
+	id_t_ pub_key_id = ID_BLANK_ID;
 public:
 	data_id_t id;
+	void set_pub_key_id(id_t_ pub_key_id_);
+	id_t_ get_pub_key_id();
 	encrypt_priv_key_t();
 	~encrypt_priv_key_t();
 };

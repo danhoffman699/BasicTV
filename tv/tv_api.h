@@ -9,7 +9,7 @@ namespace tv{
 		uint64_t count(uint64_t flags = 0);
 		id_t_ next_id(id_t_ id, uint64_t flags = 0);
 		id_t_ prev_id(id_t_ id, uint64_t flags = 0);
-		id_t_ rand_id(id_t_ flags = 0);
+		id_t_ rand_id(uint64_t flags = 0);
 	};
 	// layout is defined through tv_window_t
 };

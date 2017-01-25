@@ -78,9 +78,9 @@
 struct net_proto_con_req_t{
 private:
 	uint8_t flags = 0;
-	id_t_ first_peer_id = 0;
-	id_t_ second_peer_id = 0;
-	id_t_ third_peer_id = 0;
+	id_t_ first_peer_id = ID_BLANK_ID;
+	id_t_ second_peer_id = ID_BLANK_ID;
+	id_t_ third_peer_id = ID_BLANK_ID;
 	uint64_t heartbeat_timestamp = 0;
 public:
 	data_id_t id;

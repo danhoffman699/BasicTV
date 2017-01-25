@@ -15,14 +15,44 @@
 #include "../tv/tv_frame_audio.h"
 #include "../tv/tv_channel.h"
 #include "../tv/tv_window.h"
+#include "../encrypt/encrypt.h"
 
 /*
   Because of encryption and compression overheads, making this multithreadable
   isn't a bad idea. However, implementing locks shouldn't be hard later on.
  */
 
-// when performance starts to be a problem, look into quicksorting or
-// moving it over to an std::vector
+/*
+  TODO: GIVE THIS A REALLY GOOD CLEANING
+
+  I mean seriously
+ */
+
+std::array<uint8_t, 32> get_id_hash(id_t_ id){
+	std::array<uint8_t, 32> retval;
+	memcpy(&(retval[0]), &(id[8]), 32);
+	return retval;
+}
+
+void set_id_hash(id_t_ *id, std::array<uint8_t, 32> hash){
+	memcpy(&((*id)[8]), &(hash[0]), 32);
+}
+
+uint64_t get_id_uuid(id_t_ id){
+	return *((uint64_t*)&(id[0]));
+}
+
+void set_id_uuid(id_t_ *id, uint64_t uuid){
+	memcpy(&((*id)[0]), &uuid, 8);
+}
+
+std::string id_to_str(id_t_ id){
+	std::string retval;
+	for(uint64_t i = 0;i < 40;i++){
+		retval += to_hex(id[i]);
+	}
+	return retval;
+}
 
 void data_id_t::init_list_all_data(){
 	add_data(&id,
@@ -37,10 +67,37 @@ void data_id_t::init_list_all_data(){
 	
 }
 
+/*
+  production_priv_key_id is the private key used in the encryption of all of the
+  files. This should be changable, but no interface exists to do that yet (and I
+  don't really see a need for one, assuming no broadcasted net_peer_ts share
+  that key).
+
+  If the key can't be found, then zero out the ID. Every time the ID is
+  referenced, check to see if the hash is zero and generate the hash the
+  first time production_priv_key_id is valid (throw an exception when
+  get_id is called without a valid hash)
+ */
+
 void data_id_t::init_gen_id(){
-	while(id == 0){
-		id = true_rand(1, 0xFFFFFFFFFFFFFFFF);
-	} // doesn't hurt, true_rand might still be retarded
+	set_id_uuid(&id, true_rand(1, ~(uint64_t)0));
+	encrypt_priv_key_t *priv_key =
+		PTR_DATA(production_priv_key_id,
+			 encrypt_priv_key_t);
+	if(priv_key == nullptr){
+		print("production_priv_key_id is a nullptr", P_WARN);
+		return;
+	}
+	encrypt_pub_key_t *pub_key =
+		PTR_DATA(priv_key->get_pub_key_id(),
+			 encrypt_pub_key_t);
+	if(pub_key == nullptr){
+		print("production_priv_key_id's public key is a nullptr", P_WARN);
+		return;
+	}
+	set_id_hash(&id,
+		    encrypt_api::hash::sha256::gen_raw(
+			    pub_key->get_encrypt_key().second));
 }
 
 
@@ -58,7 +115,27 @@ data_id_t::~data_id_t(){
 	id_api::cache::del(id, type);
 }
 
-uint64_t data_id_t::get_id(){
+static std::array<uint8_t, 32> zero_hash = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+id_t_ data_id_t::get_id(bool skip){
+	// even with unlikely, this seems pretty slow
+	if(!skip && !id_throw_exception && unlikely(memcmp(&(zero_hash[0]), &(id[8]), 32) == 0)){
+		encrypt_priv_key_t *priv_key =
+			PTR_DATA(production_priv_key_id,
+				 encrypt_priv_key_t);
+		if(priv_key == nullptr){
+			print("do not have a hash yet, aborting", P_ERR);
+		}
+		encrypt_pub_key_t *pub_key =
+			PTR_DATA(priv_key->get_pub_key_id(),
+				 encrypt_pub_key_t);
+		if(pub_key == nullptr){
+			print("do not have a hash yet, aborting", P_ERR);
+		}
+		set_id_hash(&id,
+			    encrypt_api::hash::sha256::gen_raw(
+				    pub_key->get_encrypt_key().second));
+	}
 	return id;
 }
 
@@ -85,7 +162,13 @@ void data_id_t::add_data(void *ptr_, uint32_t size_, uint64_t flags){
 			flags));
 }
 
-// std::vector<uint8_t> is the only vector that is networkable
+void data_id_t::add_data(id_t_ *ptr_, uint32_t size_, uint64_t flags){
+	data_vector.push_back(
+		data_id_ptr_t(
+			ptr_,
+			size_,
+			flags | ID_DATA_ID));
+}
 
 void data_id_t::add_data(std::vector<uint8_t> *ptr_, uint32_t size_, uint64_t flags){
 	data_vector.push_back(
@@ -93,6 +176,14 @@ void data_id_t::add_data(std::vector<uint8_t> *ptr_, uint32_t size_, uint64_t fl
 			ptr_,
 			size_,
 			flags | ID_DATA_BYTE_VECTOR));
+}
+
+void data_id_t::add_data(std::vector<uint64_t> *ptr_, uint32_t size_, uint64_t flags){
+	data_vector.push_back(
+		data_id_ptr_t(
+			ptr_,
+			size_,
+			flags | ID_DATA_EIGHT_BYTE_VECTOR));
 }
 
 void data_id_t::add_data(std::vector<id_t_> *ptr_, uint32_t size_, uint64_t flags){
@@ -103,8 +194,8 @@ void data_id_t::add_data(std::vector<id_t_> *ptr_, uint32_t size_, uint64_t flag
 			flags | ID_DATA_ID_VECTOR));
 }
 
-uint64_t data_id_t::get_rsa_cite_id(){
-	return rsa_cite_id;
+id_t_ data_id_t::get_encrypt_pub_key_id(){
+	return encrypt_pub_key_id;
 }
 
 uint64_t data_id_t::get_data_index_size(){
@@ -147,7 +238,7 @@ std::vector<uint8_t> data_id_t::export_data(uint8_t flags_){
 	std::vector<uint8_t> retval;
 	bool valid = false;
 	for(uint64_t i = 3;i < data_vector.size();i++){
-		if(!(data_vector[i].get_flags() & ID_DATA_NOEXPORT)){
+		if(!(data_vector[i].get_flags() & ID_DATA_NOEXP)){
 			valid = true;
 			break;
 		}
@@ -170,13 +261,24 @@ std::vector<uint8_t> data_id_t::export_data(uint8_t flags_){
 			trans_i = i;
 			trans_size = data_vector[i].get_length();
 			ID_EXPORT(trans_i);
-			ID_EXPORT(trans_size);
 			void *ptr_to_export = data_vector[i].get_ptr();
 			if(data_vector[i].get_flags() & ID_DATA_BYTE_VECTOR){
 				ptr_to_export =
 					((std::vector<uint8_t>*)ptr_to_export)->data();
+				trans_size = ((std::vector<uint8_t>*)ptr_to_export)->size()*1;
+			}else if(data_vector[i].get_flags() & ID_DATA_ID_VECTOR){
+				ptr_to_export =
+					((std::vector<id_t_>*)ptr_to_export)->data();
+				trans_size = ((std::vector<id_t_>*)ptr_to_export)->size()*40;
+			}else if(data_vector[i].get_flags() & ID_DATA_EIGHT_BYTE_VECTOR){
+				ptr_to_export =
+					((std::vector<uint64_t>*)ptr_to_export)->data();
+				trans_size = ((std::vector<uint64_t>*)ptr_to_export)->size()*8;
+			}else if(data_vector[i].get_flags() & ID_DATA_ID){
+				trans_size *= 40;
 			}
-			id_export_raw((uint8_t*)data_vector[i].get_ptr(), trans_size, &retval);
+			ID_EXPORT(trans_size);
+			id_export_raw((uint8_t*)ptr_to_export, trans_size, &retval);
 		}
 		P_V(retval.size(), P_NOTE);
 		/*
@@ -197,11 +299,23 @@ static void id_import_raw(uint8_t* var, uint8_t flags, uint64_t size, std::vecto
 			(std::vector<uint8_t>*)var;
 		// not the fastest
 		vector_tmp->erase(vector_tmp->begin(),
-				 vector_tmp->end());
+				  vector_tmp->end());
 		vector_tmp->insert(vector_tmp->end(),
-				  size-vector_tmp->size(),
-				  0);
+				   size/1,
+				   0);
 		var = vector_tmp->data();
+	}else if(flags & ID_DATA_EIGHT_BYTE_VECTOR){
+		if(size % 8){
+			print("invalid size for eight byte vector", P_ERR);
+		}
+		std::vector<uint64_t> *vector_tmp =
+			(std::vector<uint64_t>*)var;
+		vector_tmp->erase(vector_tmp->begin(),
+				  vector_tmp->end());
+		vector_tmp->insert(vector_tmp->end(),
+				   size/8,
+				   0);
+		var = (uint8_t*)vector_tmp->data();
 	}
 	memcpy(var, vector->data(), size);
 	vector->erase(vector->begin(), vector->begin()+size);
@@ -216,7 +330,7 @@ static void id_import_raw(uint8_t* var, uint8_t flags, uint64_t size, std::vecto
 #define ID_IMPORT(var) id_import_raw((uint8_t*)&var, 0, sizeof(var), &data)
 
 void data_id_t::import_data(std::vector<uint8_t> data){
-	id_t_ trans_id = 0;
+	id_t_ trans_id = ID_BLANK_ID;
 	std::array<uint8_t, TYPE_LENGTH> trans_type = {{0}};
 	ID_IMPORT(trans_id);
 	ID_IMPORT(trans_type);
@@ -290,7 +404,7 @@ bool data_id_t::is_owner(){
 void data_id_t::noexport_all_data(){
 	for(uint64_t i = 0;i < data_vector.size();i++){
 		data_vector[i].set_flags(
-			data_vector[i].get_flags() | ID_DATA_NOEXPORT);
+			data_vector[i].get_flags() | ID_DATA_NOEXP);
 	}
 }
 

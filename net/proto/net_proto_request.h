@@ -5,10 +5,7 @@
   Since this is a vector, this should be a soft limit. I should increase this a bit.
  */
 
-#define NET_REQUEST_MAX_LENGTH 65536
-
-// this is the only use I can think of for the flags in net_request_
-
+// assumed to be a whitelist
 #define NET_REQUEST_BLACKLIST (1 << 0)
 
 // check to see if the data exists, don't actually send it over
@@ -65,10 +62,11 @@ private:
 	// global information
 	uint8_t flags = 0;
 	std::array<uint8_t, TYPE_LENGTH> type = {{0}};
-	std::vector<id_t_> ids = {{0}};
+	std::vector<id_t_> ids = {{ID_BLANK_ID}};
+	std::vector<uint64_t> mod = {{0}};
 	// local information
 	// socket_id of connection, 0 if outbound
-	id_t_ socket_id = 0;
+	id_t_ socket_id = ID_BLANK_ID;
 	/*
 	  One ID paired with a vector of sockets and their respective
 	  probability of having the information. This is generated manually
@@ -82,17 +80,18 @@ public:
 	data_id_t id;
 	net_proto_request_t();
 	~net_proto_request_t();
-	void set_proto_socket_id(uint64_t socket_id_);
+	void set_proto_socket_id(id_t_ socket_id_);
 	id_t_ get_proto_socket_id();
-	void update_probs();	
 	void set_flags(uint8_t flags);
 	uint8_t get_flags();
 	std::vector<id_t_> get_ids();
+	std::vector<uint64_t> get_mod();
 	void set_ids(std::vector<id_t_> ids_);
 	void set_type(std::array<uint8_t, TYPE_LENGTH> type_);
 	std::array<uint8_t, TYPE_LENGTH> get_type();
 	bool is_local();
 	uint64_t get_last_query_timestamp_micro_s();
+	void update_probs();	
 };
 
 #endif

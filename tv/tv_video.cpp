@@ -267,8 +267,8 @@ static void tv_render_frame_to_screen_surface(tv_frame_video_t *frame,
 	frame_surface = nullptr;
 }
 
-static uint64_t tv_render_get_preferable_frame_list(tv_channel_t *channel){
-	uint64_t retval = 0;
+static id_t_ tv_render_get_preferable_frame_list(tv_channel_t *channel){
+	id_t_ retval = ID_BLANK_ID;
 	std::vector<id_t_> stream_list =
 		channel->get_stream_list();
 	for(uint64_t i = 0;i < stream_list.size();i++){
@@ -373,7 +373,7 @@ static void tv_init_test_webcam(){
 		new tv_channel_t;
 	tv_dev_video_t *dev =
 	 	new tv_dev_video_t("/dev/video0");
-	std::vector<uint64_t> vector_array;
+	std::vector<id_t_> vector_array;
 	// Without an offset, the frames are obsolete before they
 	// are rendered
 	const uint64_t refresh_rate = (1000.0*1000.0)/dev->get_frame_interval_micro_s(); // just an estimate

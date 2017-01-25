@@ -43,7 +43,7 @@ struct tv_window_t{
 private:
 	uint8_t pos = TV_WINDOW_CT;
 	int64_t timestamp_offset = 0;
-	id_t_ channel_id = 0;
+	id_t_ channel_id = ID_BLANK_ID;
 	/*
 	  I like the idea of using entries instead of IDs (lookup overhead), but
 	  resizing the vector ruins that

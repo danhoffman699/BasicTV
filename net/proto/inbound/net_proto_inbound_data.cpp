@@ -254,7 +254,7 @@ void net_proto_loop_handle_inbound_requests(){
 		if(request == nullptr){
 			continue;
 		}
-		if(request->get_proto_socket_id() == 0){
+		if(request->get_proto_socket_id() == ID_BLANK_ID){
 			continue;
 		}
 		const std::string type =
@@ -279,17 +279,33 @@ void net_proto_loop_handle_inbound_requests(){
 		if(bulk_send && malicious_to_bulk_send_){
 			print("detected malicious activity on a bulk send, not servicing", P_ERR);
 		}
-		// TODO: actually create a proper response to this
-		std::vector<id_t_> serve_vector =
-			request->get_ids();
+		// TODO: actually create a proper response to this (?)
 		net_proto_socket_t *curr_proto_socket =
 			PTR_DATA(request->get_proto_socket_id(),
 				 net_proto_socket_t);
 		if(curr_proto_socket == nullptr){
 			print("can't service to an invalid socket", P_NOTE);
-		} // disconnected
+		}
+		std::vector<id_t_> serve_vector =
+			request->get_ids();
+		std::vector<uint64_t> mod_vector =
+			request->get_mod();
+		// getters assert they are at least equal
 		for(uint64_t i = 0;i < serve_vector.size();i++){
-			curr_proto_socket->send_id(serve_vector[i]);
+			data_id_t *id_tmp =
+				PTR_ID(serve_vector[i], );
+			if(id_tmp == nullptr){
+				print("can't service an ID I don't have", P_NOTE);
+			}
+			if(id_tmp->get_mod_inc() >= mod_vector[i]){
+				curr_proto_socket->send_id(serve_vector[i]);
+			}else{
+				// can be spammed
+				/*
+				  I CAN'T QUERY A NODE BECAUSE OF THIS
+				 */
+				print("ID I have is out of date?", P_NOTE);
+			}
 		}
 	}
 }

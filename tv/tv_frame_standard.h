@@ -11,7 +11,7 @@ private:
 	uint64_t frame_entry = 0;
 	// dependencies on other frames, read in order and used for
 	// Opus and VP9 encoding
-	std::array<id_t_, TV_FRAME_DEP_SIZE> dep = {{0}};
+	std::array<id_t_, TV_FRAME_DEP_SIZE> dep = {{ID_BLANK_ID}};
 public:
 	tv_frame_standard_t();
 	~tv_frame_standard_t();
@@ -43,7 +43,7 @@ id_t_ tv_frame_scroll_to_time(T data, uint64_t play_time){
 			BETWEEN(start_time_micro_s,
 				play_time,
 				end_time_micro_s);
-		id_t_ new_id = 0;
+		id_t_ new_id = ID_BLANK_ID;
 		if(stay){
 			return data->id.get_id();
 		}else{
@@ -64,6 +64,6 @@ id_t_ tv_frame_scroll_to_time(T data, uint64_t play_time){
 		}
 	}
 	// only out that isn't valid is data = PTR_ID...
-	return 0;
+	return ID_BLANK_ID;
 }
 #endif

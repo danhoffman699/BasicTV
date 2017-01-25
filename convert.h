@@ -19,7 +19,6 @@
 // TODO: actually have a list for both instead of defaulting to LE
 
 #ifdef __sparc__
-#error This isnt big endian
 #define IS_BIG_ENDIAN
 #else
 #define IS_LITTLE_ENDIAN
@@ -42,7 +41,9 @@
 
 #endif
 
-#elif IS_BIG_ENDIAN
+#endif
+
+#ifdef IS_BIG_ENDIAN
 
 #define NBO_64(a) (a)
 #define NBO_32(a) (a)

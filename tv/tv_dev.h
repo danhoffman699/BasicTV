@@ -14,7 +14,7 @@ class tv_dev_t{
 private:
 	std::string filename;
 	int64_t file_descriptor = 0;
-	id_t_ last_frame_id = 0;
+	id_t_ last_frame_id = ID_BLANK_ID;
 	// timestamp ought to be associated with frame
 public:
 	tv_dev_t();

@@ -32,7 +32,7 @@ static std::vector<std::pair<id_t_, std::vector<id_t_> > > net_proto_generate_pr
 			continue;
 		}
 		const id_t_ cite_id =
-			proto_socket->id.get_encrypt_cite_id();
+			proto_socket->id.get_encrypt_pub_key_id();
 		bool append = false;
 		for(uint64_t r = 0;r < retval.size();r++){
 			if(cite_id == retval[i].first){
@@ -43,11 +43,12 @@ static std::vector<std::pair<id_t_, std::vector<id_t_> > > net_proto_generate_pr
 		if(append){
 			break;
 		}
-		retval.push_back(
+		std::pair<id_t_, std::vector<id_t_> > pushed_data =
 			std::make_pair(
 				cite_id,
 				std::vector<id_t_>(
-					proto_socket->id.get_id())));
+				{proto_socket->id.get_id()}));
+		retval.push_back(pushed_data);
 	}
 	return retval;
 }

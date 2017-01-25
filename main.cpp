@@ -40,6 +40,30 @@ int argc = 0;
 char **argv = nullptr;
 bool running = true;
 
+/*
+  All information imported has the SHA256 hash of the public key. It follows
+  the following rules:
+
+  1. The first item to be created is the owner's encrypt_priv_key_t, this
+  doesn't need a SHA256 hash (as it shouldn't be networked and doesn't add
+  any security). 
+  2. The second item to be created is the corresponding public key.
+  3. All information created will have the encryption fingerprint included
+  in the ID, as well as being encrypted with that information for transport
+  (not relevant here)
+
+  Anything can be loaded perfectly fine, but it cannot request the ID of the
+  public key to link it to the private key. id_throw_exception is ONLY used
+  to make this connection.
+
+  SHA256 keys aren't needed for array lookups, and no transporting should be
+  done to keep this property for long enough (entire code is only around five
+  lines), so this isn't as hacky as I make myself believe it is.
+ */
+
+id_t_ production_priv_key_id = ID_BLANK_ID;
+bool id_throw_exception = true;
+
 #define APPEND_TYPE_TO_VECTOR(old, type)				\
 	if(true){							\
 		auto new_vector = id_api::cache::get(#type);		\
@@ -70,9 +94,56 @@ void no_mem(){
 
 #undef APPEND_TO_VECTOR
 
+/*
+  The production private key is the private key that is associated with every
+  data type created on this machine. If the information were to be imported, the
+  hash would be applied to the ID, but it would be overridden.
+
+  I made a write up on why this is needed above. In case that was deleted, then
+  a tl;dr is that the public key can't reference itself because the hash needs
+  to be known for get_id(), and that needs to be ran to link the private and
+  public keys together (production_priv_key_id).
+*/
+
+static void bootstrap_production_priv_key_id(){
+	id_api::import::load_all_of_type(
+		"encrypt_priv_key_t",
+		ID_API_IMPORT_FROM_DISK);
+	std::vector<id_t_> all_private_keys =
+		id_api::cache::get(
+			"encrypt_priv_key_t");
+	if(all_private_keys.size() == 0){
+		print("detected first boot, creating production id", P_NOTE);
+		uint64_t bits_to_use = 4096;
+		try{
+			bits_to_use =
+				std::stoi(
+					settings::get_setting(
+						"rsa_key_length"));
+		}catch(...){}
+		std::pair<id_t_, id_t_> key_pair =
+			rsa::gen_key_pair(bits_to_use);
+		encrypt_priv_key_t *priv_key =
+			PTR_DATA(key_pair.first,
+				 encrypt_priv_key_t);
+		if(priv_key == nullptr){
+			print("priv_key is a nullptr", P_ERR);
+		}
+		priv_key->set_pub_key_id(key_pair.second);
+		production_priv_key_id = priv_key->id.get_id();
+	}else if(all_private_keys.size() == 1){
+		production_priv_key_id = all_private_keys[0];
+	}else if(all_private_keys.size() > 1){
+		print("I have more than one private key, make a prompt to choose one", P_ERR);
+	}
+	id_throw_exception = false;
+}
+
 static void init(){
-	std::set_new_handler(no_mem);	
+	//std::set_new_handler(no_mem);
+	// debugging information for OpenSSL's error printing
 	ERR_load_crypto_strings();
+	bootstrap_production_priv_key_id();
 	/*
 	  settings_init() only reads from the file, it doesn't do anything
 	  critical to setting default values
@@ -166,7 +237,7 @@ static void test_socket(){
   of the test).
  */
 
-static void test_socket_array(std::vector<std::pair<uint64_t, uint64_t> > socket_array){
+static void test_socket_array(std::vector<std::pair<id_t_, id_t_> > socket_array){
 	for(uint64_t i = 0;i < socket_array.size();i++){
 		net_socket_t *first =
 			PTR_DATA(socket_array[i].first,
@@ -175,8 +246,8 @@ static void test_socket_array(std::vector<std::pair<uint64_t, uint64_t> > socket
 			PTR_DATA(socket_array[i].second,
 				 net_socket_t);
 		if(first == nullptr || second == nullptr){
-			P_V(socket_array[i].first, P_SPAM);
-			P_V(socket_array[i].second, P_SPAM);
+			P_V_S(id_to_str(socket_array[i].first), P_SPAM);
+			P_V_S(id_to_str(socket_array[i].second), P_SPAM);
 			print("SOCKETS STRUCTS ARE NULL", P_ERR);
 		}
 		first->send({'a','a','a','a'});
@@ -199,7 +270,7 @@ static void test_max_tcp_sockets(){
 	print("Local IP address:", P_NOTE);
 	std::string ip;
 	std::cin >> ip;
-	std::vector<std::pair<uint64_t, uint64_t> > socket_pair;
+	std::vector<std::pair<id_t_, id_t_> > socket_pair;
 	bool dropped = false;
 	net_socket_t *inbound =
 		new net_socket_t;
@@ -236,20 +307,24 @@ static void test_id_transport_print_exp(std::vector<uint8_t> exp){
 	}
 }
 
+/*
+  TODO: rework this to use different types
+ */
+
 static void test_id_transport(){
 	// not defined behavior at all
 	data_id_t *tmp =
 		new data_id_t(nullptr, "TEST");
-	tmp->set_next_linked_list(1);
-	tmp->set_prev_linked_list(2);
+	// tmp->set_next_linked_list(1);
+	// tmp->set_prev_linked_list(2);
 	const std::vector<uint8_t> exp =
 		tmp->export_data(0);
 	test_id_transport_print_exp(exp);
-	tmp->set_next_linked_list(0);
-	tmp->set_prev_linked_list(0);
+	// tmp->set_next_linked_list(0);
+	// tmp->set_prev_linked_list(0);
 	tmp->import_data(exp);
-	P_V(tmp->get_next_linked_list(), P_NOTE);
-	P_V(tmp->get_prev_linked_list(), P_NOTE);
+	// P_V(tmp->get_next_linked_list(), P_NOTE);
+	// P_V(tmp->get_prev_linked_list(), P_NOTE);
 	running  = false;
 }
 
@@ -349,6 +424,7 @@ int main(int argc_, char **argv_){
 	argc = argc_;
 	argv = argv_;
 	init();
+	running = false;
 	//test_rsa_encryption();
 	//test_rsa_encryption();
 	//test_break_id_transport();

@@ -26,6 +26,9 @@
 #define PTR_DATA(id, type) ((type*)id_api::array::ptr_data(id, #type))
 #define PTR_ID(id, type) (id_api::array::ptr_id(id, #type))
 
+#define ID_API_IMPORT_FROM_DISK (1 << 0)
+#define ID_API_IMPORT_FROM_NET (1 << 1)
+
 namespace id_api{
 	namespace array{
 		data_id_t *ptr_id(id_t_ id,
@@ -70,6 +73,14 @@ namespace id_api{
 		/*
 		  Perhaps sort by last access time (when that gets implemented)?
 		 */
+	};
+	namespace import{
+		void load_all_of_type(std::string type, uint8_t flags);
+		// used for saving, not needed for network (too slow as well)
+		uint64_t ver_on_disk(id_t_);
+		// used internally, called by id_api::array::ptr_* and others
+		void load_from_disk(id_t_);
+		void load_from_net(id_t_);
 	};
 	std::vector<id_t_> get_all();
 	void free_mem();

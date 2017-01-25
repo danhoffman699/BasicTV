@@ -21,7 +21,7 @@
 
 struct net_proto_socket_t{
 private:
-	id_t_ socket_id = 0;
+	id_t_ socket_id = ID_BLANK_ID;
 	std::vector<uint8_t> working_buffer;
 	// finalized buffer, removed DEV_CTRL_1, native endian, etc.
 	std::vector<std::vector<uint8_t> > buffer;

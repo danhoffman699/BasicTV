@@ -19,7 +19,7 @@ public:
 	~tv_dev_audio_t();
 	void set_rate(uint64_t rate,
 		      uint8_t depth);
-	uint64_t update();
+	id_t_ update();
 };
 
 #endif

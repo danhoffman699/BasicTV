@@ -26,8 +26,8 @@ static std::vector<data_id_t*> id_list;
 static std::vector<std::pair<std::vector<id_t_>, std::array<uint8_t, TYPE_LENGTH> > > type_cache;
 
 static data_id_t *id_find(id_t_ id){
-	for(id_t_ i = 0;i < id_list.size();i++){
-		if(unlikely(id_list[i]->get_id() == id)){
+	for(uint64_t i = 0;i < id_list.size();i++){
+		if(unlikely(id_list[i]->get_id(true) == id)){
 			return id_list[i];
 		}
 	}
@@ -43,7 +43,7 @@ static data_id_t *id_find(id_t_ id){
 data_id_t *id_api::array::ptr_id(id_t_ id,
 				 std::string type,
 				 uint8_t flags){
-	if(id == 0){
+	if(id == ID_BLANK_ID){
 		return nullptr;
 	}
 	data_id_t *retval = id_find(id);
@@ -108,7 +108,7 @@ void id_api::array::del(id_t_ id){
  */
 
 id_t_ id_api::array::add_data(std::vector<uint8_t> data_){
-	id_t_ id = 0;
+	id_t_ id = ID_BLANK_ID;
 	std::array<uint8_t, TYPE_LENGTH> type;
 	type.fill(0);
 	/*
@@ -130,7 +130,7 @@ id_t_ id_api::array::add_data(std::vector<uint8_t> data_){
 	CHECK_TYPE(net_proto_con_req_t);
 	CHECK_TYPE(encrypt_pub_key_t);
 	print("type isn't valid", P_WARN);
-	return 0;
+	return id;
 }
 
 #undef CHECK_TYPE
@@ -194,7 +194,7 @@ std::vector<id_t_> id_api::cache::get(std::string type){
 
 std::vector<id_t_> id_api::linked_list::get_forward_linked_list(id_t_ id){
 	std::vector<id_t_> retval;
-	while(id != 0){
+	while(id != ID_BLANK_ID){
 		data_id_t *id_ptr = PTR_ID(id, );
 		retval.push_back(id);
 		id = id_ptr->get_next_linked_list();
@@ -262,7 +262,7 @@ uint64_t id_api::linked_list::distance_fast(id_t_ linked_list_id, id_t_ target_i
 
 std::vector<id_t_> id_api::get_all(){
 	std::vector<id_t_> retval;
-	for(id_t_ i = 0;i < id_list.size();i++){
+	for(uint64_t i = 0;i < id_list.size();i++){
 		if(id_list[i] != nullptr){
 			retval.push_back(id_list[i]->get_id());
 		}
@@ -281,28 +281,103 @@ std::vector<id_t_> id_api::get_all(){
   Periodically update with rgrep
  */
 
+
+/*
+  TODO: when I start to care about Windows development, start using their
+  inferior directory seperators
+
+  TODO: add the modification incrementor to the exported information for
+  faster lookups and sanity checks against existing data. Incrementor would
+  go up by one every time the version in RAM changed, and will export it to 
+  disk every time we were ahead, and imported it every time it was ahead,
+  very nice for cluster computing, but that's not a high priority.
+ */
+
+static std::string id_api_get_filename(id_t_ id_){
+	std::string retval;
+	data_id_t *id = PTR_ID(id_, );
+	retval += "data_folder/";
+	retval += id->get_type() + "/";
+	retval += id_to_str(id_) + "_" + std::to_string(id->get_mod_inc()); // + _ + id incrementor (if it existed)
+	P_V_S(retval, P_SPAM);
+	return retval;
+}
+
+static bool id_api_should_write_to_disk(id_t_ id_){
+	std::string directory =
+		id_api_get_filename(id_);
+	directory =
+		directory.substr(
+			0,
+			directory.find_last_of('_'));
+	P_V_S(directory, P_SPAM);
+	std::vector<std::string> find_output =
+		system_handler::find(
+			directory,
+			id_to_str(id_));
+	// multiple files might exist for some stupid and very broken reason,
+	// so read the entire vector like this
+	uint64_t largest_mod_inc = 0;
+	for(uint64_t i = 0;i < find_output.size();i++){
+		try{
+			uint64_t mod_inc =
+				std::stoi(
+					find_output[i].substr(
+						find_output[i].find_last_of("_")+1,
+						find_output[i].size()));
+			if(mod_inc > largest_mod_inc){
+				largest_mod_inc = mod_inc;
+			}
+		}catch(...){}
+	}
+	data_id_t *id_tmp =
+		PTR_ID(id_, );
+	if(id_tmp == nullptr){
+		print("id_tmp is a nullptr, probably passing stale info", P_WARN);
+		return false;
+		// not a big deal, but shouldn't happen, probably passing around
+		// stale information at this point
+	}
+	return id_tmp->get_mod_inc() > largest_mod_inc || largest_mod_inc == 0;
+}
+
+/*
+  TODO: Make a setting to always export to disk every time a modification is
+  made to a file (hopefully not too often). This is done so multiple different
+  executions of BasicTV (prob. on multiple machines like an RPi) would be able
+  to ensure with a fair amount of certainty that they have read the newest file.
+
+  I'm not worried about the aforementioned TODO for now, but I would REALLY like
+  to implement it in the future. This would need to keep track of the number of 
+  times it was modified (always reference setters, and figure the setters to
+  increment the number), so i'm going to wait for that to be implemented before
+  I start worrying about spreading the load.
+ */
+
 void id_api::destroy(id_t_ id){	
+	bool should_write_to_disk =
+		id_api_should_write_to_disk(id);
+	// handles mod_inc logic
+	if(unlikely(should_write_to_disk == false)){
+		return;
+	}
 	data_id_t *ptr = PTR_ID(id, );
 	std::vector<uint8_t> exportable_data =
-		ptr->export_data(0);
-	// doesn't work if no struct types are exportable
-	if((exportable_data.size() != 0) && (settings::get_setting("export_data") == "true")){
+		ptr->export_data(ID_DATA_NONET);
+	const bool can_export = settings::get_setting("export_data") == "true";
+	if(likely((exportable_data.size() != 0) && can_export)){
 		// make this work on Windows
-		const std::string path =
-			"data_folder/"+
-			std::to_string(id);
-		system(("touch " + path).c_str());
-		system(("rm " + path).c_str());
-		std::ofstream out(path, std::ios::out | std::ios::binary);
+		const std::string filename =
+			id_api_get_filename(id);
+		system_handler::rm(filename);
+		std::ofstream out(filename, std::ios::out | std::ios::binary);
 		if(out.is_open() == false){
 			print("cannot open file for exporting", P_ERR);
 		}
-		for(uint64_t i = 0;i < exportable_data.size();i++){
-			out << exportable_data[i];
-		}
+		out.write((const char*)exportable_data.data(), exportable_data.size());
 		out.close();
 	}else{
-		print("not exporting ID " + std::to_string(id),  P_ERR);
+		print("not exporting ID " + id_to_str(id),  P_ERR);
 	}
 	// TV subsystem
 	DELETE_TYPE_2(tv_frame_video_t);
@@ -327,24 +402,19 @@ void id_api::destroy(id_t_ id){
 	DELETE_TYPE_2(input_dev_standard_t);
 
 	// cryptography
-	DELETE_TYPE_2(encrypt_key_pair_t);
 	DELETE_TYPE_2(encrypt_priv_key_t);
 	DELETE_TYPE_2(encrypt_pub_key_t);
+
+	for(uint64_t i = 0;i < id_list.size();i++){
+		if(ptr == id_list[i]){
+			id_list.erase(id_list.begin()+i);
+		}
+	}
 }
 
 void id_api::destroy_all_data(){
-	for(uint64_t i = 0;i < id_list.size();i++){
-		try{
-			data_id_t *ptr = id_list[i];
-			DELETE_TYPE(tv_frame_video_t);
-			DELETE_TYPE(tv_frame_audio_t);
-			DELETE_TYPE(tv_channel_t);
-			DELETE_TYPE(tv_window_t);
-			DELETE_TYPE(tv_dev_video_t);
-			DELETE_TYPE(tv_dev_audio_t);
-			DELETE_TYPE(net_socket_t);
-			print("unknown type:" + ptr->get_type(), P_WARN);
-		}catch(...){}
+	while(id_list.size() > 0){
+		destroy(id_list[0]->get_id());
 	}
 }
 
@@ -380,7 +450,7 @@ void id_api::free_mem(){
 	}
 	while(get_mem_usage_kb() > max_mem_usage){
 		id_t_ lowest_timestamp_id =
-			0;
+			ID_BLANK_ID;
 		for(uint64_t i = 0;i < id_list.size();i++){
 			data_id_t *lowest =
 				PTR_ID(lowest_timestamp_id, );
@@ -403,6 +473,48 @@ void id_api::free_mem(){
 		/*
 		  id_api::destroy takes care of exporting to disk (if that makes
 		  sense and is allowed per settings.cfg)
+		 */
+	}
+}
+
+/*
+  TODO: refine this to filter by ownership and other easy to check items
+ */
+
+void id_api::import::load_all_of_type(std::string type, uint8_t flags){
+	if(flags & ID_API_IMPORT_FROM_DISK){
+		std::vector<std::string> find_out =
+			system_handler::find("data_folder", type);
+		for(uint64_t i = 0;i < find_out.size();i++){
+			std::ifstream in(find_out[i]);
+			if(in.is_open() == false){
+				continue;
+			}
+			std::vector<uint8_t> data;
+			// TODO: make this efficient with vector's reserve
+			char tmp;
+			while(in.get(tmp)){
+				data.push_back(tmp);
+			}
+			in.close();
+			id_api::array::add_data(data);
+		}
+	}
+	if(flags & ID_API_IMPORT_FROM_NET){
+		net_proto_request_t *request_ptr =
+			new net_proto_request_t;
+		request_ptr->set_type(
+			convert::array::type::to(
+				type));
+		request_ptr->set_flags(NET_REQUEST_BLACKLIST);
+		/*
+		  With responses, I should be able to get a concrete response
+		  and generate this list as a return value (with some
+		  networking latency) assuming we are on multiple threads.
+
+		  The major use case for this is not to get a list directly, but
+		  instead to just query all resources to get it from the net at
+		  least on the disk, and from on the disk to memory.
 		 */
 	}
 }
