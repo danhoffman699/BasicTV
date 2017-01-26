@@ -10,6 +10,8 @@
 tv_window_t::tv_window_t() : id(this, __FUNCTION__){
 	id.add_data(&pos, sizeof(pos));
 	id.add_data(&channel_id, sizeof(channel_id), ID_DATA_ID);
+	id.nonet_all_data();
+	id.noexp_all_data();
 }
 
 tv_window_t::~tv_window_t(){

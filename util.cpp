@@ -131,8 +131,8 @@ long double get_btc_rate(std::string currency){
  */
 
 int system_handler::run(std::string str){
-	str += "> /dev/null 2>&1;touch finished";
-	print("system: " + str, P_DEBUG);
+	str += ";touch finished";
+	P_V_S(str, P_SPAM);
 	/*
 	  Most commands need some time to be processed on the lower level (GPIO).
 	  Speed shouldn't be a problem
@@ -144,20 +144,20 @@ int system_handler::run(std::string str){
 }
 
 void system_handler::write(std::string cmd, std::string file){
-	run(cmd + " > " + file);
+	run(cmd + " | tee " + file);
 	file::wait_for_file(file);
 }
 
 void system_handler::mkdir(std::string dir){
-	if(!file::exists(dir)){
-		run("mkdir " + dir);
-	}
+	run("mkdir " + dir);
 }
 
 std::string system_handler::cmd_output(std::string cmd){
+	
 	write(cmd, "TMP_OUT");
 	const std::string file_data = file::read_file("TMP_OUT");
 	rm("TMP_OUT");
+	P_V_S(file_data, P_SPAM);
 	return file_data;
 }
 
@@ -176,6 +176,9 @@ std::vector<std::string> system_handler::find(std::string directory, std::string
 	std::vector<std::string> retval =
 		newline_to_vector(
 			cmd_output("find " + directory + " | grep " + search));
+	if(retval.size() > 1){
+		retval.erase(retval.begin()); // directory itself
+	}
 	return retval;
 }
 

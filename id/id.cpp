@@ -132,9 +132,13 @@ id_t_ data_id_t::get_id(bool skip){
 		if(pub_key == nullptr){
 			print("do not have a hash yet, aborting", P_ERR);
 		}
+		id_t_ old_id = id;
 		set_id_hash(&id,
 			    encrypt_api::hash::sha256::gen_raw(
 				    pub_key->get_encrypt_key().second));
+		// ID list is raw pointers, type list is an ID vector (fast)
+		id_api::cache::del(old_id, type);
+		id_api::cache::add(id, type);
 	}
 	return id;
 }
@@ -155,6 +159,9 @@ void *data_id_t::get_ptr(){
 }
 
 void data_id_t::add_data(void *ptr_, uint32_t size_, uint64_t flags){
+	if(ptr_ == nullptr){
+		print("ptr_ is a nullptr", P_ERR);
+	}
 	data_vector.push_back(
 		data_id_ptr_t(
 			ptr_,
@@ -163,6 +170,9 @@ void data_id_t::add_data(void *ptr_, uint32_t size_, uint64_t flags){
 }
 
 void data_id_t::add_data(id_t_ *ptr_, uint32_t size_, uint64_t flags){
+	if(ptr_ == nullptr){
+		print("ptr_ is a nullptr", P_ERR);
+	}
 	data_vector.push_back(
 		data_id_ptr_t(
 			ptr_,
@@ -171,6 +181,9 @@ void data_id_t::add_data(id_t_ *ptr_, uint32_t size_, uint64_t flags){
 }
 
 void data_id_t::add_data(std::vector<uint8_t> *ptr_, uint32_t size_, uint64_t flags){
+	if(ptr_ == nullptr){
+		print("ptr_ is a nullptr", P_ERR);
+	}
 	data_vector.push_back(
 		data_id_ptr_t(
 			ptr_,
@@ -179,6 +192,9 @@ void data_id_t::add_data(std::vector<uint8_t> *ptr_, uint32_t size_, uint64_t fl
 }
 
 void data_id_t::add_data(std::vector<uint64_t> *ptr_, uint32_t size_, uint64_t flags){
+	if(ptr_ == nullptr){
+		print("ptr_ is a nullptr", P_ERR);
+	}
 	data_vector.push_back(
 		data_id_ptr_t(
 			ptr_,
@@ -187,6 +203,9 @@ void data_id_t::add_data(std::vector<uint64_t> *ptr_, uint32_t size_, uint64_t f
 }
 
 void data_id_t::add_data(std::vector<id_t_> *ptr_, uint32_t size_, uint64_t flags){
+	if(ptr_ == nullptr){
+		print("ptr_ is a nullptr", P_ERR);
+	}
 	data_vector.push_back(
 		data_id_ptr_t(
 			ptr_,
@@ -244,6 +263,7 @@ std::vector<uint8_t> data_id_t::export_data(uint8_t flags_){
 		}
 	}
 	if(valid == false){
+		print("cannot export data, set as not exportable", P_WARN);
 		return {};
 	}
 	if(is_owner()){
@@ -261,29 +281,37 @@ std::vector<uint8_t> data_id_t::export_data(uint8_t flags_){
 			trans_i = i;
 			trans_size = data_vector[i].get_length();
 			ID_EXPORT(trans_i);
-			uint8_t *ptr_to_export = (uint8_t*)data_vector[i].get_ptr();
+			uint8_t *ptr_to_export =
+				(uint8_t*)data_vector[i].get_ptr();
+			if(ptr_to_export == nullptr){
+				print("ptr_to_export is a nullptr (pre-vector)", P_ERR);
+			}
 			if(data_vector[i].get_flags() & ID_DATA_BYTE_VECTOR){
+				print("reading in a byte vector", P_SPAM);
 				std::vector<uint8_t> *vector =
 					(std::vector<uint8_t>*)ptr_to_export;
 				ptr_to_export = vector->data();
 				trans_size = vector->size();
 			}else if(data_vector[i].get_flags() & ID_DATA_ID_VECTOR){
+				print("reading in an ID vector", P_SPAM);
 				std::vector<id_t_> *vector =
 					(std::vector<id_t_>*)ptr_to_export;
 				ptr_to_export = (uint8_t*)vector->data();
 				trans_size = vector->size()*sizeof(id_t_);
 			}else if(data_vector[i].get_flags() & ID_DATA_EIGHT_BYTE_VECTOR){
+				print("reading in a 64-bit vector", P_SPAM);
 				std::vector<uint64_t> *vector =
 					(std::vector<uint64_t>*)ptr_to_export;
 				ptr_to_export = (uint8_t*)vector->data();
 				trans_size = vector->size()*sizeof(uint64_t);
 			}else if(data_vector[i].get_flags() & ID_DATA_ID){
+				print("reading in a single ID", P_SPAM);
 				trans_size *= 40;
 			}
+			if(ptr_to_export == nullptr){
+				print("ptr_to_export is a nullptr (post-vector)", P_ERR);
+			}
 			ID_EXPORT(trans_size);
-			P_V_S(convert::array::type::from(type), P_SPAM);
-			P_V(trans_size, P_SPAM);
-			P_V(data_vector[i].get_length(), P_SPAM);
 			id_export_raw((uint8_t*)ptr_to_export, trans_size, &retval);
 		}
 		P_V(retval.size(), P_NOTE);
@@ -301,27 +329,30 @@ std::vector<uint8_t> data_id_t::export_data(uint8_t flags_){
 
 static void id_import_raw(uint8_t* var, uint8_t flags, uint64_t size, std::vector<uint8_t> *vector){
 	if(flags & ID_DATA_BYTE_VECTOR){
-		std::vector<uint8_t> *vector_tmp =
+		std::vector<uint8_t> *local_vector =
 			(std::vector<uint8_t>*)var;
 		// not the fastest
-		vector_tmp->erase(vector_tmp->begin(),
-				  vector_tmp->end());
-		vector_tmp->insert(vector_tmp->end(),
-				   size/1,
+		local_vector->clear();
+		local_vector->insert(local_vector->end(),
+				   size,
 				   0);
-		var = vector_tmp->data();
+		var = local_vector->data();
 	}else if(flags & ID_DATA_EIGHT_BYTE_VECTOR){
-		if(size % 8){
-			print("invalid size for eight byte vector", P_ERR);
-		}
-		std::vector<uint64_t> *vector_tmp =
+		std::vector<uint64_t> *local_vector =
 			(std::vector<uint64_t>*)var;
-		vector_tmp->erase(vector_tmp->begin(),
-				  vector_tmp->end());
-		vector_tmp->insert(vector_tmp->end(),
-				   size/8,
-				   0);
-		var = (uint8_t*)vector_tmp->data();
+		local_vector->clear();
+		local_vector->insert(local_vector->end(),
+				     size,
+				     0);
+		var = (uint8_t*)local_vector->data();
+	}else if(flags & ID_DATA_ID_VECTOR){
+		std::vector<id_t_> *local_vector =
+			(std::vector<id_t_>*)var;
+		local_vector->clear();
+		local_vector->insert(local_vector->end(),
+				     size,
+				     ID_BLANK_ID);
+		var = (uint8_t*)local_vector->data();
 	}
 	memcpy(var, vector->data(), size);
 	vector->erase(vector->begin(), vector->begin()+size);

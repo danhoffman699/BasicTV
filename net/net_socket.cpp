@@ -7,8 +7,8 @@
 
 net_socket_t::net_socket_t() : id(this, __FUNCTION__){
 	id.add_data(&status, 8);
-	// no real need to add anything else, should never
-	// be networked
+	id.noexp_all_data();
+	id.nonet_all_data();
 	outbound_stat_sample_set_id = (new stat_sample_set_t)->id.get_id();
 	inbound_stat_sample_set_id = (new stat_sample_set_t)->id.get_id();
 }

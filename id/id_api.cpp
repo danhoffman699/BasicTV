@@ -31,7 +31,7 @@ static data_id_t *id_find(id_t_ id){
 			return id_list[i];
 		}
 	}
-	print("Couldn't find ID", P_WARN);
+	print("Couldn't find ID", P_ERR);
 	return nullptr;
 }
 
@@ -99,7 +99,7 @@ void id_api::array::del(id_t_ id){
 	print("cannot find ID in list", P_ERR);
 }
 
-#define CHECK_TYPE(a) if(convert::array::type::from(type) == #a){a *tmp = new a;tmp->id.import_data(data_);return tmp->id.get_id();}
+#define CHECK_TYPE(a) if(convert::array::type::from(type) == #a){print("importing data", P_NOTE);a *tmp = new a;tmp->id.import_data(data_);return tmp->id.get_id();}
 
 /*
   General purpose reader, returns the ID of the new information.
@@ -112,7 +112,9 @@ id_t_ id_api::array::add_data(std::vector<uint8_t> data_){
 	std::array<uint8_t, TYPE_LENGTH> type;
 	type.fill(0);
 	/*
-	  TODO: complete this
+	  TODO: FINISH THIS!
+
+	  THIS IS WHY IT DOESN'T WORK YET
 	 */
 	std::vector<id_t_> tmp_type_cache =
 		id_api::cache::get(type);
@@ -129,6 +131,7 @@ id_t_ id_api::array::add_data(std::vector<uint8_t> data_){
 	CHECK_TYPE(net_proto_request_t);
 	CHECK_TYPE(net_proto_con_req_t);
 	CHECK_TYPE(encrypt_pub_key_t);
+	CHECK_TYPE(encrypt_priv_key_t);
 	print("type isn't valid", P_WARN);
 	return id;
 }
@@ -303,7 +306,7 @@ static std::string id_api_get_filename(id_t_ id_){
 	return retval;
 }
 
-static bool id_api_should_write_to_disk(id_t_ id_){
+static bool id_api_should_write_to_disk_mod_inc(id_t_ id_){
 	std::string directory =
 		id_api_get_filename(id_);
 	directory =
@@ -356,7 +359,7 @@ static bool id_api_should_write_to_disk(id_t_ id_){
 
 void id_api::destroy(id_t_ id){	
 	bool should_write_to_disk =
-		id_api_should_write_to_disk(id);
+		id_api_should_write_to_disk_mod_inc(id);
 	// handles mod_inc logic
 	if(unlikely(should_write_to_disk == false)){
 		return;
@@ -379,7 +382,7 @@ void id_api::destroy(id_t_ id){
 		out.write((const char*)exportable_data.data(), exportable_data.size());
 		out.close();
 	}else{
-		print("not exporting ID " + id_to_str(id),  P_ERR);
+		print("not exporting ID " + id_to_str(id),  P_SPAM);
 	}
 	// TV subsystem
 	DELETE_TYPE_2(tv_frame_video_t);
@@ -488,6 +491,7 @@ void id_api::import::load_all_of_type(std::string type, uint8_t flags){
 		std::vector<std::string> find_out =
 			system_handler::find("data_folder", type);
 		for(uint64_t i = 0;i < find_out.size();i++){
+			P_V_S(find_out[i], P_SPAM);
 			std::ifstream in(find_out[i]);
 			if(in.is_open() == false){
 				continue;

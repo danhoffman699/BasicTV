@@ -112,6 +112,8 @@ static void bootstrap_production_priv_key_id(){
 	std::vector<id_t_> all_private_keys =
 		id_api::cache::get(
 			"encrypt_priv_key_t");
+	encrypt_priv_key_t *priv_key = nullptr;
+	encrypt_pub_key_t *pub_key = nullptr;
 	if(all_private_keys.size() == 0){
 		print("detected first boot, creating production id", P_NOTE);
 		uint64_t bits_to_use = 4096;
@@ -123,11 +125,17 @@ static void bootstrap_production_priv_key_id(){
 		}catch(...){}
 		std::pair<id_t_, id_t_> key_pair =
 			rsa::gen_key_pair(bits_to_use);
-		encrypt_priv_key_t *priv_key =
+		priv_key =
 			PTR_DATA(key_pair.first,
 				 encrypt_priv_key_t);
 		if(priv_key == nullptr){
 			print("priv_key is a nullptr", P_ERR);
+		}
+		pub_key =
+			PTR_DATA(key_pair.second,
+				 encrypt_pub_key_t);
+		if(pub_key == nullptr){
+			print("pub_key is a nullptr", P_ERR);
 		}
 		priv_key->set_pub_key_id(key_pair.second);
 		production_priv_key_id = priv_key->id.get_id();
@@ -137,6 +145,8 @@ static void bootstrap_production_priv_key_id(){
 		print("I have more than one private key, make a prompt to choose one", P_ERR);
 	}
 	id_throw_exception = false;
+	production_priv_key_id = priv_key->id.get_id();
+	priv_key->set_pub_key_id(pub_key->id.get_id());
 }
 
 static void init(){
@@ -302,6 +312,7 @@ static void test_max_tcp_sockets(){
 }
 
 static void test_id_transport_print_exp(std::vector<uint8_t> exp){
+	P_V(exp.size(), P_SPAM);
 	for(uint64_t i = 0;i < exp.size();i++){
 		print(std::to_string(i) + "\t" + std::to_string((int)(exp[i])) + "\t" + std::string(1, exp[i]), P_SPAM);
 	}
@@ -313,18 +324,14 @@ static void test_id_transport_print_exp(std::vector<uint8_t> exp){
 
 static void test_id_transport(){
 	// not defined behavior at all
-	data_id_t *tmp =
-		new data_id_t(nullptr, "TEST");
-	// tmp->set_next_linked_list(1);
-	// tmp->set_prev_linked_list(2);
+	settings::set_setting("export_data", "true");
+	net_proto_peer_t *tmp =
+		new net_proto_peer_t;
+	tmp->set_net_ip("127.0.0.1", 58486, 0);
 	const std::vector<uint8_t> exp =
-		tmp->export_data(0);
+		tmp->id.export_data(0);
 	test_id_transport_print_exp(exp);
-	// tmp->set_next_linked_list(0);
-	// tmp->set_prev_linked_list(0);
-	tmp->import_data(exp);
-	// P_V(tmp->get_next_linked_list(), P_NOTE);
-	// P_V(tmp->get_prev_linked_list(), P_NOTE);
+	tmp->id.import_data(exp);
 	running  = false;
 }
 
@@ -424,14 +431,13 @@ int main(int argc_, char **argv_){
 	argc = argc_;
 	argv = argv_;
 	init();
-	running = false;
-	//test_rsa_encryption();
 	//test_rsa_encryption();
 	//test_break_id_transport();
 	//test_id_transport();
 	//test_max_tcp_sockets();
 	//test_compressor();
 	//test_socket();
+	running = false;
 	while(running){
 		tv_loop();
 		input_loop();

@@ -5,9 +5,7 @@
 #include "tv.h"
 
 tv_channel_t::tv_channel_t() : id(this, __FUNCTION__){
-	ADD_DATA_ARRAY(stream_list,
-		       TV_CHAN_FRAME_LIST_SIZE,
-		       8); // uint64_t
+	id.add_data(&stream_list, TV_CHAN_FRAME_LIST_SIZE);
 	ADD_DATA_NONET(broadcast_delay_micro_s);
 	ADD_DATA(status);
 }

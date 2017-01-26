@@ -119,6 +119,7 @@ public:
 	bool is_owner();
 	std::vector<uint8_t> get_ptr_flags();
 	void noexport_all_data();
+	void noexp_all_data(){noexport_all_data();}
 	void nonet_all_data();
 	uint64_t get_last_access_timestamp_micro_s(){return last_access_timestamp_micro_s;}
 };
