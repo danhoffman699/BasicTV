@@ -27,9 +27,11 @@ void convert::nbo::to(uint8_t *data, uint64_t size){
 	for(uint64_t i = 0;i < size/2;i++){
 		const uint64_t first = i;
 		const uint64_t second = size-i-1;
-		const uint8_t first_data = data[first];
-		data[first] = second;
-		data[second] = first_data;
+		data[first] ^= data[second];
+		data[second] ^= data[first];
+		data[first] ^= data[second];		
+		// data[first] = second;
+		// data[second] = first_data;
 	}
 #endif
 }

@@ -80,9 +80,15 @@ static void bootstrap_production_priv_key_id(){
 	id_api::import::load_all_of_type(
 		"encrypt_priv_key_t",
 		ID_API_IMPORT_FROM_DISK);
+	id_api::import::load_all_of_type(
+		"encrypt_pub_key_t",
+		ID_API_IMPORT_FROM_DISK);
 	std::vector<id_t_> all_private_keys =
 		id_api::cache::get(
 			"encrypt_priv_key_t");
+	std::vector<id_t_> all_public_keys =
+		id_api::cache::get(
+			"encrypt_pub_key_t");
 	encrypt_priv_key_t *priv_key = nullptr;
 	encrypt_pub_key_t *pub_key = nullptr;
 	if(all_private_keys.size() == 0){
@@ -112,6 +118,8 @@ static void bootstrap_production_priv_key_id(){
 		production_priv_key_id = priv_key->id.get_id();
 	}else if(all_private_keys.size() == 1){
 		production_priv_key_id = all_private_keys[0];
+		priv_key = PTR_DATA(all_private_keys[0], encrypt_priv_key_t);
+		pub_key = PTR_DATA(all_public_keys[0], encrypt_pub_key_t);
 	}else if(all_private_keys.size() > 1){
 		print("I have more than one private key, make a prompt to choose one", P_ERR);
 	}
@@ -317,26 +325,22 @@ static void test_id_transport(){
  */
 
 static void test_nbo_transport(){
-	while(true){
-		uint64_t orig_random =
-			true_rand(0, ~0L);
-		uint64_t random =
-			orig_random;
-		uint64_t mem_to_copy = true_rand(1, 7)%8;
-		P_V(mem_to_copy, P_SPAM);
-		convert::nbo::to(
-			(uint8_t*)&random,
-			mem_to_copy);
+	// 2, 4, and 8 are optimized, 7 isn't
+	std::vector<uint8_t> test =
+		{'T', 'E', 'S', 'T', 'I', 'N'};
+	std::vector<uint8_t> test_2 = test;
+	test_2 =
 		convert::nbo::from(
-			(uint8_t*)&random,
-			mem_to_copy);
-		if(memcmp(&orig_random, &random, mem_to_copy) == 0){
-			print("IT WORKS", P_NOTE);
-		}else{
-			P_V_B(random, P_NOTE);
-			P_V_B(orig_random, P_NOTE);
-			print("IT DOESN'T WORK", P_ERR);
+			convert::nbo::to(
+				test_2));
+	if(test == test_2){
+		print("it works", P_NOTE);
+	}else{
+		for(uint64_t i = 0;i < test.size();i++){
+			P_V_C(test[i], P_NOTE);
+			P_V_C(test_2[i], P_NOTE);
 		}
+		print("it doesn't work", P_ERR);
 	}
 	running = false;
 }
@@ -399,20 +403,23 @@ static void test_rsa_encryption(){
 
 static void test(){}
 
-// TODO: define some ownership, don't actually use this
-// in production, but just as a leak checker
+/*
+  TODO: make these tests so they can be more easily ran (all of them)
+ */
 
 int main(int argc_, char **argv_){
 	argc = argc_;
 	argv = argv_;
-	//init();
+	init();
 	//test_rsa_encryption();
 	//test_break_id_transport();
-	test_id_transport();
+	//test_id_transport();
 	//test_max_tcp_sockets();
 	//test_compressor();
 	//test_socket();
-	return 0;
+	//test_nbo_transport();
+	//test_id_transport();
+	running = false;
 	while(running){
 		tv_loop();
 		input_loop();

@@ -536,7 +536,7 @@ id_t_ id_api::metadata::get_id_from_data(std::vector<uint8_t> raw_data){
 	if(unlikely(raw_data.size() < 40)){
 		print("don't have enough room to extract ID", P_ERR);
 	}
-	memcpy(&(retval[0]), raw_data.data(), 40);
+	memcpy(&(retval[0]), &(raw_data[0]), 40);
 	return retval;
 }
 
@@ -545,6 +545,6 @@ std::array<uint8_t, 32> id_api::metadata::get_type_from_data(std::vector<uint8_t
 	if(unlikely(raw_data.size() < 40+32)){
 		print("don't have enough room to extract type", P_ERR);
 	}
-	memcpy(&(retval[0]), &(raw_data[39]), 32);
+	memcpy(&(retval[0]), &(raw_data[40]), 32);
 	return retval;
 }
