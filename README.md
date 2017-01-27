@@ -1,4 +1,6 @@
 The following is not entirely accurate for the current version, but are instead v1.0 goals. However, there is some proof of concept somewhere for everything listed, and is just a matter of implementing it.
+
+Join the IRC chat at #basictv on Freenode [here](http://webchat.freenode.net/?channels=#basictv).
 # BasicTV
 A simple, decentralized Internet television system
 
