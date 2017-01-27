@@ -110,18 +110,16 @@ void id_api::array::del(id_t_ id){
 id_t_ id_api::array::add_data(std::vector<uint8_t> data_){
 	id_t_ id = ID_BLANK_ID;
 	std::array<uint8_t, TYPE_LENGTH> type;
-	if(data_.size() <= 40){
-		print("not enough space to properly extract information", P_ERR);
+	try{
+		id = id_api::metadata::get_id_from_data(data_);
+		type = id_api::metadata::get_type_from_data(data_);
+		P_V_S(id_to_str(id), P_SPAM);
+		P_V_S(convert::array::type::from(type), P_SPAM);
+	}catch(std::exception &e){
+		print("can't import id and type from raw data", P_ERR);
+		throw e;
 	}
-	memcpy(&(type[0]), &(data_[8]), 32);
-	P_V_S(convert::array::type::from(type), P_SPAM);
-	//print("ACTUALLY PROGRAM THE ID IMPORTER", P_CRIT);
-	/*
-	  TODO: FINISH THIS!
-
-
-	  THIS IS WHY IT DOESN'T WORK YET
-	 */
+	
 	std::vector<id_t_> tmp_type_cache =
 		id_api::cache::get(type);
 	for(uint64_t i = 0;i < tmp_type_cache.size();i++){
@@ -318,7 +316,7 @@ static bool id_api_should_write_to_disk_mod_inc(id_t_ id_){
 	directory =
 		directory.substr(
 			0,
-			directory.find_last_of('_'));
+			directory.find_last_of('/'));
 	P_V_S(directory, P_SPAM);
 	std::vector<std::string> find_output =
 		system_handler::find(
@@ -496,8 +494,9 @@ void id_api::import::load_all_of_type(std::string type, uint8_t flags){
 			system_handler::find("data_folder", type);
 		for(uint64_t i = 0;i < find_out.size();i++){
 			P_V_S(find_out[i], P_SPAM);
-			std::ifstream in(find_out[i]);
+			std::ifstream in(find_out[i], std::ios::binary);
 			if(in.is_open() == false){
+				print("can't open file I just searched for", P_ERR);
 				continue;
 			}
 			std::vector<uint8_t> data;
@@ -518,6 +517,9 @@ void id_api::import::load_all_of_type(std::string type, uint8_t flags){
 				type));
 		request_ptr->set_flags(NET_REQUEST_BLACKLIST);
 		/*
+		  TODO: include relevant information on a blacklist basis to 
+		  decrease spam
+
 		  With responses, I should be able to get a concrete response
 		  and generate this list as a return value (with some
 		  networking latency) assuming we are on multiple threads.
@@ -529,7 +531,7 @@ void id_api::import::load_all_of_type(std::string type, uint8_t flags){
 	}
 }
 
-id_t_ id_api::metadata::get_id_from_str(std::vector<uint8_t> raw_data){
+id_t_ id_api::metadata::get_id_from_data(std::vector<uint8_t> raw_data){
 	id_t_ retval;
 	if(unlikely(raw_data.size() < 40)){
 		print("don't have enough room to extract ID", P_ERR);
@@ -538,7 +540,7 @@ id_t_ id_api::metadata::get_id_from_str(std::vector<uint8_t> raw_data){
 	return retval;
 }
 
-std::array<uint8_t, 32> id_api::metadata::get_type_from_str(std::vector<uint8_t> raw_data){
+std::array<uint8_t, 32> id_api::metadata::get_type_from_data(std::vector<uint8_t> raw_data){
 	std::array<uint8_t, 32> retval;
 	if(unlikely(raw_data.size() < 40+32)){
 		print("don't have enough room to extract type", P_ERR);

@@ -84,8 +84,8 @@ namespace id_api{
 	};
 	// metadata from the raw, unencrypted, and decompressed string
 	namespace metadata{
-		id_t_ get_id_from_str(std::vector<uint8_t> raw_data);
-		std::array<uint8_t, 32> get_type_from_str(std::vector<uint8_t> raw_data);
+		id_t_ get_id_from_data(std::vector<uint8_t> raw_data);
+		std::array<uint8_t, 32> get_type_from_data(std::vector<uint8_t> raw_data);
 	};
 	std::vector<id_t_> get_all();
 	void free_mem();

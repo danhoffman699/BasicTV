@@ -102,6 +102,7 @@ void data_id_t::init_gen_id(){
 
 
 data_id_t::data_id_t(void *ptr_, std::string type_){
+	P_V_S(type_, P_SPAM);
 	type = convert::array::type::to(type_);
 	ptr = ptr_;
 	init_list_all_data();
@@ -243,7 +244,7 @@ std::vector<uint8_t> data_id_t::get_ptr_flags(){
 
 static void id_export_raw(uint8_t *var, uint64_t size, std::vector<uint8_t> *vector){
 	std::vector<uint8_t> tmp(var, var+size);
-	tmp = convert::nbo::to(tmp);
+	//tmp = convert::nbo::to(tmp);
 	vector->insert(vector->end(), tmp.begin(), tmp.end());
 }
 
@@ -272,12 +273,9 @@ std::vector<uint8_t> data_id_t::export_data(uint8_t flags_){
 		transport_i_t trans_i = 0;
 		transport_size_t trans_size = 0;
 		for(uint64_t i = 0;i < data_vector.size();i++){
-			const uint8_t data_vector_flags =
-				(data_vector[i].get_flags() & ID_DATA_NOEXP) |
-				(data_vector[i].get_flags() & ID_DATA_NONET);
-			if(data_vector_flags != flags_){
-				print("skipping unexportable data_vector entry", P_NOTE);
-			}
+			/*
+			  TODO: ENFORCE EXPORTING RULES
+			 */
 			trans_i = i;
 			trans_size = data_vector[i].get_length();
 			ID_EXPORT(trans_i);
@@ -304,15 +302,14 @@ std::vector<uint8_t> data_id_t::export_data(uint8_t flags_){
 					(std::vector<uint64_t>*)ptr_to_export;
 				ptr_to_export = (uint8_t*)vector->data();
 				trans_size = vector->size()*sizeof(uint64_t);
-			}else if(data_vector[i].get_flags() & ID_DATA_ID){
-				// print("reading in a single ID", P_SPAM);
-				trans_size *= 40;
 			}
 			if(ptr_to_export == nullptr){
 				print("ptr_to_export is a nullptr (post-vector)", P_ERR);
 			}
 			ID_EXPORT(trans_size);
 			id_export_raw((uint8_t*)ptr_to_export, trans_size, &retval);
+			P_V(trans_i, P_SPAM);
+			P_V(trans_size, P_SPAM);
 		}
 		P_V(retval.size(), P_NOTE);
 		/*
@@ -356,7 +353,7 @@ static void id_import_raw(uint8_t* var, uint8_t flags, uint64_t size, std::vecto
 	}
 	memcpy(var, vector->data(), size);
 	vector->erase(vector->begin(), vector->begin()+size);
-	convert::nbo::from((uint8_t*)var, size);
+	//convert::nbo::from((uint8_t*)var, size);
 }
 
 /*
@@ -371,6 +368,8 @@ void data_id_t::import_data(std::vector<uint8_t> data){
 	std::array<uint8_t, TYPE_LENGTH> trans_type = {{0}};
 	ID_IMPORT(trans_id);
 	ID_IMPORT(trans_type);
+	P_V_S(id_to_str(trans_id), P_SPAM);
+	P_V_S(convert::array::type::from(trans_type), P_SPAM);
 	transport_i_t trans_i = 0;
 	transport_size_t trans_size = 0;
 	while(data.size() > sizeof(transport_i_t) + sizeof(transport_size_t)){

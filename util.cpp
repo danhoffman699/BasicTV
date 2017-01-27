@@ -12,7 +12,7 @@ std::vector<std::string> newline_to_vector(std::string data){
 	for(unsigned int i = 0;i < data.size();i++){
 		if(data[i] == '\n'){
 			const std::string tmp =
-				data.substr(old_pos, i);
+				data.substr(old_pos, i-old_pos);
 			old_pos = i+1; // skip newline
 			retval.push_back(tmp);
 		}

@@ -59,45 +59,16 @@ bool running = true;
   SHA256 keys aren't needed for array lookups, and no transporting should be
   done to keep this property for long enough (entire code is only around five
   lines), so this isn't as hacky as I make myself believe it is.
- */
+*/
 
 id_t_ production_priv_key_id = ID_BLANK_ID;
 bool id_throw_exception = true;
 
-#define APPEND_TYPE_TO_VECTOR(old, type)				\
-	if(true){							\
-		auto new_vector = id_api::cache::get(#type);		\
-		old.insert(old.end(), new_vector.begin(), new_vector.end()); \
-	}								\
-
-void no_mem(){
-	std::vector<id_t_> frame_ids;
-	APPEND_TYPE_TO_VECTOR(frame_ids, tv_frame_video_t);
-	APPEND_TYPE_TO_VECTOR(frame_ids, tv_frame_audio_t);
-	APPEND_TYPE_TO_VECTOR(frame_ids, tv_frame_caption_t);
-	/*
-	  destroy() exports to disk if possible, so we can destroy IDs like
-	  crazy if we wanted to and just reread them. Types that have been
-	  exported the longest without being re-read are destroyed when we
-	  run out of memory
-	 */
-	// TODO: try and adhere to the gen_ded_mem setting somehow
-	for(uint64_t i = 0;i < frame_ids.size();i++){
-		id_api::destroy(frame_ids[i]);
-	}
-	/*
-	  tv_frame_*_t structs use up most of the space in a majority of the 
-	  cases, but in edge cases, it might make sense to use a dedicated
-	  no_mem function for stress and unit tests
-	 */
-}
-
-#undef APPEND_TO_VECTOR
-
 /*
   The production private key is the private key that is associated with every
   data type created on this machine. If the information were to be imported, the
-  hash would be applied to the ID, but it would be overridden.
+  hash would be applied to the ID, but it would be overridden by the ID
+  associated with the imported data (logical, and it doesn't break the hashing)
 
   I made a write up on why this is needed above. In case that was deleted, then
   a tl;dr is that the public key can't reference itself because the hash needs
@@ -329,10 +300,14 @@ static void test_id_transport(){
 		new net_proto_peer_t;
 	tmp->set_net_ip("127.0.0.1", 58486, 0);
 	const std::vector<uint8_t> exp =
-		tmp->id.export_data(0);
-	test_id_transport_print_exp(exp);
-	tmp->id.import_data(exp);
-	running  = false;
+		tmp->id.export_data(ID_DATA_NOEXP | ID_DATA_NONET);
+	//test_id_transport_print_exp(exp);
+	net_proto_peer_t *tmp_2 =
+		new net_proto_peer_t;
+	tmp_2->id.import_data(exp);
+	P_V(tmp_2->get_net_port(), P_NOTE);
+	P_V_S(tmp_2->get_net_ip_str(), P_NOTE);
+	running = false;
 }
 
 /*
@@ -430,14 +405,14 @@ static void test(){}
 int main(int argc_, char **argv_){
 	argc = argc_;
 	argv = argv_;
-	init();
+	//init();
 	//test_rsa_encryption();
 	//test_break_id_transport();
-	//test_id_transport();
+	test_id_transport();
 	//test_max_tcp_sockets();
 	//test_compressor();
 	//test_socket();
-	running = false;
+	return 0;
 	while(running){
 		tv_loop();
 		input_loop();
