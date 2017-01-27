@@ -132,7 +132,6 @@ long double get_btc_rate(std::string currency){
 
 int system_handler::run(std::string str){
 	str += ";touch finished";
-	P_V_S(str, P_SPAM);
 	/*
 	  Most commands need some time to be processed on the lower level (GPIO).
 	  Speed shouldn't be a problem
@@ -157,7 +156,6 @@ std::string system_handler::cmd_output(std::string cmd){
 	write(cmd, "TMP_OUT");
 	const std::string file_data = file::read_file("TMP_OUT");
 	rm("TMP_OUT");
-	P_V_S(file_data, P_SPAM);
 	return file_data;
 }
 

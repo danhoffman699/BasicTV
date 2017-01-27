@@ -263,7 +263,7 @@ std::vector<uint8_t> data_id_t::export_data(uint8_t flags_){
 		}
 	}
 	if(valid == false){
-		print("cannot export data, set as not exportable", P_WARN);
+		//print("cannot export data, set as not exportable", P_WARN);
 		return {};
 	}
 	if(is_owner()){
@@ -287,25 +287,25 @@ std::vector<uint8_t> data_id_t::export_data(uint8_t flags_){
 				print("ptr_to_export is a nullptr (pre-vector)", P_ERR);
 			}
 			if(data_vector[i].get_flags() & ID_DATA_BYTE_VECTOR){
-				print("reading in a byte vector", P_SPAM);
+				// print("reading in a byte vector", P_SPAM);
 				std::vector<uint8_t> *vector =
 					(std::vector<uint8_t>*)ptr_to_export;
 				ptr_to_export = vector->data();
 				trans_size = vector->size();
 			}else if(data_vector[i].get_flags() & ID_DATA_ID_VECTOR){
-				print("reading in an ID vector", P_SPAM);
+				// print("reading in an ID vector", P_SPAM);
 				std::vector<id_t_> *vector =
 					(std::vector<id_t_>*)ptr_to_export;
 				ptr_to_export = (uint8_t*)vector->data();
 				trans_size = vector->size()*sizeof(id_t_);
 			}else if(data_vector[i].get_flags() & ID_DATA_EIGHT_BYTE_VECTOR){
-				print("reading in a 64-bit vector", P_SPAM);
+				// print("reading in a 64-bit vector", P_SPAM);
 				std::vector<uint64_t> *vector =
 					(std::vector<uint64_t>*)ptr_to_export;
 				ptr_to_export = (uint8_t*)vector->data();
 				trans_size = vector->size()*sizeof(uint64_t);
 			}else if(data_vector[i].get_flags() & ID_DATA_ID){
-				print("reading in a single ID", P_SPAM);
+				// print("reading in a single ID", P_SPAM);
 				trans_size *= 40;
 			}
 			if(ptr_to_export == nullptr){
@@ -316,7 +316,7 @@ std::vector<uint8_t> data_id_t::export_data(uint8_t flags_){
 		}
 		P_V(retval.size(), P_NOTE);
 		/*
-		  DATA COMPRESSION SHOULD GO RIGHT HERE
+		  Compression is taken care of here if needed
 		*/
 	}else{
 		/*

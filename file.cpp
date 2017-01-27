@@ -64,7 +64,7 @@ bool file::exists(std::string file){
 		print("data of file is too large to be represented for file " + file, P_ERR);
 		return true;
 	default:
-		print("file " + file + " exists", P_DEBUG);
+		//print("file " + file + " exists", P_DEBUG);
 		return true;
 	}
 }

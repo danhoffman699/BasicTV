@@ -82,6 +82,11 @@ namespace id_api{
 		void load_from_disk(id_t_);
 		void load_from_net(id_t_);
 	};
+	// metadata from the raw, unencrypted, and decompressed string
+	namespace metadata{
+		id_t_ get_id_from_str(std::vector<uint8_t> raw_data);
+		std::array<uint8_t, 32> get_type_from_str(std::vector<uint8_t> raw_data);
+	};
 	std::vector<id_t_> get_all();
 	void free_mem();
 	void destroy(id_t_ id);

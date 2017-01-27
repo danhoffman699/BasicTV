@@ -110,9 +110,15 @@ void id_api::array::del(id_t_ id){
 id_t_ id_api::array::add_data(std::vector<uint8_t> data_){
 	id_t_ id = ID_BLANK_ID;
 	std::array<uint8_t, TYPE_LENGTH> type;
-	type.fill(0);
+	if(data_.size() <= 40){
+		print("not enough space to properly extract information", P_ERR);
+	}
+	memcpy(&(type[0]), &(data_[8]), 32);
+	P_V_S(convert::array::type::from(type), P_SPAM);
+	//print("ACTUALLY PROGRAM THE ID IMPORTER", P_CRIT);
 	/*
 	  TODO: FINISH THIS!
+
 
 	  THIS IS WHY IT DOESN'T WORK YET
 	 */
@@ -381,8 +387,6 @@ void id_api::destroy(id_t_ id){
 		}
 		out.write((const char*)exportable_data.data(), exportable_data.size());
 		out.close();
-	}else{
-		print("not exporting ID " + id_to_str(id),  P_SPAM);
 	}
 	// TV subsystem
 	DELETE_TYPE_2(tv_frame_video_t);
@@ -523,4 +527,22 @@ void id_api::import::load_all_of_type(std::string type, uint8_t flags){
 		  least on the disk, and from on the disk to memory.
 		 */
 	}
+}
+
+id_t_ id_api::metadata::get_id_from_str(std::vector<uint8_t> raw_data){
+	id_t_ retval;
+	if(unlikely(raw_data.size() < 40)){
+		print("don't have enough room to extract ID", P_ERR);
+	}
+	memcpy(&(retval[0]), raw_data.data(), 40);
+	return retval;
+}
+
+std::array<uint8_t, 32> id_api::metadata::get_type_from_str(std::vector<uint8_t> raw_data){
+	std::array<uint8_t, 32> retval;
+	if(unlikely(raw_data.size() < 40+32)){
+		print("don't have enough room to extract type", P_ERR);
+	}
+	memcpy(&(retval[0]), &(raw_data[39]), 32);
+	return retval;
 }
