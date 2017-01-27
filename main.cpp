@@ -118,13 +118,18 @@ static void bootstrap_production_priv_key_id(){
 		production_priv_key_id = priv_key->id.get_id();
 	}else if(all_private_keys.size() == 1){
 		production_priv_key_id = all_private_keys[0];
+		P_V_S(id_to_str(all_private_keys[0]), P_SPAM);
 		priv_key = PTR_DATA(all_private_keys[0], encrypt_priv_key_t);
+		P_V_S(id_to_str(all_public_keys[0]), P_SPAM);
 		pub_key = PTR_DATA(all_public_keys[0], encrypt_pub_key_t);
 	}else if(all_private_keys.size() > 1){
 		print("I have more than one private key, make a prompt to choose one", P_ERR);
 	}
+	set_id_hash(&production_priv_key_id,
+		    encrypt_api::hash::sha256::gen_raw(
+			    pub_key->get_encrypt_key().second));
+	priv_key->id.set_id(production_priv_key_id);
 	id_throw_exception = false;
-	production_priv_key_id = priv_key->id.get_id();
 	priv_key->set_pub_key_id(pub_key->id.get_id());
 }
 
@@ -313,6 +318,8 @@ static void test_id_transport(){
 	net_proto_peer_t *tmp_2 =
 		new net_proto_peer_t;
 	tmp_2->id.import_data(exp);
+	P_V_S(id_to_str(tmp->id.get_id()), P_NOTE);
+	P_V_S(id_to_str(tmp_2->id.get_id()), P_NOTE);
 	P_V(tmp_2->get_net_port(), P_NOTE);
 	P_V_S(tmp_2->get_net_ip_str(), P_NOTE);
 	running = false;
@@ -419,7 +426,7 @@ int main(int argc_, char **argv_){
 	//test_socket();
 	//test_nbo_transport();
 	//test_id_transport();
-	running = false;
+	//running = false;
 	while(running){
 		tv_loop();
 		input_loop();

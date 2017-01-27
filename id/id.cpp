@@ -113,7 +113,9 @@ data_id_t::data_id_t(void *ptr_, std::string type_){
 
 data_id_t::~data_id_t(){
 	id_api::array::del(id);
-	id_api::cache::del(id, type);
+	try{
+		id_api::cache::del(id, type);
+	}catch(...){}
 }
 
 static std::array<uint8_t, 32> zero_hash = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -142,6 +144,14 @@ id_t_ data_id_t::get_id(bool skip){
 		id_api::cache::add(id, type);
 	}
 	return id;
+}
+
+void data_id_t::set_id(id_t_ id_){
+	try{
+		id_api::cache::del(id, type);
+	}catch(...){} // shouldn't run anyways
+	id = id_;
+	id_api::cache::add(id, type);
 }
 
 std::string data_id_t::get_type(){
@@ -308,8 +318,8 @@ std::vector<uint8_t> data_id_t::export_data(uint8_t flags_){
 			}
 			ID_EXPORT(trans_size);
 			id_export_raw((uint8_t*)ptr_to_export, trans_size, &retval);
-			P_V(trans_i, P_SPAM);
-			P_V(trans_size, P_SPAM);
+			// P_V(trans_i, P_SPAM);
+			// P_V(trans_size, P_SPAM);
 		}
 		P_V(retval.size(), P_NOTE);
 		/*
@@ -350,6 +360,15 @@ static void id_import_raw(uint8_t* var, uint8_t flags, uint64_t size, std::vecto
 				     size,
 				     ID_BLANK_ID);
 		var = (uint8_t*)local_vector->data();
+	}else{
+		// sanity check
+		memset(var, 0, size);
+	}
+	if(vector->size() < size){
+		P_V(flags, P_NOTE);
+		P_V(size, P_NOTE);
+		P_V(vector->size(), P_NOTE);
+		print("not enough runway to export information, see where it went off track", P_ERR);
 	}
 	memcpy(var, vector->data(), size);
 	vector->erase(vector->begin(), vector->begin()+size);
@@ -370,6 +389,10 @@ void data_id_t::import_data(std::vector<uint8_t> data){
 	ID_IMPORT(trans_type);
 	P_V_S(id_to_str(trans_id), P_SPAM);
 	P_V_S(convert::array::type::from(trans_type), P_SPAM);
+	if(trans_type != type){
+		print("can't import a mis-matched type", P_ERR);
+	}
+	set_id(trans_id);
 	transport_i_t trans_i = 0;
 	transport_size_t trans_size = 0;
 	while(data.size() > sizeof(transport_i_t) + sizeof(transport_size_t)){

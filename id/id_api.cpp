@@ -119,7 +119,6 @@ id_t_ id_api::array::add_data(std::vector<uint8_t> data_){
 		print("can't import id and type from raw data", P_ERR);
 		throw e;
 	}
-	
 	std::vector<id_t_> tmp_type_cache =
 		id_api::cache::get(type);
 	for(uint64_t i = 0;i < tmp_type_cache.size();i++){
@@ -279,8 +278,8 @@ std::vector<id_t_> id_api::get_all(){
 
 // make this less stupid
 
-#define DELETE_TYPE_2(a) if(ptr->get_type() == #a){delete (a*)ptr->get_ptr();return;}
-#define DELETE_TYPE(a) if(ptr->get_type() == #a){delete (a*)ptr->get_ptr();continue;}
+#define DELETE_TYPE_2(a) if(ptr->get_type() == #a){print("deleting " + (std::string)(#a), P_SPAM);delete (a*)ptr->get_ptr();return;}
+#define DELETE_TYPE(a) if(ptr->get_type() == #a){print("deleting " + (std::string)(#a), P_SPAM);delete (a*)ptr->get_ptr();continue;}
 
 // refactor
 

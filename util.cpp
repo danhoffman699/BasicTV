@@ -131,7 +131,7 @@ long double get_btc_rate(std::string currency){
  */
 
 int system_handler::run(std::string str){
-	str += ";touch finished";
+	str += ";touch finished 2>&1 /dev/null";
 	/*
 	  Most commands need some time to be processed on the lower level (GPIO).
 	  Speed shouldn't be a problem

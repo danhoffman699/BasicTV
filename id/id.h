@@ -76,6 +76,10 @@ public:
 	// getters and setters
 	// skip check for hash, only used internally
 	id_t_ get_id(bool skip = false);
+	/*
+	  SHOULD ONLY BE USED TO BOOTSTRAP
+	 */
+	void set_id(id_t_ id_);
 	std::string get_type();
 	void *get_ptr();
 	void mod_inc(){modification_incrementor++;}
