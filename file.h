@@ -13,5 +13,7 @@ namespace file{
 	void write(std::string file, std::string data);
 	std::string read(std::string file);
 	void wait_for_file(std::string file);
+	bool is_dir(std::string path);
+	bool is_file(std::string path);
 }
 #endif

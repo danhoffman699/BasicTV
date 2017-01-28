@@ -69,15 +69,6 @@ namespace pre_pro{
 	void exception(std::exception e, std::string for_, int level);
 };
 
-namespace system_handler{
-	std::string cmd_output(std::string cmd);
-	int run(std::string str);
-	// file operators
-	void mkdir(std::string dir);
-	void write(std::string cmd, std::string file);
-	void rm(std::string file);
-	std::vector<std::string> find(std::string directory, std::string search);
-};
 
 /*
   Since networking std::vectors takes some extra code and complexity, 

@@ -82,3 +82,57 @@ void file::wait_for_file(std::string file){
 		sleep_ms(1);
 	}
 }
+
+bool file::is_dir(std::string file){
+	struct stat sb;
+	switch(stat(file.c_str(), &sb)){
+	case EACCES:
+		print("search permission is denied for file " + file, P_ERR);
+		return false;
+	case ELOOP:
+		print("too many symbolic links for file " + file, P_ERR);
+		// should this count?
+		return false;
+	case ENAMETOOLONG:
+		print("file path is too long for file " + file, P_ERR);
+		return false;
+	case ENOENT:
+		print("directory doesn't exist or path is blank for file " + file, P_ERR);
+		return false;
+	case ENOTDIR:
+		print("directory file mixup in the path for file " + file, P_ERR);
+		return false;
+	case EOVERFLOW:
+		print("data of file is too large to be represented for file " + file, P_ERR);
+		return true;
+	default:
+		return S_ISDIR(sb.st_mode);
+	}
+}
+
+bool file::is_file(std::string file){
+	struct stat sb;
+	switch(stat(file.c_str(), &sb)){
+	case EACCES:
+		print("search permission is denied for file " + file, P_ERR);
+		return false;
+	case ELOOP:
+		print("too many symbolic links for file " + file, P_ERR);
+		// should this count?
+		return false;
+	case ENAMETOOLONG:
+		print("file path is too long for file " + file, P_ERR);
+		return false;
+	case ENOENT:
+		print("directory doesn't exist or path is blank for file " + file, P_ERR);
+		return false;
+	case ENOTDIR:
+		print("directory file mixup in the path for file " + file, P_ERR);
+		return false;
+	case EOVERFLOW:
+		print("data of file is too large to be represented for file " + file, P_ERR);
+		return true;
+	default:
+		return S_ISREG(sb.st_mode);
+	}
+}

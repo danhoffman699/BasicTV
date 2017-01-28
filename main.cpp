@@ -134,10 +134,6 @@ static void bootstrap_production_priv_key_id(){
 }
 
 static void init(){
-	//std::set_new_handler(no_mem);
-	// debugging information for OpenSSL's error printing
-	ERR_load_crypto_strings();
-	bootstrap_production_priv_key_id();
 	/*
 	  settings_init() only reads from the file, it doesn't do anything
 	  critical to setting default values
@@ -152,7 +148,21 @@ static void init(){
 	settings::set_setting("socks_proxy_ip", "127.0.0.1");
 	// SOCKS proxy port in ASCII
 	settings::set_setting("socks_proxy_port", "9050");
+	/*
+	  Using "~" doesn't work with C++, so get the information from getenv()
+
+	  TODO: convert the input string from settings.cfg to this
+
+	  TODO: use getuid and that stuff when getenv doesn't work (?)
+	 */
+	settings::set_setting("data_folder", ((std::string)getenv("HOME"))+"/.BasicTV/");
 	settings_init();
+
+	//std::set_new_handler(no_mem);
+	// debugging information for OpenSSL's error printing
+	ERR_load_crypto_strings();
+	bootstrap_production_priv_key_id();
+
 	
 	tv_init();
 	input_init();

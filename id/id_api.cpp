@@ -21,6 +21,8 @@
 
 #include "../settings.h"
 
+#include "../system.h"
+
 
 static std::vector<data_id_t*> id_list;
 static std::vector<std::pair<std::vector<id_t_>, std::array<uint8_t, TYPE_LENGTH> > > type_cache;
@@ -302,7 +304,7 @@ std::vector<id_t_> id_api::get_all(){
 static std::string id_api_get_filename(id_t_ id_){
 	std::string retval;
 	data_id_t *id = PTR_ID(id_, );
-	retval += "data_folder/";
+	retval += settings::get_setting("data_folder");
 	retval += id->get_type() + "/";
 	retval += id_to_str(id_) + "_" + std::to_string(id->get_mod_inc()); // + _ + id incrementor (if it existed)
 	P_V_S(retval, P_SPAM);
@@ -318,7 +320,7 @@ static bool id_api_should_write_to_disk_mod_inc(id_t_ id_){
 			directory.find_last_of('/'));
 	P_V_S(directory, P_SPAM);
 	std::vector<std::string> find_output =
-		system_handler::find(
+		system_handler::find_all_files(
 			directory,
 			id_to_str(id_));
 	// multiple files might exist for some stupid and very broken reason,
@@ -376,7 +378,7 @@ void id_api::destroy(id_t_ id){
 		const std::string filename =
 			id_api_get_filename(id);
 		system_handler::rm(filename);
-		system_handler::mkdir("data_folder/"+ptr->get_type());
+		system_handler::mkdir(settings::get_setting("data_folder")+ptr->get_type());
 		std::ofstream out(filename, std::ios::out | std::ios::binary);
 		if(out.is_open() == false){
 			print("cannot open file for exporting", P_ERR);
@@ -490,7 +492,10 @@ void id_api::free_mem(){
 void id_api::import::load_all_of_type(std::string type, uint8_t flags){
 	if(flags & ID_API_IMPORT_FROM_DISK){
 		std::vector<std::string> find_out =
-			system_handler::find("data_folder", type);
+			system_handler::find_all_files(
+				settings::get_setting(
+					"data_folder"),
+				type);
 		for(uint64_t i = 0;i < find_out.size();i++){
 			P_V_S(find_out[i], P_SPAM);
 			std::ifstream in(find_out[i], std::ios::binary);
