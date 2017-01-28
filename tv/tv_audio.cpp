@@ -1,3 +1,4 @@
+#include "tv_frame_audio.h"
 #include "tv_audio.h"
 #include "tv.h"
 #include "../convert.h"
@@ -39,18 +40,9 @@ static void tv_audio_wave(std::vector<uint8_t> *retval, uint16_t data){
 	retval->push_back(((uint8_t*)&data)[1]);
 }
 
-/*
-  TODO: fix this function
-*/
-
-static std::vector<uint8_t> tv_audio_get_wav_data(tv_frame_audio_t *frame){
-	uint32_t sampling_freq = frame->get_sampling_freq();
-	uint8_t bit_depth = frame->get_bit_depth();
-	std::vector<uint8_t> frame_data =
-		frame->get_data();
-	if(frame_data.size() % (bit_depth/8)){
-		print("frame_data isn't the proper size", P_ERR);
-	}
+static std::vector<uint8_t> tv_audio_get_wav_data_raw(std::vector<uint8_t> frame_data,
+						      uint32_t sampling_freq,
+						      uint8_t bit_depth){
 	std::vector<uint8_t> retval;
 	tv_audio_wave(&retval, "RIFF");
 	tv_audio_wave(&retval, (uint32_t)(frame_data.size()+36));
@@ -71,6 +63,55 @@ static std::vector<uint8_t> tv_audio_get_wav_data(tv_frame_audio_t *frame){
 		frame_data.begin(),
 		frame_data.end());
 	return retval;
+}
+
+static std::vector<uint8_t> tv_audio_get_wav_data_from_uncompressed(tv_frame_audio_t *frame){
+	const uint32_t sampling_freq = frame->get_sampling_freq();
+	const uint8_t bit_depth = frame->get_bit_depth();
+	const std::vector<uint8_t> frame_data =
+		frame->get_data();
+	if(frame_data.size() % (bit_depth/8)){
+		print("frame_data isn't the proper size", P_ERR);
+	}
+	return tv_audio_get_wav_data_raw(frame_data,
+					 sampling_freq,
+					 bit_depth);
+}
+
+
+static std::vector<uint8_t> tv_audio_get_wav_data_from_opus(tv_frame_audio_t *frame){
+        uint32_t sampling_freq = frame->get_sampling_freq();
+	uint8_t bit_depth = frame->get_bit_depth();
+	std::vector<uint8_t> opus_data =
+	        frame->get_data();
+	OpusDecoder *decoder = opus_decoder_create(sampling_freq, 1, NULL);
+	int32_t frame_size = opus_decoder_get_nb_samples(decoder,opus_data.data(),opus_data.size());
+	std::vector<uint8_t> frame_data;
+	frame_data.resize(frame_size*sizeof(opus_int16));
+	opus_decode(decoder,opus_data.data(),opus_data.size(),(opus_int16*)frame_data.data(),frame_size,0);
+	opus_decoder_destroy(decoder);
+	return tv_audio_get_wav_data_raw(frame_data,
+					 sampling_freq,
+					 bit_depth);
+}
+
+static std::vector<uint8_t> tv_audio_get_wav_data(tv_frame_audio_t *frame){
+	switch(GET_TV_FRAME_AUDIO_FORMAT(frame->get_flags())){
+	case TV_FRAME_AUDIO_FORMAT_UNDEFINED:
+		print("can't play undefined file", P_ERR);
+		break;
+	case TV_FRAME_AUDIO_FORMAT_RAW:
+		return tv_audio_get_wav_data_from_uncompressed(frame);
+	case TV_FRAME_AUDIO_FORMAT_OPUS:
+		return tv_audio_get_wav_data_from_opus(frame);
+	case TV_FRAME_AUDIO_FORMAT_FLAC:
+		print("FLAC is not supported yet", P_ERR);
+		break;
+	default:
+		print("unknown format", P_ERR);
+		break;
+	}
+	return {};
 }
 
 static uint32_t tv_audio_sdl_format_from_depth(uint8_t bit_depth){
