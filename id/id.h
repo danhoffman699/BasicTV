@@ -133,6 +133,4 @@ extern void set_id_hash(id_t_ *id, std::array<uint8_t, 32> hash);
 extern uint64_t get_id_uuid(id_t_ id);
 extern void set_id_uuid(id_t_ *id, uint64_t uuid);
 
-extern std::string id_to_str(id_t_ id);
-
 #endif

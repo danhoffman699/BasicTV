@@ -46,14 +46,6 @@ void set_id_uuid(id_t_ *id, uint64_t uuid){
 	memcpy(&((*id)[0]), &uuid, 8);
 }
 
-std::string id_to_str(id_t_ id){
-	std::string retval;
-	for(uint64_t i = 0;i < 40;i++){
-		retval += to_hex(id[i]);
-	}
-	return retval;
-}
-
 void data_id_t::init_list_all_data(){
 	add_data(&id,
 		 sizeof(id_t_),
@@ -387,7 +379,7 @@ void data_id_t::import_data(std::vector<uint8_t> data){
 	std::array<uint8_t, TYPE_LENGTH> trans_type = {{0}};
 	ID_IMPORT(trans_id);
 	ID_IMPORT(trans_type);
-	P_V_S(id_to_str(trans_id), P_SPAM);
+	P_V_S(convert::array::id::to_hex(trans_id), P_SPAM);
 	P_V_S(convert::array::type::from(trans_type), P_SPAM);
 	if(trans_type != type){
 		print("can't import a mis-matched type", P_ERR);

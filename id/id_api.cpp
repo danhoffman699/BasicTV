@@ -115,7 +115,7 @@ id_t_ id_api::array::add_data(std::vector<uint8_t> data_){
 	try{
 		id = id_api::metadata::get_id_from_data(data_);
 		type = id_api::metadata::get_type_from_data(data_);
-		P_V_S(id_to_str(id), P_SPAM);
+		P_V_S(convert::array::id::to_hex(id), P_SPAM);
 		P_V_S(convert::array::type::from(type), P_SPAM);
 	}catch(std::exception &e){
 		print("can't import id and type from raw data", P_ERR);
@@ -306,7 +306,7 @@ static std::string id_api_get_filename(id_t_ id_){
 	data_id_t *id = PTR_ID(id_, );
 	retval += settings::get_setting("data_folder");
 	retval += id->get_type() + "/";
-	retval += id_to_str(id_) + "_" + std::to_string(id->get_mod_inc()); // + _ + id incrementor (if it existed)
+	retval += convert::array::id::to_hex(id_) + "_" + std::to_string(id->get_mod_inc()); // + _ + id incrementor (if it existed)
 	P_V_S(retval, P_SPAM);
 	return retval;
 }
@@ -322,7 +322,7 @@ static bool id_api_should_write_to_disk_mod_inc(id_t_ id_){
 	std::vector<std::string> find_output =
 		system_handler::find_all_files(
 			directory,
-			id_to_str(id_));
+			convert::array::id::to_hex(id_));
 	// multiple files might exist for some stupid and very broken reason,
 	// so read the entire vector like this
 	uint64_t largest_mod_inc = 0;

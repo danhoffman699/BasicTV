@@ -118,9 +118,9 @@ static void bootstrap_production_priv_key_id(){
 		production_priv_key_id = priv_key->id.get_id();
 	}else if(all_private_keys.size() == 1){
 		production_priv_key_id = all_private_keys[0];
-		P_V_S(id_to_str(all_private_keys[0]), P_SPAM);
+		P_V_S(convert::array::id::to_hex(all_private_keys[0]), P_SPAM);
 		priv_key = PTR_DATA(all_private_keys[0], encrypt_priv_key_t);
-		P_V_S(id_to_str(all_public_keys[0]), P_SPAM);
+		P_V_S(convert::array::id::to_hex(all_public_keys[0]), P_SPAM);
 		pub_key = PTR_DATA(all_public_keys[0], encrypt_pub_key_t);
 	}else if(all_private_keys.size() > 1){
 		print("I have more than one private key, make a prompt to choose one", P_ERR);
@@ -250,8 +250,8 @@ static void test_socket_array(std::vector<std::pair<id_t_, id_t_> > socket_array
 			PTR_DATA(socket_array[i].second,
 				 net_socket_t);
 		if(first == nullptr || second == nullptr){
-			P_V_S(id_to_str(socket_array[i].first), P_SPAM);
-			P_V_S(id_to_str(socket_array[i].second), P_SPAM);
+			P_V_S(convert::array::id::to_hex(socket_array[i].first), P_SPAM);
+			P_V_S(convert::array::id::to_hex(socket_array[i].second), P_SPAM);
 			print("SOCKETS STRUCTS ARE NULL", P_ERR);
 		}
 		first->send({'a','a','a','a'});
@@ -328,8 +328,8 @@ static void test_id_transport(){
 	net_proto_peer_t *tmp_2 =
 		new net_proto_peer_t;
 	tmp_2->id.import_data(exp);
-	P_V_S(id_to_str(tmp->id.get_id()), P_NOTE);
-	P_V_S(id_to_str(tmp_2->id.get_id()), P_NOTE);
+	P_V_S(convert::array::id::to_hex(tmp->id.get_id()), P_NOTE);
+	P_V_S(convert::array::id::to_hex(tmp_2->id.get_id()), P_NOTE);
 	P_V(tmp_2->get_net_port(), P_NOTE);
 	P_V_S(tmp_2->get_net_ip_str(), P_NOTE);
 	running = false;

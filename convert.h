@@ -3,6 +3,7 @@
 #include "vector"
 #include "string"
 #include "array"
+#include "id/id.h"
 
 /*
   convert: if the conversion is simple enough to be written in plain C/C++,
@@ -74,6 +75,10 @@ namespace convert{
 		void from(uint8_t *, uint64_t);
 	}
 	namespace array{
+		namespace id{
+			std::string to_hex(id_t_);
+			id_t_ from_hex(std::string);
+		};
 		namespace type{
 			std::array<uint8_t, 32> to(std::string);
 			std::string from(std::array<uint8_t, 32>);
@@ -81,7 +86,8 @@ namespace convert{
 	}
 	namespace number{
 		std::string to_binary(uint64_t);
-		std::string to_hex(uint64_t);
+		std::string to_hex(std::vector<uint8_t>);
+		std::vector<uint8_t> from_hex(std::string);
 	}
 	/*
 	  A color tuple is the RGB values plus the bytes per color. Bytes per 

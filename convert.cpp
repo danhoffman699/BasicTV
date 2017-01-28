@@ -99,22 +99,6 @@ std::string convert::number::to_binary(uint64_t data){
 	return retval;
 }
 
-std::string convert::number::to_hex(uint64_t data){
-	std::string retval;
-	for(uint64_t i = 0;i < 64;i+=4){
-		const uint64_t character =
-			(data >> i) & 0xF;
-		if(character == 0){
-			retval = '0' + retval;
-		}else if(character <= 9){
-			retval = (char)(character-1+'1') + retval;
-		}else{
-			retval = (char)(character-10+'A') + retval;
-		}
-	}
-	return "0x" + retval;
-}
-
 // of course, in RGB format (fourth being the BPC, bytes per color)
 
 // mask here is just the first color, it shifts automatically down
@@ -153,4 +137,129 @@ std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> convert::color::bpc(std::tuple
 	std::get<1>(color) *= mul;
 	std::get<2>(color) *= mul;
 	return color;
+}
+
+static std::string byte_to_hex(uint8_t byte){
+	return (std::string)(to_hex(byte&4)) +
+		(std::string)(to_hex(byte >> 4));
+}
+
+static uint8_t to_byte_char(int8_t hex){
+	switch(hex){
+	case '0':
+		return 0;
+	case '1':
+		return 1;
+	case '2':
+		return 2;
+	case '3':
+		return 3;
+	case '4':
+		return 4;
+	case '5':
+		return 5;
+	case '6':
+		return 6;
+	case '7':
+		return 7;
+	case '8':
+		return 8;
+	case '9':
+		return 9;
+	case 'a':
+		return 10;
+	case 'b':
+		return 11;
+	case 'c':
+		return 12;
+	case 'd':
+		return 13;
+	case 'e':
+		return 14;
+	case 'f':
+		return 15;
+	}
+	print("invalid hex character", P_ERR);
+	return 0;
+}
+
+// TODO: make cross endian
+
+static uint8_t hex_to_byte(std::string hex){
+	return to_byte_char(hex[0]) | (to_byte_char(hex[1]));
+}
+
+/*
+  All hexadecimal is in big endian
+*/
+
+std::vector<uint8_t> convert::number::from_hex(std::string hex){
+	std::vector<uint8_t> retval;
+	for(uint64_t i = 0;i < (hex.size()/2);i++){
+		retval.push_back(
+			hex_to_byte(
+				hex.substr(
+					i*2, 2)));
+	}
+	retval = convert::nbo::to(retval);
+	return retval;
+}
+
+std::string convert::number::to_hex(std::vector<uint8_t> byte){
+	std::string retval;
+	byte = convert::nbo::to(byte);
+	for(uint64_t i = 0;i < byte.size();i++){
+		retval +=
+			byte_to_hex(byte[i]);
+	}
+	return retval;
+}
+	
+std::string convert::array::id::to_hex(id_t_ id_){
+	std::array<uint8_t, 32> hash_array =
+		get_id_hash(id_);
+	uint64_t uuid_num =
+		get_id_uuid(id_);
+	std::vector<uint8_t> uuid_vector(
+		&uuid_num,
+		&uuid_num+8);
+	std::string retval =
+		convert::number::to_hex(
+			uuid_vector) +
+		"-" +
+		convert::number::to_hex(
+			std::vector<uint8_t>(
+				hash_array.begin(),
+				hash_array.end()));
+	return retval;
+}
+
+id_t_ convert::array::id::from_hex(std::string id_){
+	id_t_ retval = ID_BLANK_ID;
+	uint64_t pos_of_hyphen = id_.find_first_of("-");
+	std::vector<uint8_t> uuid_raw =
+		convert::number::from_hex(
+			id_.substr(
+				0, pos_of_hyphen));
+	if(uuid_raw.size() != 8){
+		print("invalid size for UUID", P_ERR);
+	}
+	uint64_t uuid = 0;
+	memcpy(&uuid, uuid_raw.data(), 8);
+	set_id_uuid(
+		&retval,
+		uuid);
+	std::vector<uint8_t> hash =
+		convert::number::from_hex(
+			id_.substr(
+				pos_of_hyphen, id_.size()));
+	if(hash.size() != 32){
+		print("invalid size for hash", P_ERR);
+	}
+	std::array<uint8_t, 32> hash_array;
+	memcpy(&(hash_array[0]), &(hash[0]), 32);
+	set_id_hash(
+		&retval,
+		hash_array);
+	return retval;
 }
