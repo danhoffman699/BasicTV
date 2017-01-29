@@ -33,7 +33,8 @@ static data_id_t *id_find(id_t_ id){
 			return id_list[i];
 		}
 	}
-	print("Couldn't find ID", P_ERR);
+	print("Couldn't find ID", P_NOTE);
+	std::raise(SIGINT);
 	return nullptr;
 }
 
@@ -53,12 +54,11 @@ data_id_t *id_api::array::ptr_id(id_t_ id,
 		if(flags & ID_LOOKUP_FAST){
 			return nullptr;
 		}
-		// should be as simple as creating a net_proto_request_t
-		print("haven't implemented data requests from ID lookups yet", P_ERR);
-	}
-	// blank type is a wildcard, currently onlu used for RSA sorting
-	// "" is used for direct calls
-	if(retval->get_type() != type && type != ""){
+		// TODO: get a list of items to not query the network for
+		if(type != "console_t"){
+			print("haven't implemented data requests from ID lookups yet", P_ERR);
+		}
+	}else if(retval->get_type() != type && type != ""){
 		// not really grounds for an error
 		return nullptr;
 	}
@@ -370,6 +370,9 @@ void id_api::destroy(id_t_ id){
 		return;
 	}
 	data_id_t *ptr = PTR_ID(id, );
+	if(ptr == nullptr){
+		return;
+	}
 	std::vector<uint8_t> exportable_data =
 		ptr->export_data(ID_DATA_NONET);
 	const bool can_export = settings::get_setting("export_data") == "true";
@@ -413,6 +416,13 @@ void id_api::destroy(id_t_ id){
 	DELETE_TYPE_2(encrypt_priv_key_t);
 	DELETE_TYPE_2(encrypt_pub_key_t);
 
+	/*
+	  Shouldn't get this far, but if it does, delist it manually
+	 */
+
+	id_api::array::del(id);
+	id_api::cache::del(id, ptr->get_type());
+	
 	for(uint64_t i = 0;i < id_list.size();i++){
 		if(ptr == id_list[i]){
 			id_list.erase(id_list.begin()+i);

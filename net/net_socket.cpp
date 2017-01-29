@@ -40,10 +40,7 @@ uint8_t net_socket_t::get_status(){
  */
 
 bool net_socket_t::is_alive(){
-	if(socket == nullptr){
-		return false;
-	}
-	return true;
+	return socket != nullptr;
 }
 
 /*
@@ -167,8 +164,12 @@ std::vector<uint8_t> net_socket_t::recv(uint64_t byte_count, uint64_t flags){
 }
 
 std::vector<uint8_t> net_socket_t::recv_all_buffer(){
-	std::vector<uint8_t> retval;
-	retval = local_buffer;
+	std::vector<uint8_t> retval =
+		recv(1, NET_SOCKET_RECV_NO_HANG); // runs input code
+	retval.insert(
+		retval.end(),
+		local_buffer.begin(),
+		local_buffer.end());
 	local_buffer.clear();
 	return retval;
 }

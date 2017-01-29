@@ -15,7 +15,7 @@
   calling it. This is done for every level.
 */
 
-#define LIST_CMD(x) if(cmd_vector[0] == #x){x(std::vector<std::string>(cmd_vector.begin()+1, cmd_vector.end()));}
+#define LIST_CMD(x) if(cmd_vector.at(0) == #x){if(cmd_vector.size() > 1){x(std::vector<std::string>(cmd_vector.begin()+1, cmd_vector.end()));}else{x(std::vector<std::string>{});}}
 #define DEF_CMD(x) void x(std::vector<std::string> cmd_vector)
 #define DEC_CMD(x) void console_t::x(std::vector<std::string> cmd_vector)
 
@@ -42,6 +42,15 @@ private:
 	std::vector<uint8_t> working_input; // buffer
 	std::vector<std::vector<std::string> > output_table;
 	std::array<std::string, 4> registers;
+
+	DEF_CMD(exit);
+	
+	/*
+	  Print operations
+	 */
+	DEF_CMD(print_output_table);
+	DEF_CMD(print_reg);
+	
 	/*
 	  Register operators: Set the IDs in the registers
 
@@ -91,12 +100,14 @@ private:
 	/* DEF_CMD(tv_list_clear_active_stream); // first reg: tv_channel_t id */
 	/* DEF_CMD(tv_list_add_active_stream); // first reg: chan id, second reg: stream id */
 	/* DEF_CMD(tv_list_del_active_stream); // first reg: chan id, second reg: stream id */
+	void print_socket(std::string);
 	void execute(std::vector<std::string> cmd_vector);
 public:
 	data_id_t id;
 	console_t();
 	~console_t();
 	void set_socket_id(id_t_ socket_id_);
+	id_t_ get_socket_id();
 	void run();
 };
 
