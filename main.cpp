@@ -23,6 +23,7 @@
 #include "id/id_api.h"
 #include "compress.h"
 #include "convert.h"
+#include "console/console.h"
 
 /*
   TODO:
@@ -167,12 +168,14 @@ static void init(){
 	tv_init();
 	input_init();
 	net_proto_init();
+	console_init();
 }
 
 static void close(){
 	tv_close();
 	input_close();
 	net_proto_close();
+	console_close();
 	id_api::destroy_all_data();
 	ERR_free_strings();
 }
@@ -220,7 +223,7 @@ static void test_socket(){
 			std::make_pair(ip, port);
 		test_socket_->set_net_ip(ip, port, NET_IP_VER_4);
 		test_socket_->connect();
-		test_socket_->send({'A', 'A', 'A', 'A'});
+		test_socket_->send("AAAA");
 		while(true){
 			sleep_ms(1);
 		}
@@ -254,7 +257,7 @@ static void test_socket_array(std::vector<std::pair<id_t_, id_t_> > socket_array
 			P_V_S(convert::array::id::to_hex(socket_array[i].second), P_SPAM);
 			print("SOCKETS STRUCTS ARE NULL", P_ERR);
 		}
-		first->send({'a','a','a','a'});
+		first->send("aaaa");
 		sleep_ms(1);
 		if(second->recv(4, NET_SOCKET_RECV_NO_HANG).size() == 0){
 			print("SOCKET HAS CLOSED", P_ERR);
@@ -441,6 +444,7 @@ int main(int argc_, char **argv_){
 		tv_loop();
 		input_loop();
 		net_proto_loop();
+		console_loop();
 		try{
 			if(settings::get_setting("slow_iterate") == "1"){
 				sleep_ms(1000);

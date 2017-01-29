@@ -51,6 +51,7 @@ public:
 	
 	// send and recv functions
 	void send(std::vector<uint8_t> data);
+	void send(std::string);
 	std::vector<uint8_t> recv(uint64_t byte_count = 0, uint64_t flags = 0);
 	std::vector<uint8_t> recv_all_buffer();
 	bool activity();

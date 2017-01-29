@@ -92,6 +92,11 @@ void net_socket_t::send(std::vector<uint8_t> data){
 	}
 }
 
+void net_socket_t::send(std::string data){
+	std::vector<uint8_t> data_(data.c_str(), data.c_str()+data.size());
+	send(data_);
+}
+
 /*
   net_socket_t::recv: reads byte_count amount of data. Flags can be passed
   NET_SOCKET_RECV_NO_HANG: check for activity on the socket
