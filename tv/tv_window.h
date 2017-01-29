@@ -2,7 +2,7 @@
 #include "tv.h"
 #ifndef TV_WINDOW_H
 #define TV_WINDOW_H
-#include "SDL2/SDL.h"
+#include <SDL2/SDL.h>
 // get a better way to do this
 #define TV_WINDOW_CT 0
 #define TV_WINDOW_UL 1

@@ -13,8 +13,8 @@
   I am planning on using that in conjunction with this.
  */
 
-#include "array"
-#include "tuple"
+#include <array>
+#include <tuple>
 #include "input.h"
 
 /*

@@ -5,8 +5,8 @@
 #ifndef NET_PROTO_H
 #define NET_PROTO_H
 #include "../../id/id.h"
-#include "string"
-#include "SDL2/SDL_net.h"
+#include <string>
+#include <SDL2/SDL_net.h>
 
 /*
   Multiple connections can be made to a single client perfectly fine. However,

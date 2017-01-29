@@ -1,7 +1,7 @@
 #ifndef STATS_H
 #define STATS_H
-#include "vector"
-#include "tuple"
+#include <vector>
+#include <tuple>
 #include "id/id.h"
 /*
   stats.h a simple statistics library

@@ -2,7 +2,7 @@
 #include "tv_frame_video.h"
 #ifndef TV_MENU_H
 #define TV_MENU_H
-#include "array"
+#include <array>
 #define TV_MENU_TEXT_LENGTH 64
 // TODO: define this in settings, not as macros
 #define TV_MENU_WIDTH 16

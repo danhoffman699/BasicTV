@@ -1,10 +1,10 @@
 #ifndef MAIN_H
 #define MAIN_H
-#include "csignal"
-#include "iostream"
-#include "vector"
-#include "SDL2/SDL.h"
-#include "array"
+#include <csignal>
+#include <iostream>
+#include <vector>
+#include <SDL2/SDL.h>
+#include <array>
 #include "convert.h"
 #include "id/id.h"
 #define STD_ARRAY_LENGTH 65536

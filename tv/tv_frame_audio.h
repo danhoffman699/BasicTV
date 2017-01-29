@@ -1,7 +1,7 @@
 #ifndef TV_FRAME_AUDIO_H
 #define TV_FRAME_AUDIO_H
 #include "tv_frame_standard.h"
-#include "opus/opus.h"
+#include <opus/opus.h>
 
 #define TV_FRAME_AUDIO_DEFAULT_SAMPLING_RATE 48000
 #define TV_FRAME_AUDIO_DEFAULT_BIT_DEPTH 24

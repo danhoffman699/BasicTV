@@ -3,7 +3,7 @@
 #include "../net_socket.h"
 #ifndef NET_PROTO_SOCKET_H
 #define NET_PROTO_SOCKET_H
-#include "SDL2/SDL_net.h"
+#include <SDL2/SDL_net.h>
 
 /*
   net_proto_socket_t: handles protocol specific transcoding

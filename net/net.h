@@ -1,8 +1,8 @@
 #ifndef NET_H
 #define NET_H
-#include "string"
-#include "vector"
-#include "curl/curl.h"
+#include <string>
+#include <vector>
+#include <curl/curl.h>
 
 namespace net{
 	std::string get_cache(std::string url, int stale_time);

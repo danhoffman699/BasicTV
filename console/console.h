@@ -6,9 +6,9 @@
 #include "../net/net_socket.h"
 #include "../id/id.h"
 #include "../id/id_api.h"
-#include "string"
-#include "vector"
-#include "algorithm"
+#include <string>
+#include <vector>
+#include <algorithm>
 
 /*
   Generic interface to strip the reference to the function being called and

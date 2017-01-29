@@ -1,12 +1,12 @@
 #include "../main.h"
 #ifndef ID_H
 #define ID_H
-#include "cstdint"
-#include "fstream"
-#include "array"
-#include "vector"
-#include "random"
-#include "cstdlib"
+#include <cstdint>
+#include <fstream>
+#include <array>
+#include <vector>
+#include <random>
+#include <cstdlib>
 
 #define ADD_DATA(x) (id.add_data(&x, sizeof(x)))
 #define ADD_DATA_ARRAY(x, y, z) (id.add_data(&(x[0]), y*z))

@@ -1,7 +1,7 @@
 #ifndef TV_DEV_AUDIO_H
 #define TV_DEV_AUDIO_H
 #include "tv_dev.h"
-#include "alsa/asoundlib.h"
+#include <alsa/asoundlib.h>
 // doesn't use open_dev or set_ioctl, not a conventional
 // device file
 #define TV_DEV_AUDIO_TYPE_UNDEF 0

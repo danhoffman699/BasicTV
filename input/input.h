@@ -1,9 +1,9 @@
-#include "SDL2/SDL.h"
+#include <SDL2/SDL.h>
 #include "../id/id.h"
 #ifndef INPUT_H
 #define INPUT_H
 
-#include "signal.h"
+#include <signal.h>
 
 /*
   INPUT_KEY_* is reserved from 32 to 127 for ASCII (extended

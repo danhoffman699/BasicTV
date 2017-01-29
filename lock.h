@@ -1,7 +1,7 @@
 #ifndef LOCK_H
 #define LOCK_H
-#include "mutex"
-#include "thread"
+#include <mutex>
+#include <thread>
 struct lock_t{
 private:
 	bool first_run = true;

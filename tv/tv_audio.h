@@ -1,8 +1,8 @@
 #include "../id/id.h"
 #ifndef TV_AUDIO_H
 #define TV_AUDIO_H
-#include "SDL2/SDL_mixer.h"
-#include "algorithm" // std::reverse
+#include <SDL2/SDL_mixer.h>
+#include <algorithm> // std::reverse
 
 #define TV_AUDIO_DEFAULT_SAMPLING_RATE 44100
 #define TV_AUDIO_DEFAULT_BIT_DEPTH 16
