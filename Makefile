@@ -1,32 +1,27 @@
-CXXFLAGS+=-Wall -Wextra -std=c++11 -Wno-unused-function
-LDFLAGS+=-lstdc++ -lcurl -lSDL2_net -lSDL2_mixer -lSDL2 -lz -lcrypto -lopus
+CXXFLAGS += -Wall -Wextra -std=c++11 -Wno-unused-function
+LDLIBS = -lcurl -lSDL2_net -lSDL2_mixer -lSDL2 -lz -lcrypto -lopus
+CPPFLAGS = -DDEBUG
 
-all: debug
+SRC = $(shell find . -name '*.cpp')
+DEP = .depend
 
+all: basictv
 
-id_:
-	$(CXX) $(CXXFLAGS) -DDEBUG -O0 -g -c id/id_unified.cpp
+%.o: %.cpp
+	@mkdir -p $(DEP)/$(@D)
+	@$(CXX) $(CXXFLAGS) $(CPPFLAGS) -MMD -MF $(DEP)/$*.d -c $< -o $@
+	@echo -e "CXX\t$<"
 
-console_: id_
-	$(CXX) $(CXXFLAGS) -DDEBUG -O0 -g -c console/console_unified.cpp
-
-tv_: id_
-	$(CXX) $(CXXFLAGS) -DDEBUG -O0 -g -c tv/tv_unified.cpp
-
-net_: id_
-	$(CXX) $(CXXFLAGS) -DDEBUG -O0 -g -c net/net_unified.cpp
-
-input_: id_
-	$(CXX) $(CXXFLAGS) -DDEBUG -O0 -g -c input/input_unified.cpp
-
-encrypt_: id_
-	$(CXX) $(CXXFLAGS) -DDEBUG -O0 -g -c encrypt/encrypt_unified.cpp
-
-debug: tv_ net_ input_ encrypt_ id_ console_
-	$(CXX) $(CXXFLAGS) -DDEBUG -O0 -g  *.cpp tv_unified.o net_unified.o input_unified.o console_unified.o id_unified.o encrypt_unified.o $(LDFLAGS) 
-
-fast: tv_ net_ input_ encrypt_ id_ console_
-	$(CXX) $(CXXFLAGS) -Ofast -march=native tv_unified.o net_unified.o input_unified.o console_unified.o id_unified.o encrypt_unified.o *.cpp $(LDFLAGS)
+basictv: $(SRC:.cpp=.o)
+	@$(CXX) $^ -o $@ $(LDLIBS)
+	@echo -e "LD\t$@"
 
 clean:
-	rm input_unified.o tv_unified.o net_unified.o id_unified.o console_unified.o encrypt_unified.o a.out id/*~ tv/*~ net/*~ net/proto/*~ encrypt/*~ *~
+	$(RM) $(SRC:.cpp=.o) basictv
+	$(RM) -r $(DEP)
+
+.PHONY: all clean
+
+.PRECIOUS: $(DEP)/%.d
+
+-include $(addprefix $(DEP)/, $(SRC:.cpp=.d))
