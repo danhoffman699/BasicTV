@@ -1,5 +1,6 @@
 #include "tv_dev_audio.h"
 #include "tv_dev.h"
+#include "tv_frame_audio.h"
 
 // SDL_Mixer can't do microphones, so I have to use the full
 // ALSA stack, which is too complex for now

@@ -1,4 +1,5 @@
 #include "net_proto_dev_ctrl.h"
+#include "net_proto.h"
 
 std::vector<uint8_t> net_proto_apply_dev_ctrl(std::vector<uint8_t> data){
 	for(uint64_t i = 0;i < data.size();i++){

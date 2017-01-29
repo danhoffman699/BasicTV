@@ -1,5 +1,6 @@
 #include "tv_dev.h"
 #include "tv_dev_video.h"
+#include "tv_frame_video.h"
 
 /*
   For now, this will be the de-facto method of importing video into the

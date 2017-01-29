@@ -1,4 +1,5 @@
 #include "../../main.h" // VERSION_*
+#include "../../util.h"
 #include "net_proto.h"
 #include "net_proto_meta.h"
 

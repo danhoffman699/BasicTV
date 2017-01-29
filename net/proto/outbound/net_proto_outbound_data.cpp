@@ -1,6 +1,9 @@
 #include "net_proto_outbound_data.h"
 #include "../net_proto_dev_ctrl.h" // apply dev_ctrl function
 #include "../net_proto_meta.h" // apply meta function
+#include "../net_proto_request.h"
+#include "../../../settings.h"
+#include "../../../id/id_api.h"
 
 // sends all requests out in one network socket call
 

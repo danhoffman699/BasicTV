@@ -1,5 +1,7 @@
+#include <SDL2/SDL_net.h>
 #include "net_ip.h"
 #include "../convert.h"
+#include "../util.h"
 
 net_ip_t::net_ip_t(){
 }

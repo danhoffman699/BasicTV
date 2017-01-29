@@ -15,6 +15,7 @@
 #include "../net/proto/net_proto_peer.h"
 #include "../net/proto/net_proto_con_req.h"
 #include "../net/proto/net_proto.h"
+#include "../net/net.h"
 
 #include "../input/input.h"
 #include "../input/input_ir.h"

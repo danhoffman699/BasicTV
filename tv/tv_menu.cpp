@@ -1,6 +1,7 @@
 #include "tv_menu.h"
 #include "tv_frame_standard.h"
 #include "tv_frame_video.h"
+#include "../settings.h"
 
 /*
   tv_menu: a standardized menu setup. I want this program to be as simple,

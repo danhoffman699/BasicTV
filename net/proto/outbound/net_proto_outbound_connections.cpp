@@ -1,4 +1,9 @@
 #include "net_proto_outbound_connections.h"
+#include "../net_proto_socket.h"
+#include "../../../id/id.h"
+#include "../../../id/id_api.h"
+
+#include <vector>
 
 /*
   Start off by opening as many sockets as possible, and if not all of the

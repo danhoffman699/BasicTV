@@ -1,6 +1,7 @@
 #include "net_proto.h"
 #include "net_proto_request.h"
 #include "net_proto_socket.h"
+#include "../../id/id_api.h"
 
 net_proto_request_t::net_proto_request_t(): id(this, __FUNCTION__){
 	// ids

@@ -2,6 +2,7 @@
 #define NET_PROXY_H
 
 #include "net_ip.h"
+#include "../id/id.h"
 
 /*
   net_proxy_t: proxy information

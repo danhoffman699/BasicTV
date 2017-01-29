@@ -1,6 +1,10 @@
 #include "net_proto_inbound_data.h"
 // meta has apply and unapply functions for DEV_CTRL_1
 #include "../net_proto_meta.h"
+#include "../net_proto_socket.h"
+#include "../net_proto_request.h"
+#include "../../../util.h"
+#include "../../../id/id_api.h"
 
 // static std::vector<uint8_t> net_proto_read_struct_segment(uint8_t *data,
 // 							  uint64_t data_size){

@@ -1,7 +1,10 @@
 #include "tv_frame_audio.h"
 #include "tv_audio.h"
+#include "tv_window.h"
+#include "tv_channel.h"
 #include "tv.h"
 #include "../convert.h"
+#include "../settings.h"
 
 static uint32_t output_sampling_rate = 0;
 static uint8_t output_bit_depth = 0;

@@ -1,4 +1,5 @@
 #include "net_proxy.h"
+#include "../stats.h"
 
 net_proxy_t::net_proxy_t() : id(this, __FUNCTION__){
 	proxy_stat_sample_set_id =

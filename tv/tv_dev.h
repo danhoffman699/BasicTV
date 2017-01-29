@@ -6,6 +6,9 @@
 #include <sys/ioctl.h>
 #include <linux/videodev2.h>
 #include <cassert>
+#include <string>
+#include "../id/id.h"
+#include "../util.h"
 /*
   tv_dev: interface for Linux kernel devices
  */

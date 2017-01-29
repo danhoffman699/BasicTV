@@ -1,5 +1,10 @@
 #ifndef NET_IP_H
 #define NET_IP_H
+
+#include <array>
+#include <cstdint>
+#include "../id/id.h"
+
 /*
   net_ip_t: virtual overlay for any type needing an IP
 

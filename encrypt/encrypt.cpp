@@ -1,4 +1,5 @@
 #include "encrypt.h"
+#include "encrypt_rsa.h"
 
 encrypt_key_t::encrypt_key_t(){}
 
